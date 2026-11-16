@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@theme {
+    --font-sans:
+        'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-navy-50: #eef3fa;
+    --color-navy-100: #d6e2f2;
+    --color-navy-700: #163563;
+    --color-navy-800: #0f2748;
+    --color-navy-900: #0a1c36;
+    --color-teal: #14b8a6;
+    --color-teal-dark: #0d9488;
+    /*
+     * Deep "Merah Putih" red everywhere. Lighter tints are the same red at low
+     * opacity (accent/5, /10, /20 ...) so every red on the page stays one hue.
+     */
+    --color-merah: #a50e1e;
+    --color-merah-dark: #6b0712;
+    --color-accent: #a50e1e;
+    --color-accent-dark: #6b0712;
+    --color-accent-soft: rgb(165 14 30 / 0.08);
+    --animate-marquee: marquee 40s linear infinite;
+
+    @keyframes marquee {
+        from {
+            transform: translateX(0);
+        }
+        to {
+            transform: translateX(-50%);
+        }
+    }
+}
+
+/* Native view transitions (Inertia `viewTransition`): soft crossfade + shared cover morph. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.28s;
+}
+::view-transition-group(*) {
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
+
+@utility no-scrollbar {
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/*
+ * Page backdrop: near-white with a faint blush wash at the top only.
+ * Content sits on solid white cards, so text contrast never depends on the gradient.
+ */
+@utility bg-nusantara {
+    background-color: #fffcfc;
+    background-image:
+        radial-gradient(
+            48rem 22rem at 12% -6rem,
+            rgb(165 14 30 / 0.1),
+            transparent 70%
+        ),
+        radial-gradient(
+            40rem 20rem at 95% -4rem,
+            rgb(107 7 18 / 0.07),
+            transparent 70%
+        ),
+        linear-gradient(180deg, rgb(165 14 30 / 0.05) 0, transparent 26rem);
+    background-repeat: no-repeat;
+}
+
+/* Frosted glass surface (bars, floating buttons). */
+@utility glass {
+    @apply border border-white/70 bg-white/75 shadow-[0_8px_30px_-12px_rgba(165,14,30,0.22)] backdrop-blur-2xl backdrop-saturate-150;
+}
+
+@utility card {
+    @apply rounded-3xl border border-accent/10 bg-white shadow-[0_6px_24px_-12px_rgba(107,7,18,0.2)];
+}
+
+@utility input {
+    @apply w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-teal focus:ring-2 focus:ring-teal/30 focus:outline-none;
+}
+
+@utility btn {
+    @apply inline-flex items-center justify-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition disabled:opacity-50;
+}
+
+@utility btn-primary {
+    @apply btn bg-navy-800 text-white hover:bg-navy-700;
+}
+
+@utility btn-teal {
+    @apply btn bg-teal text-white hover:bg-teal-dark;
+}
+
+@utility btn-ghost {
+    @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+}
+
+@utility btn-danger {
+    @apply btn bg-accent text-white hover:bg-red-700;
+}
