@@ -19,44 +19,57 @@ class DatabaseSeeder extends Seeder
         $categories = collect(['Nasional', 'Politik', 'Ekonomi', 'Hukum', 'Pendidikan', 'Budaya', 'Pariwisata', 'UMKM', 'Olahraga'])
             ->map(fn ($name, $i) => Category::updateOrCreate(['slug' => Str::slug($name)], ['name' => $name, 'sort' => $i]));
 
-        $admin = User::factory()->create([
+        $admin = $this->user([
             'name' => 'Super Admin',
             'email' => 'admin@nusantaranews.test',
             'role' => Role::SuperAdmin,
         ]);
-        User::factory()->create([
+        $this->user([
             'name' => 'Editor Jawa Barat',
             'email' => 'editor.jabar@nusantaranews.test',
             'role' => Role::Editor,
             'region_code' => '32',
         ]);
-        $journalist = User::factory()->create([
+        $journalist = $this->user([
             'name' => 'Wartawan Bandung',
             'email' => 'wartawan@nusantaranews.test',
             'role' => Role::Journalist,
             'region_code' => '32.73',
         ]);
-        User::factory()->create([
+        $this->user([
             'name' => 'Kontributor Warga',
             'email' => 'kontributor@nusantaranews.test',
             'role' => Role::Contributor,
         ]);
 
-        // Illustration data only, not real news.
-        $regionCodes = Region::pluck('code')->push(null, null, null);
-        Article::factory(120)->published()
-            ->sequence(fn () => [
-                'category_id' => $categories->random()->id,
-                'region_code' => $regionCodes->random(),
-                'author_id' => fake()->randomElement([$admin->id, $journalist->id]),
-                // Placeholder photos for the illustration data.
-                'cover_path' => 'https://picsum.photos/seed/'.Str::random(8).'/800/500',
-            ])
-            ->create();
+        // Illustration data only, not real news. Skipped on re-runs so articles don't pile up.
+        if (Article::doesntExist()) {
+            $regionCodes = Region::pluck('code')->push(null, null, null);
+            Article::factory(120)->published()
+                ->sequence(fn () => [
+                    'category_id' => $categories->random()->id,
+                    'region_code' => $regionCodes->random(),
+                    'author_id' => fake()->randomElement([$admin->id, $journalist->id]),
+                    // Placeholder photos for the illustration data.
+                    'cover_path' => 'https://picsum.photos/seed/'.Str::random(8).'/800/500',
+                ])
+                ->create();
+        }
 
         $this->call(ProvinceNewsSeeder::class);
 
         Article::published()->limit(5)->update(['is_headline' => true]);
         Article::published()->skip(5)->limit(4)->update(['is_breaking' => true]);
+    }
+
+    /**
+     * Returns the existing user with this email, or creates it, so the seeder can be re-run.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function user(array $attributes): User
+    {
+        return User::where('email', $attributes['email'])->first()
+            ?? User::factory()->create($attributes);
     }
 }

@@ -84,7 +84,8 @@ export default function RegionShow({
                                 damping: 16,
                                 delay: 0.15,
                             }}
-                            className="-mt-10 block size-20 overflow-hidden rounded-full border-4 border-white shadow-lg"
+                            // relative + z-10: otherwise the positioned banner above paints over the avatar's top half.
+                            className="relative z-10 -mt-10 block size-20 overflow-hidden rounded-full border-4 border-white shadow-lg ring-2 ring-accent/25 md:-mt-12 md:size-24"
                         >
                             <RegionAvatar
                                 region={{

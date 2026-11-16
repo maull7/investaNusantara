@@ -21,14 +21,25 @@ class ArticleController extends Controller
     {
         $user = $request->user();
 
-        $articles = Article::query()
+        // Editors see their region; writers see their own work; super admin sees everything.
+        $visible = Article::query()
+            ->when($user->role === Role::Editor && $user->region_code, fn ($q) => $q->inRegion($user->region_code))
+            ->when($user->hasRole(Role::Journalist, Role::Contributor), fn ($q) => $q->where('author_id', $user->id));
+
+        // Dashboard tiles: per-status counts and total views over everything this user can see.
+        $counts = (clone $visible)->reorder()->selectRaw('status, count(*) as total, sum(views) as views')
+            ->groupBy('status')->get()->keyBy(fn ($row) => $row->status->value);
+        $stats = [
+            'total' => (int) $counts->sum('total'),
+            'views' => (int) $counts->sum('views'),
+            ...collect(ArticleStatus::cases())->mapWithKeys(fn (ArticleStatus $s) => [$s->value => (int) ($counts[$s->value]->total ?? 0)]),
+        ];
+
+        $articles = (clone $visible)
             ->with(['category:id,name', 'region:code,name', 'author:id,name'])
-            ->select(['id', 'title', 'slug', 'status', 'category_id', 'region_code', 'author_id', 'published_at', 'updated_at', 'views'])
+            ->select(['id', 'title', 'slug', 'status', 'cover_path', 'category_id', 'region_code', 'author_id', 'published_at', 'updated_at', 'views', 'is_headline', 'is_breaking'])
             ->when($request->string('status')->value(), fn ($q, $s) => $q->where('status', $s))
             ->when($request->string('q')->trim()->value(), fn ($q, $term) => $q->where('title', 'like', "%$term%"))
-            // Editors see their region; writers see their own work; super admin sees everything.
-            ->when($user->role === Role::Editor && $user->region_code, fn ($q) => $q->inRegion($user->region_code))
-            ->when($user->hasRole(Role::Journalist, Role::Contributor), fn ($q) => $q->where('author_id', $user->id))
             ->latest('updated_at')
             ->paginate(20)
             ->withQueryString()
@@ -43,6 +54,7 @@ class ArticleController extends Controller
 
         return Inertia::render('admin/articles/index', [
             'articles' => $articles,
+            'stats' => $stats,
             'filters' => $request->only('status', 'q'),
         ]);
     }

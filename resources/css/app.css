@@ -91,25 +91,25 @@
 }
 
 @utility input {
-    @apply w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-teal focus:ring-2 focus:ring-teal/30 focus:outline-none;
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 transition placeholder:text-slate-400 focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none;
 }
 
 @utility btn {
-    @apply inline-flex items-center justify-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium whitespace-nowrap transition active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
 }
 
 @utility btn-primary {
-    @apply btn bg-navy-800 text-white hover:bg-navy-700;
+    @apply btn bg-accent text-white shadow-sm shadow-accent/30 hover:bg-accent-dark;
 }
 
-@utility btn-teal {
-    @apply btn bg-teal text-white hover:bg-teal-dark;
+@utility btn-success {
+    @apply btn bg-emerald-600 text-white shadow-sm shadow-emerald-600/25 hover:bg-emerald-700;
 }
 
 @utility btn-ghost {
-    @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+    @apply btn bg-white text-slate-600 ring-1 ring-slate-200 hover:text-accent hover:ring-accent/30;
 }
 
 @utility btn-danger {
-    @apply btn bg-accent text-white hover:bg-red-700;
+    @apply btn bg-white text-red-700 ring-1 ring-red-200 hover:bg-red-600 hover:text-white hover:ring-red-600;
 }

@@ -1,6 +1,17 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import {
+    type FormEvent,
+    type ReactNode,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from 'react';
+import { StatusPill, Switch } from '@/components/admin/ui';
+import Icon from '@/components/icons';
 import AdminLayout from '@/layouts/admin';
+import { cn } from '@/lib/utils';
 import {
     destroy,
     index,
@@ -11,7 +22,6 @@ import {
 } from '@/routes/admin/articles';
 import { cities as citiesRoute } from '@/routes/region';
 import type { Article, Category, Region } from '@/types';
-import { statusLabel } from './index';
 
 type Props = {
     article: (Article & { region: Region | null }) | null;
@@ -20,14 +30,17 @@ type Props = {
     can: { publish: boolean; submit: boolean; flag: boolean };
 };
 
+const FORM_ID = 'article-form';
+
 export default function ArticleForm({
     article,
     categories,
     provinces,
     can,
 }: Props) {
-    const initialProvince = article?.region_code?.slice(0, 2) ?? '';
-    const [province, setProvince] = useState(initialProvince);
+    const [province, setProvince] = useState(
+        article?.region_code?.slice(0, 2) ?? '',
+    );
     const [cities, setCities] = useState<Region[]>([]);
 
     const form = useForm({
@@ -56,99 +69,201 @@ export default function ArticleForm({
         };
     }, [province]);
 
-    function onSubmit(e: React.FormEvent) {
+    function onSubmit(e: FormEvent) {
         e.preventDefault();
         // POST with _method spoofing so file uploads work on update.
         form.transform((d) => ({ ...d, region_code: d.region_code || null }));
         form.post(article ? update.url(article.id) : store.url(), {
             forceFormData: true,
+            preserveScroll: true,
         });
     }
 
     const err = form.errors;
+    const words = form.data.body.trim()
+        ? form.data.body.trim().split(/\s+/).length
+        : 0;
+    const title = article ? 'Edit artikel' : 'Tulis artikel';
 
     return (
         <AdminLayout
-            title={article ? 'Edit artikel' : 'Tulis artikel'}
+            title={title}
+            subtitle={
+                article ? (
+                    <StatusPill status={article.status} />
+                ) : (
+                    'Artikel baru disimpan sebagai draft.'
+                )
+            }
             actions={
-                <Link href={index.url()} className="btn-ghost">
-                    Kembali
-                </Link>
+                <>
+                    <Link href={index.url()} className="btn-ghost">
+                        <Icon name="back" width={16} height={16} />
+                        Kembali
+                    </Link>
+                    <button
+                        form={FORM_ID}
+                        disabled={form.processing}
+                        className="btn-primary min-w-28"
+                    >
+                        <AnimatePresence mode="wait" initial={false}>
+                            <motion.span
+                                key={
+                                    form.processing
+                                        ? 'saving'
+                                        : form.recentlySuccessful
+                                          ? 'saved'
+                                          : 'idle'
+                                }
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.15 }}
+                                className="inline-flex items-center gap-1.5"
+                            >
+                                {form.processing ? (
+                                    'Menyimpan…'
+                                ) : form.recentlySuccessful ? (
+                                    <>
+                                        <Icon
+                                            name="check"
+                                            width={16}
+                                            height={16}
+                                        />
+                                        Tersimpan
+                                    </>
+                                ) : (
+                                    'Simpan'
+                                )}
+                            </motion.span>
+                        </AnimatePresence>
+                    </button>
+                </>
             }
         >
-            <Head title={article ? 'Edit artikel' : 'Tulis artikel'} />
-            <form onSubmit={onSubmit} className="grid gap-6 lg:grid-cols-3">
-                <div className="space-y-4 rounded-lg bg-white p-6 ring-1 ring-slate-200 lg:col-span-2">
-                    <Field label="Judul" error={err.title}>
-                        <input
-                            value={form.data.title}
-                            onChange={(e) =>
-                                form.setData('title', e.target.value)
-                            }
-                            className="input"
-                            required
-                        />
-                    </Field>
-                    <Field label="Ringkasan" error={err.excerpt}>
-                        <textarea
-                            value={form.data.excerpt}
-                            onChange={(e) =>
-                                form.setData('excerpt', e.target.value)
-                            }
-                            rows={2}
-                            maxLength={500}
-                            className="input"
-                        />
-                    </Field>
-                    <Field
-                        label="Isi berita (pisahkan paragraf dengan baris kosong)"
-                        error={err.body}
-                    >
-                        <textarea
-                            value={form.data.body}
-                            onChange={(e) =>
-                                form.setData('body', e.target.value)
-                            }
-                            rows={18}
-                            className="input font-serif"
-                            required
-                        />
-                    </Field>
+            <Head title={title} />
+            <form
+                id={FORM_ID}
+                onSubmit={onSubmit}
+                className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
+            >
+                {/* Writing area */}
+                <div className="card p-5 sm:p-8">
+                    <AutoTextarea
+                        value={form.data.title}
+                        onChange={(v) => form.setData('title', v)}
+                        placeholder="Judul berita"
+                        aria-label="Judul"
+                        required
+                        className="text-2xl leading-snug font-semibold text-navy-900 sm:text-3xl"
+                    />
+                    <Error message={err.title} />
+
+                    <AutoTextarea
+                        value={form.data.excerpt}
+                        onChange={(v) => form.setData('excerpt', v)}
+                        placeholder="Ringkasan singkat yang tampil di kartu berita…"
+                        aria-label="Ringkasan"
+                        maxLength={500}
+                        className="mt-4 text-base text-slate-600"
+                    />
+                    <div className="flex justify-between">
+                        <Error message={err.excerpt} />
+                        <span
+                            className={cn(
+                                'ml-auto text-xs tabular-nums',
+                                form.data.excerpt.length > 450
+                                    ? 'text-amber-600'
+                                    : 'text-slate-400',
+                            )}
+                        >
+                            {form.data.excerpt.length}/500
+                        </span>
+                    </div>
+
+                    <div className="my-5 h-px bg-gradient-to-r from-accent/20 via-slate-200 to-transparent" />
+
+                    <AutoTextarea
+                        value={form.data.body}
+                        onChange={(v) => form.setData('body', v)}
+                        placeholder="Tulis isi berita di sini. Pisahkan paragraf dengan satu baris kosong."
+                        aria-label="Isi berita"
+                        required
+                        minRows={16}
+                        className="font-serif text-[17px] leading-8 text-slate-800"
+                    />
+                    <Error message={err.body} />
+
+                    <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4 text-xs text-slate-500">
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1">
+                            {words.toLocaleString('id-ID')} kata
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
+                            <Icon name="clock" width={12} height={12} />
+                            {Math.max(1, Math.round(words / 200))} menit baca
+                        </span>
+                    </div>
                 </div>
 
-                <div className="space-y-4">
-                    <div className="space-y-4 rounded-lg bg-white p-6 ring-1 ring-slate-200">
-                        {article && (
-                            <p className="text-sm">
-                                Status:{' '}
-                                <strong>{statusLabel[article.status]}</strong>
-                            </p>
-                        )}
-                        <Field label="Kategori" error={err.category_id}>
-                            <select
-                                value={form.data.category_id}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'category_id',
-                                        Number(e.target.value),
-                                    )
-                                }
-                                className="input"
-                            >
-                                {categories.map((c) => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </Field>
-                        <Field label="Provinsi" error={err.region_code}>
+                {/* Side panel */}
+                <div className="space-y-4 lg:sticky lg:top-6">
+                    <Panel title="Gambar sampul">
+                        <CoverInput
+                            current={article?.cover_url ?? null}
+                            file={form.data.cover}
+                            onChange={(f) => form.setData('cover', f)}
+                        />
+                        <Error message={err.cover} />
+                    </Panel>
+
+                    <Panel title="Kategori">
+                        <div className="flex flex-wrap gap-1.5">
+                            {categories.map((c) => {
+                                const on = form.data.category_id === c.id;
+                                return (
+                                    <button
+                                        key={c.id}
+                                        type="button"
+                                        onClick={() =>
+                                            form.setData('category_id', c.id)
+                                        }
+                                        className={cn(
+                                            'relative rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors',
+                                            on
+                                                ? 'text-white ring-accent'
+                                                : 'bg-white text-slate-600 ring-slate-200 hover:text-accent hover:ring-accent/30',
+                                        )}
+                                    >
+                                        {on && (
+                                            <motion.span
+                                                layoutId="category-chip"
+                                                transition={{
+                                                    type: 'spring',
+                                                    stiffness: 500,
+                                                    damping: 36,
+                                                }}
+                                                className="absolute inset-0 rounded-full bg-accent"
+                                            />
+                                        )}
+                                        <span className="relative">
+                                            {c.name}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <Error message={err.category_id} />
+                    </Panel>
+
+                    <Panel title="Wilayah">
+                        <div className="space-y-2">
                             <select
                                 value={province}
                                 onChange={(e) => {
                                     setProvince(e.target.value);
                                     form.setData('region_code', e.target.value);
                                 }}
+                                aria-label="Provinsi"
                                 className="input"
                             >
                                 <option value="">
@@ -160,123 +275,112 @@ export default function ArticleForm({
                                     </option>
                                 ))}
                             </select>
-                        </Field>
-                        {province && (
-                            <Field label="Kabupaten/Kota">
-                                <select
-                                    value={form.data.region_code}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'region_code',
-                                            e.target.value,
-                                        )
-                                    }
-                                    className="input"
-                                >
-                                    <option value={province}>
-                                        Seluruh provinsi
-                                    </option>
-                                    {cities.map((c) => (
-                                        <option key={c.code} value={c.code}>
-                                            {c.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </Field>
-                        )}
-                        <Field label="Gambar sampul" error={err.cover}>
-                            {article?.cover_url && (
-                                <img
-                                    src={article.cover_url}
-                                    alt=""
-                                    className="mb-2 rounded"
-                                />
-                            )}
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) =>
-                                    form.setData(
-                                        'cover',
-                                        e.target.files?.[0] ?? null,
-                                    )
-                                }
-                                className="text-sm"
+                            <AnimatePresence initial={false}>
+                                {province && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="-m-1 overflow-hidden p-1"
+                                    >
+                                        <select
+                                            value={form.data.region_code}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'region_code',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            aria-label="Kabupaten/kota"
+                                            className="input"
+                                        >
+                                            <option value={province}>
+                                                Seluruh provinsi
+                                            </option>
+                                            {cities.map((c) => (
+                                                <option
+                                                    key={c.code}
+                                                    value={c.code}
+                                                >
+                                                    {c.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                        <Error message={err.region_code} />
+                    </Panel>
+
+                    {can.flag && (
+                        <Panel title="Sorotan" flush>
+                            <Switch
+                                label="Headline"
+                                hint="Tampil di slider utama beranda"
+                                checked={form.data.is_headline}
+                                onChange={(v) => form.setData('is_headline', v)}
                             />
-                        </Field>
-                        {can.flag && (
-                            <div className="flex gap-4 text-sm">
-                                <label className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={form.data.is_headline}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'is_headline',
-                                                e.target.checked,
-                                            )
-                                        }
-                                    />{' '}
-                                    Headline
-                                </label>
-                                <label className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={form.data.is_breaking}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'is_breaking',
-                                                e.target.checked,
-                                            )
-                                        }
-                                    />{' '}
-                                    Breaking
-                                </label>
-                            </div>
-                        )}
-                        <button
-                            disabled={form.processing}
-                            className="btn-primary w-full"
-                        >
-                            Simpan
-                        </button>
-                    </div>
+                            <Switch
+                                label="Breaking news"
+                                hint="Masuk ticker berita terkini"
+                                checked={form.data.is_breaking}
+                                onChange={(v) => form.setData('is_breaking', v)}
+                            />
+                        </Panel>
+                    )}
 
                     {article && (
-                        <div className="flex flex-wrap gap-2">
-                            {can.submit && article.status !== 'review' && (
+                        <Panel title="Alur kerja">
+                            <div className="space-y-2">
+                                {can.submit && article.status !== 'review' && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            router.post(submit.url(article.id))
+                                        }
+                                        className="btn-ghost w-full"
+                                    >
+                                        <Icon
+                                            name="send"
+                                            width={16}
+                                            height={16}
+                                        />
+                                        Ajukan ke editor
+                                    </button>
+                                )}
+                                {can.publish &&
+                                    article.status !== 'published' && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                router.post(
+                                                    publish.url(article.id),
+                                                )
+                                            }
+                                            className="btn-success w-full"
+                                        >
+                                            <Icon
+                                                name="check"
+                                                width={16}
+                                                height={16}
+                                            />
+                                            Terbitkan sekarang
+                                        </button>
+                                    )}
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        router.post(submit.url(article.id))
+                                        confirm('Hapus artikel ini?') &&
+                                        router.delete(destroy.url(article.id))
                                     }
-                                    className="btn-ghost flex-1"
+                                    className="btn-danger w-full"
                                 >
-                                    Ajukan ke editor
+                                    <Icon name="trash" width={16} height={16} />
+                                    Hapus artikel
                                 </button>
-                            )}
-                            {can.publish && article.status !== 'published' && (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        router.post(publish.url(article.id))
-                                    }
-                                    className="btn-teal flex-1"
-                                >
-                                    Terbitkan
-                                </button>
-                            )}
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    confirm('Hapus artikel ini?') &&
-                                    router.delete(destroy.url(article.id))
-                                }
-                                className="btn-danger"
-                            >
-                                Hapus
-                            </button>
-                        </div>
+                            </div>
+                        </Panel>
                     )}
                 </div>
             </form>
@@ -284,20 +388,175 @@ export default function ArticleForm({
     );
 }
 
-function Field({
-    label,
-    error,
+function Panel({
+    title,
+    flush = false,
     children,
 }: {
-    label: string;
-    error?: string;
-    children: React.ReactNode;
+    title: string;
+    flush?: boolean;
+    children: ReactNode;
 }) {
     return (
-        <label className="block text-sm font-medium text-slate-700">
-            {label}
-            <div className="mt-1 font-normal">{children}</div>
-            {error && <span className="text-xs text-accent">{error}</span>}
-        </label>
+        <section className={cn('card', flush ? 'p-2' : 'p-4')}>
+            <h3
+                className={cn(
+                    'mb-3 text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase',
+                    flush && 'mb-1 px-3 pt-2',
+                )}
+            >
+                {title}
+            </h3>
+            {children}
+        </section>
+    );
+}
+
+function Error({ message }: { message?: string }) {
+    return message ? (
+        <p className="mt-1 text-xs text-red-600">{message}</p>
+    ) : null;
+}
+
+/** Borderless textarea that grows with its content, like a document editor. */
+function AutoTextarea({
+    value,
+    onChange,
+    minRows = 1,
+    className,
+    ...props
+}: Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange'> & {
+    value: string;
+    onChange: (value: string) => void;
+    minRows?: number;
+}) {
+    const ref = useRef<HTMLTextAreaElement>(null);
+
+    // Grow to fit the text (CSS field-sizing isn't supported everywhere yet).
+    useLayoutEffect(() => {
+        const el = ref.current;
+        if (el) {
+            el.style.height = 'auto';
+            el.style.height = `${el.scrollHeight}px`;
+        }
+    }, [value]);
+
+    return (
+        <textarea
+            {...props}
+            ref={ref}
+            value={value}
+            rows={minRows}
+            onChange={(e) => onChange(e.target.value)}
+            className={cn(
+                'w-full resize-none overflow-hidden bg-transparent outline-none placeholder:text-slate-300',
+                className,
+            )}
+        />
+    );
+}
+
+/** Drop zone with an instant local preview of the picked image. */
+function CoverInput({
+    current,
+    file,
+    onChange,
+}: {
+    current: string | null;
+    file: File | null;
+    onChange: (file: File | null) => void;
+}) {
+    const [dragging, setDragging] = useState(false);
+    const [preview, setPreview] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!file) {
+            setPreview(null);
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        setPreview(url);
+
+        return () => URL.revokeObjectURL(url);
+    }, [file]);
+
+    const shown = preview ?? current;
+
+    return (
+        <div>
+            <label
+                onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => {
+                    e.preventDefault();
+                    setDragging(false);
+                    const dropped = e.dataTransfer.files[0];
+                    if (dropped?.type.startsWith('image/')) {
+                        onChange(dropped);
+                    }
+                }}
+                className={cn(
+                    'group relative block aspect-[16/10] cursor-pointer overflow-hidden rounded-2xl ring-1 transition',
+                    dragging
+                        ? 'bg-accent/10 ring-2 ring-accent'
+                        : 'bg-slate-50 ring-slate-200 hover:ring-accent/40',
+                )}
+            >
+                <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+                />
+                <AnimatePresence mode="wait" initial={false}>
+                    {shown ? (
+                        <motion.img
+                            key={shown}
+                            src={shown}
+                            alt=""
+                            initial={{ opacity: 0, scale: 1.05 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.35 }}
+                            className="size-full object-cover"
+                        />
+                    ) : (
+                        <motion.span
+                            key="empty"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-xs text-slate-500"
+                        >
+                            <span className="grid size-10 place-items-center rounded-full bg-white text-accent shadow-sm ring-1 ring-slate-200 transition group-hover:scale-110">
+                                <Icon name="upload" width={18} height={18} />
+                            </span>
+                            Tarik gambar ke sini
+                            <span className="text-slate-400">
+                                atau klik untuk memilih · maks 2 MB
+                            </span>
+                        </motion.span>
+                    )}
+                </AnimatePresence>
+                {shown && (
+                    <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 bg-gradient-to-t from-black/60 to-transparent py-3 text-xs font-medium text-white opacity-0 transition group-hover:opacity-100">
+                        <Icon name="image" width={14} height={14} />
+                        Ganti gambar
+                    </span>
+                )}
+            </label>
+            {file && (
+                <button
+                    type="button"
+                    onClick={() => onChange(null)}
+                    className="mt-2 text-xs text-slate-500 hover:text-accent"
+                >
+                    Batalkan gambar baru
+                </button>
+            )}
+        </div>
     );
 }
