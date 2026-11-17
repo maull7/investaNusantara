@@ -22,6 +22,8 @@ x-app: &app
   network_mode: host
   volumes:
     - storage:/app/storage
+    # MySQL on the host, reached through its unix socket (DB_HOST=localhost + DB_SOCKET).
+    - /var/run/mysqld:/var/run/mysqld
   restart: unless-stopped
   depends_on:
     redis:

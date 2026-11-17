@@ -6,7 +6,7 @@ Satu VPS, berdampingan dengan Hermes, MySQL dan Nginx yang sudah ada di server.
 Pengunjung ──► Nginx host (IP:port) ──► 127.0.0.1:8080  app (FrankenPHP)
                                             │
           horizon (antrean)  scheduler ─────┤ network host
-                                            ├─► 127.0.0.1:3306  MySQL host
+                                            ├─► /var/run/mysqld  MySQL host (socket)
                                             ├─► 127.0.0.1:8642  Hermes host
                                             └─► 127.0.0.1:6380  redis (container)
 ```
@@ -19,7 +19,9 @@ Pengunjung ──► Nginx host (IP:port) ──► 127.0.0.1:8080  app (Franken
 | `redis`     | Antrean, cache, session. Data di volume `redis`.                    |
 
 Container PHP memakai `network_mode: host`, karena MySQL dan Hermes di server
-hanya mendengar di `127.0.0.1`. Upload (`storage/`) disimpan di volume `storage`.
+hanya mendengar di `127.0.0.1`. MySQL dihubungi lewat socket
+`/var/run/mysqld/mysqld.sock` yang di-mount ke container, jadi user MySQL-nya
+`'user'@'localhost'`. Upload (`storage/`) disimpan di volume `storage`.
 
 ## 1. Pertama kali di server
 
