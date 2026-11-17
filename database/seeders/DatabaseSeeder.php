@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
@@ -14,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RegionSeeder::class);
 
+        // No dummy articles: news comes from the AI pipeline (admin > Berita AI) and the newsroom.
         collect(['Nasional', 'Politik', 'Ekonomi', 'Hukum', 'Pendidikan', 'Budaya', 'Pariwisata', 'UMKM', 'Olahraga'])
             ->each(fn ($name, $i) => Category::updateOrCreate(['slug' => Str::slug($name)], ['name' => $name, 'sort' => $i]));
 
@@ -22,6 +24,11 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@nusantaranews.test',
             'role' => Role::SuperAdmin,
         ]);
+        // Demo team accounts are for local development only.
+        if (app()->isProduction()) {
+            return;
+        }
+
         $this->user([
             'name' => 'Editor Jawa Barat',
             'email' => 'editor.jabar@nusantaranews.test',
@@ -39,18 +46,26 @@ class DatabaseSeeder extends Seeder
             'email' => 'kontributor@nusantaranews.test',
             'role' => Role::Contributor,
         ]);
-
-        // No dummy articles: news comes from the AI pipeline (admin > Berita AI) and the newsroom.
     }
 
     /**
      * Returns the existing user with this email, or creates it, so the seeder can be re-run.
+     * Locally the password is "password"; in production a random one is printed once.
      *
      * @param  array<string, mixed>  $attributes
      */
     private function user(array $attributes): User
     {
-        return User::where('email', $attributes['email'])->first()
-            ?? User::factory()->create($attributes);
+        $existing = User::where('email', $attributes['email'])->first();
+        if ($existing) {
+            return $existing;
+        }
+
+        $password = app()->isProduction() ? Str::password(16, symbols: false) : 'password';
+        if (app()->isProduction()) {
+            $this->command->warn("Akun {$attributes['email']} dibuat dengan password: {$password} (segera ganti setelah login)");
+        }
+
+        return User::forceCreate([...$attributes, 'email_verified_at' => now(), 'password' => Hash::make($password)]);
     }
 }

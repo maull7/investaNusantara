@@ -1,0 +1,86 @@
+# Production stack for one VPS. Nginx on the host proxies to 127.0.0.1:${APP_PORT}.
+#
+# The PHP containers use the host network so they reach the services already on
+# the server through 127.0.0.1: MySQL (3306) and the Hermes gateway (8642).
+# Redis runs here, published only on 127.0.0.1:${DOCKER_REDIS_PORT} (6380 by default, so
+# it never clashes with a Redis already on the host).
+#
+#   docker compose up -d --build
+#
+# See docs/deploy-docker.md.
+
+x-app: &app
+  build:
+    context: .
+    target: app
+  image: investanusantara-app:latest
+  env_file: .env
+  environment:
+    REDIS_HOST: 127.0.0.1
+    REDIS_PORT: ${DOCKER_REDIS_PORT:-6380}
+    INERTIA_SSR_ENABLED: "false"
+  network_mode: host
+  volumes:
+    - storage:/app/storage
+  restart: unless-stopped
+  depends_on:
+    redis:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *app
+    environment:
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: ${DOCKER_REDIS_PORT:-6380}
+      INERTIA_SSR_ENABLED: "false"
+      APP_PORT: ${APP_PORT:-8080}
+      APP_BIND: ${APP_BIND:-127.0.0.1}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:${APP_PORT:-8080}/up') === false ? 1 : 0);"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # Queue workers (Hermes AI news and everything else), with the /horizon dashboard data.
+  horizon:
+    <<: *app
+    command: ["php", "artisan", "horizon"]
+    healthcheck:
+      disable: true
+    # Let running jobs finish on `docker compose down` / redeploy.
+    stop_signal: SIGTERM
+    stop_grace_period: 2m
+    depends_on:
+      app:
+        condition: service_healthy
+
+  # Runs routes/console.php schedules: news:dispatch, horizon:snapshot.
+  scheduler:
+    <<: *app
+    command: ["php", "artisan", "schedule:work"]
+    healthcheck:
+      disable: true
+    depends_on:
+      app:
+        condition: service_healthy
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000"]
+    ports:
+      - "127.0.0.1:${DOCKER_REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  storage:
+  redis:
