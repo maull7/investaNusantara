@@ -165,7 +165,7 @@ export default function ArticlesIndex({
             </section>
 
             {/* Status tiles double as filters */}
-            <div className="-mx-4 mt-5 no-scrollbar flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:px-0 lg:grid-cols-5">
+            <div className="-mx-4 mt-4 no-scrollbar flex gap-3 overflow-x-auto px-4 pt-1 pb-4 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-1 lg:grid-cols-5">
                 {TILES.map((t, i) => {
                     const isActive = status === t.key;
                     const count = t.key ? stats[t.key] : stats.total;
@@ -197,7 +197,7 @@ export default function ArticlesIndex({
                                 <motion.span
                                     layoutId="stat-active"
                                     transition={spring}
-                                    className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-accent"
+                                    className="absolute inset-x-5 top-0 h-[3px] rounded-b-full bg-accent"
                                 />
                             )}
                             <span className="flex items-center gap-2 text-xs font-medium text-slate-500">

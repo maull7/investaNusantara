@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\NewsTaskStatus;
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\AiRun;
 use App\Models\Category;
 use App\Models\NewsFetch;
@@ -83,6 +84,9 @@ class AiNewsController extends Controller
     public function fetch(Request $request, NewsSource $source, NewsPipeline $pipeline): RedirectResponse
     {
         $fetch = $pipeline->queue($source, 'manual', $request->user());
+        if ($fetch) {
+            ActivityLog::record('news_source.fetched', "menjalankan pencarian berita di “{$source->name}”", $source);
+        }
 
         return $fetch
             ? to_route('admin.ai.index')->with('success', "Hermes mulai mencari berita di {$source->name}.")

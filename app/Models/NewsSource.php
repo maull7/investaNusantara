@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\NewsTaskStatus;
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -26,6 +27,13 @@ use Illuminate\Support\Carbon;
  */
 class NewsSource extends Model
 {
+    use LogsActivity;
+
+    public function activityNoun(): string
+    {
+        return 'sumber berita';
+    }
+
     protected $guarded = ['id'];
 
     protected function casts(): array

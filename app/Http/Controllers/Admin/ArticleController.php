@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ArticleStatus;
+use App\Enums\Permission;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Region;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -21,10 +23,10 @@ class ArticleController extends Controller
     {
         $user = $request->user();
 
-        // Editors see their region; writers see their own work; super admin sees everything.
+        // Editors see their region; admins with article access see everything; everyone else sees their own work.
         $visible = Article::query()
             ->when($user->role === Role::Editor && $user->region_code, fn ($q) => $q->inRegion($user->region_code))
-            ->when($user->hasRole(Role::Journalist, Role::Contributor), fn ($q) => $q->where('author_id', $user->id));
+            ->when(! $user->hasRole(Role::Editor) && ! $user->canAccess(Permission::Articles), fn ($q) => $q->where('author_id', $user->id));
 
         // Dashboard tiles: per-status counts and total views over everything this user can see.
         $counts = (clone $visible)->reorder()->selectRaw('status, count(*) as total, sum(views) as views')
@@ -135,9 +137,15 @@ class ArticleController extends Controller
             'can' => [
                 'publish' => $article->exists && request()->user()->can('publish', $article),
                 'submit' => $article->exists && request()->user()->can('submit', $article),
-                'flag' => request()->user()->hasRole(Role::SuperAdmin, Role::Editor),
+                'flag' => $this->canFlag(request()->user()),
             ],
         ]);
+    }
+
+    /** Headline/breaking flags: editors and admins with article access. */
+    private function canFlag(User $user): bool
+    {
+        return $user->hasRole(Role::Editor) || $user->canAccess(Permission::Articles);
     }
 
     private function save(Request $request, Article $article): void
@@ -159,7 +167,7 @@ class ArticleController extends Controller
             && ! (new Region(['code' => $user->region_code]))->contains($data['region_code'] ?? null)) {
             abort(422, 'Wilayah di luar cakupan editor.');
         }
-        if (! $user->hasRole(Role::SuperAdmin, Role::Editor)) {
+        if (! $this->canFlag($user)) {
             unset($data['is_headline'], $data['is_breaking']);
         }
 

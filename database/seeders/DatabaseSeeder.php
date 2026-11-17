@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\Role;
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -13,6 +14,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Seeded data isn't newsroom activity.
+        ActivityLog::$enabled = false;
+
         $this->call(RegionSeeder::class);
 
         // No dummy articles: news comes from the AI pipeline (admin > Berita AI) and the newsroom.

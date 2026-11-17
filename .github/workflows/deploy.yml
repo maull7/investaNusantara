@@ -31,11 +31,15 @@ jobs:
             git pull origin main
 
             echo "Build & restart container (app migrasi otomatis; gagal jika app tidak healthy)"
-            docker compose up -d --build --remove-orphans
+            # --wait: tunggu healthcheck app lolos (maks 5 menit) sebelum lanjut.
+            docker compose up -d --build --remove-orphans --wait --wait-timeout 300
 
             echo "Cek health"
-            APP_PORT="$(grep -E '^APP_PORT=' .env | cut -d= -f2)"
-            curl -fsS "http://127.0.0.1:${APP_PORT:-8080}/up" >/dev/null
+            # Default 6003 harus sama dengan docker-compose.yml; buang kutip/spasi/CR dari .env.
+            APP_PORT="$(grep -E '^APP_PORT=' .env | tail -n1 | cut -d= -f2 | tr -d "\"' \r")"
+            APP_PORT="${APP_PORT:-6003}"
+            curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "http://127.0.0.1:${APP_PORT}/up" >/dev/null
+            echo "App sehat di port ${APP_PORT}"
             docker compose ps
 
             echo "Bersihkan image lama"

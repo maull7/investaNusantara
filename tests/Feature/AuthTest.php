@@ -14,7 +14,8 @@ class AuthTest extends TestCase
 
     public function test_login_and_register_routes_open_the_matching_tab(): void
     {
-        $this->get('/login')->assertInertia(fn (Assert $page) => $page->component('auth/login')->where('mode', 'login'));
+        $this->get('/login')->assertInertia(fn (Assert $page) => $page->component('auth/login')->where('mode', 'login')
+            ->has('breaking')->has('stats.cities')->has('stats.weekly'));
         $this->get('/register')->assertInertia(fn (Assert $page) => $page->component('auth/login')->where('mode', 'register'));
     }
 

@@ -32,10 +32,13 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('articles/{article}/publish', [Admin\ArticleController::class, 'publish'])->name('articles.publish');
     Route::post('articles/{article}/reject', [Admin\ArticleController::class, 'reject'])->name('articles.reject');
 
-    Route::middleware('can:super-admin')->group(function () {
-        Route::resource('categories', Admin\CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('users', Admin\UserController::class)->except('show');
+    // Each area: Super Admin, or a Sub Admin granted it (see App\Enums\Permission).
+    Route::resource('categories', Admin\CategoryController::class)->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('can:access-categories');
+    Route::resource('users', Admin\UserController::class)->except('show')->middleware('can:access-users');
+    Route::get('activity', [Admin\ActivityLogController::class, 'index'])->name('activity.index')->middleware('can:access-activity');
 
+    Route::middleware('can:access-ai')->group(function () {
         Route::prefix('ai')->name('ai.')->controller(Admin\AiNewsController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('sources', 'sources')->name('sources');

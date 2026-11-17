@@ -10,7 +10,9 @@ import Logo from '@/components/logo';
 import { ease } from '@/components/motion';
 import { cn } from '@/lib/utils';
 import { home, logout } from '@/routes';
+import type { Permission } from '@/types';
 import { create, index as articles } from '@/routes/admin/articles';
+import { index as activity } from '@/routes/admin/activity';
 import { index as aiNews, sources as aiSources } from '@/routes/admin/ai';
 import { index as categories } from '@/routes/admin/categories';
 import { create as createUser, index as users } from '@/routes/admin/users';
@@ -31,27 +33,39 @@ export default function AdminLayout({
     const { auth } = usePage().props;
     const { url, component } = usePage();
     const user = auth.user!;
-    const isAdmin = user.role === 'super_admin';
+    // Areas this user may open (Super Admin: all; Sub Admin: what was granted).
+    const can = (area: Permission) => user.access.includes(area);
     const path = url.split('?')[0];
 
     const links: { href: string; label: string; icon: IconName }[] = [
         { href: articles.url(), label: 'Artikel', icon: 'file' },
-        ...(isAdmin
+        ...(can('categories')
             ? [
                   {
                       href: categories.url(),
                       label: 'Kategori',
                       icon: 'tag' as const,
                   },
-                  {
-                      href: users.url(),
-                      label: 'Pengguna',
-                      icon: 'users' as const,
-                  },
+              ]
+            : []),
+        ...(can('users')
+            ? [{ href: users.url(), label: 'Pengguna', icon: 'users' as const }]
+            : []),
+        ...(can('ai')
+            ? [
                   {
                       href: aiNews.url(),
                       label: 'Berita AI',
                       icon: 'bolt' as const,
+                  },
+              ]
+            : []),
+        ...(can('activity')
+            ? [
+                  {
+                      href: activity.url(),
+                      label: 'Log Aktivitas',
+                      icon: 'activity' as const,
                   },
               ]
             : []),
@@ -82,7 +96,7 @@ export default function AdminLayout({
             href: articles.url(),
             keywords: 'beranda artikel ringkasan',
         },
-        ...(isAdmin
+        ...(can('categories')
             ? [
                   {
                       group: 'Navigasi',
@@ -91,13 +105,32 @@ export default function AdminLayout({
                       href: categories.url(),
                       keywords: 'rubrik',
                   },
+              ]
+            : []),
+        ...(can('users')
+            ? [
                   {
                       group: 'Navigasi',
                       label: 'Pengguna',
                       icon: 'users' as const,
                       href: users.url(),
-                      keywords: 'tim user wartawan editor',
+                      keywords: 'tim user wartawan editor sub admin',
                   },
+              ]
+            : []),
+        ...(can('activity')
+            ? [
+                  {
+                      group: 'Navigasi',
+                      label: 'Log Aktivitas',
+                      icon: 'activity' as const,
+                      href: activity.url(),
+                      keywords: 'riwayat audit log jejak',
+                  },
+              ]
+            : []),
+        ...(can('ai')
+            ? [
                   {
                       group: 'Navigasi',
                       label: 'Berita AI · Antrean',
@@ -156,7 +189,7 @@ export default function AdminLayout({
             href: byStatus('rejected'),
             keywords: 'ditolak revisi',
         },
-        ...(isAdmin
+        ...(can('users')
             ? [
                   {
                       group: 'Pengguna',
@@ -279,8 +312,8 @@ export default function AdminLayout({
                 <div className="mx-auto max-w-6xl">
                     {/* Desktop top bar: breadcrumb + newsroom clock */}
                     <div className="sticky top-4 z-20 mb-7 hidden min-h-[4.5rem] items-center justify-between gap-4 rounded-3xl glass py-3 pr-3 pl-4 lg:flex">
-                        <Breadcrumb crumbs={crumbs} />
-                        <div className="flex items-center gap-2">
+                        <Breadcrumb crumbs={crumbs} className="min-w-0" />
+                        <div className="flex shrink-0 items-center gap-2">
                             <SearchTrigger
                                 onClick={() => setSearchOpen(true)}
                             />
@@ -303,7 +336,7 @@ export default function AdminLayout({
                                     />
                                     <span className="absolute right-0 bottom-0 size-3 rounded-full bg-emerald-500 ring-2 ring-white" />
                                 </span>
-                                <span className="hidden leading-tight xl:block">
+                                <span className="hidden leading-tight 2xl:block">
                                     <span className="block max-w-36 truncate text-sm font-semibold text-navy-900">
                                         {user.name}
                                     </span>
@@ -432,7 +465,7 @@ function SearchTrigger({ onClick }: { onClick: () => void }) {
         <button
             type="button"
             onClick={onClick}
-            className="group flex h-11 w-60 items-center gap-2.5 rounded-2xl bg-white/70 px-4 text-sm text-slate-400 ring-1 ring-slate-200/70 transition hover:bg-white hover:ring-accent/30 xl:w-72"
+            className="group flex h-11 w-52 items-center gap-2.5 rounded-2xl bg-white/70 px-4 text-sm whitespace-nowrap text-slate-400 ring-1 ring-slate-200/70 transition hover:bg-white hover:ring-accent/30 xl:w-64 2xl:w-72"
         >
             <Icon
                 name="search"
@@ -440,8 +473,10 @@ function SearchTrigger({ onClick }: { onClick: () => void }) {
                 height={15}
                 className="transition-colors group-hover:text-accent"
             />
-            <span className="flex-1 text-left">Cari menu atau artikel…</span>
-            <kbd className="rounded-lg bg-slate-100 px-2 py-1 font-sans text-[11px] font-medium text-slate-500 ring-1 ring-slate-200">
+            <span className="min-w-0 flex-1 truncate text-left">
+                Cari menu atau artikel…
+            </span>
+            <kbd className="hidden rounded-lg bg-slate-100 px-2 py-1 font-sans text-[11px] font-medium text-slate-500 ring-1 ring-slate-200 xl:inline">
                 {mac ? '⌘' : 'Ctrl'} K
             </kbd>
         </button>
@@ -459,7 +494,7 @@ function Breadcrumb({
 }) {
     return (
         <nav aria-label="Breadcrumb" className={className}>
-            <ol className="flex items-center gap-1 text-sm whitespace-nowrap">
+            <ol className="flex min-w-0 items-center gap-1 text-sm whitespace-nowrap">
                 {crumbs.map((c, i) => {
                     const last = i === crumbs.length - 1;
                     return (
@@ -472,7 +507,11 @@ function Breadcrumb({
                                 duration: 0.3,
                                 ease,
                             }}
-                            className="flex items-center gap-1"
+                            className={cn(
+                                'flex items-center gap-1',
+                                // Only the current page may shrink (it truncates).
+                                last ? 'min-w-0' : 'shrink-0',
+                            )}
                         >
                             {i > 0 && (
                                 <Icon
@@ -485,7 +524,8 @@ function Breadcrumb({
                             {last || !c.href ? (
                                 <span
                                     aria-current={last ? 'page' : undefined}
-                                    className="rounded-xl bg-accent/[0.08] px-3.5 py-2 font-semibold text-accent ring-1 ring-accent/10"
+                                    title={c.label}
+                                    className="block min-w-0 truncate rounded-xl bg-accent/[0.08] px-3.5 py-2 font-semibold text-accent ring-1 ring-accent/10"
                                 >
                                     {c.label}
                                 </span>
@@ -503,7 +543,14 @@ function Breadcrumb({
                                             />
                                         </span>
                                     )}
-                                    {c.label}
+                                    <span
+                                        className={cn(
+                                            i === 0 &&
+                                                'sr-only 2xl:not-sr-only',
+                                        )}
+                                    >
+                                        {c.label}
+                                    </span>
                                 </Link>
                             )}
                         </motion.li>
@@ -537,7 +584,7 @@ function Clock() {
     }, []);
 
     return (
-        <span className="flex h-11 items-center gap-3 rounded-2xl bg-white/70 px-4 ring-1 ring-slate-200/70">
+        <span className="flex h-11 items-center gap-3 rounded-2xl bg-white/70 px-4 whitespace-nowrap ring-1 ring-slate-200/70">
             <span className="relative flex size-2.5">
                 <span className="absolute inset-0 animate-ping rounded-full bg-accent/60" />
                 <span className="relative size-2.5 rounded-full bg-accent" />
@@ -547,7 +594,7 @@ function Clock() {
                     {timeFmt.format(now)}{' '}
                     <span className="text-xs font-medium text-accent">WIB</span>
                 </span>
-                <span className="block text-[11px] text-slate-500">
+                <span className="hidden text-[11px] text-slate-500 2xl:block">
                     {dayFmt.format(now)}
                 </span>
             </span>

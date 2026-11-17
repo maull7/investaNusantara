@@ -1,28 +1,37 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { Avatar, Field } from '@/components/admin/ui';
 import Icon from '@/components/icons';
 import AdminLayout from '@/layouts/admin';
 import { cn } from '@/lib/utils';
 import { index, store, update } from '@/routes/admin/users';
-import type { Role, User } from '@/types';
+import { ease } from '@/components/motion';
+import type { Permission, PermissionOption, Role, User } from '@/types';
 
 type Props = {
-    user: Pick<User, 'id' | 'name' | 'email' | 'role' | 'region_code'> | null;
+    user: Pick<
+        User,
+        'id' | 'name' | 'email' | 'role' | 'region_code' | 'permissions'
+    > | null;
     roles: { value: Role; label: string }[];
+    permissions: PermissionOption[];
     regions: { code: string; name: string; level: number }[];
 };
 
 const roleHint: Record<Role, string> = {
     super_admin: 'Akses penuh, kelola kategori dan pengguna',
+    sub_admin: 'Hanya mengakses area yang kamu tetapkan',
     editor: 'Meninjau dan menerbitkan berita wilayahnya',
     journalist: 'Menulis dan mengajukan berita ke editor',
     contributor: 'Warga yang mengirim draft berita',
 };
 
-export default function UserForm({ user, roles, regions }: Props) {
+export default function UserForm({ user, roles, permissions, regions }: Props) {
     const [role, setRole] = useState<Role>(user?.role ?? 'contributor');
+    const [granted, setGranted] = useState<Permission[]>(
+        user?.permissions ?? [],
+    );
     const [name, setName] = useState(user?.name ?? '');
     const [showPassword, setShowPassword] = useState(false);
     const title = user ? 'Edit pengguna' : 'Pengguna baru';
@@ -206,6 +215,25 @@ export default function UserForm({ user, roles, regions }: Props) {
                                     </p>
                                 )}
                             </fieldset>
+
+                            <AnimatePresence initial={false}>
+                                {role === 'sub_admin' && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3, ease }}
+                                        className="-m-1 overflow-hidden p-1 sm:col-span-2"
+                                    >
+                                        <PermissionPicker
+                                            options={permissions}
+                                            value={granted}
+                                            onChange={setGranted}
+                                            error={errors.permissions}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/60 px-5 py-4 sm:px-6">
@@ -224,5 +252,101 @@ export default function UserForm({ user, roles, regions }: Props) {
                 )}
             </Form>
         </AdminLayout>
+    );
+}
+
+/** Checklist of admin areas a Sub Admin may open. */
+function PermissionPicker({
+    options,
+    value,
+    onChange,
+    error,
+}: {
+    options: PermissionOption[];
+    value: Permission[];
+    onChange: (value: Permission[]) => void;
+    error?: string;
+}) {
+    const all = value.length === options.length;
+
+    function toggle(p: Permission) {
+        onChange(
+            value.includes(p) ? value.filter((v) => v !== p) : [...value, p],
+        );
+    }
+
+    return (
+        <div
+            role="group"
+            aria-label="Akses Sub Admin"
+            className="rounded-2xl bg-navy-50/60 p-4 ring-1 ring-navy-100"
+        >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="flex items-center gap-2 text-sm font-medium text-navy-900">
+                    <Icon
+                        name="shield"
+                        width={16}
+                        height={16}
+                        className="text-navy-700"
+                    />
+                    Akses Sub Admin
+                    <span className="rounded-full bg-white px-2 py-0.5 text-xs font-normal text-slate-500 ring-1 ring-slate-200">
+                        {value.length}/{options.length} area
+                    </span>
+                </p>
+                <button
+                    type="button"
+                    onClick={() =>
+                        onChange(all ? [] : options.map((o) => o.value))
+                    }
+                    className="text-xs font-medium text-accent hover:text-accent-dark"
+                >
+                    {all ? 'Kosongkan' : 'Pilih semua'}
+                </button>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+                Menu di luar pilihan ini tidak akan tampil dan tidak bisa
+                dibuka. Tanpa akses artikel, Sub Admin hanya mengelola
+                tulisannya sendiri.
+            </p>
+
+            {/* Sent as permissions[]; none checked means no extra access. */}
+            {value.map((p) => (
+                <input key={p} type="hidden" name="permissions[]" value={p} />
+            ))}
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {options.map((o) => {
+                    const on = value.includes(o.value);
+                    return (
+                        <label
+                            key={o.value}
+                            className={cn(
+                                'flex cursor-pointer items-start gap-3 rounded-xl bg-white p-3 ring-1 transition',
+                                on
+                                    ? 'ring-2 ring-navy-700'
+                                    : 'ring-slate-200 hover:ring-navy-700/40',
+                            )}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={on}
+                                onChange={() => toggle(o.value)}
+                                className="mt-0.5 size-4 shrink-0 rounded accent-navy-700"
+                            />
+                            <span>
+                                <span className="block text-sm font-medium text-navy-900">
+                                    {o.label}
+                                </span>
+                                <span className="block text-xs text-slate-500">
+                                    {o.description}
+                                </span>
+                            </span>
+                        </label>
+                    );
+                })}
+            </div>
+            {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+        </div>
     );
 }

@@ -6,11 +6,20 @@ import { ease } from '@/components/motion';
 import Pagination from '@/components/pagination';
 import AdminLayout from '@/layouts/admin';
 import { create, destroy, edit } from '@/routes/admin/users';
-import type { Paginated, User } from '@/types';
+import type { Paginated, PermissionOption, User } from '@/types';
 
-type Row = User & { region: { name: string } | null };
+type Row = User & { region: { name: string } | null; manageable: boolean };
 
-export default function UsersIndex({ users }: { users: Paginated<Row> }) {
+export default function UsersIndex({
+    users,
+    permissions,
+}: {
+    users: Paginated<Row>;
+    permissions: PermissionOption[];
+}) {
+    const permissionLabel = Object.fromEntries(
+        permissions.map((p) => [p.value, p.label]),
+    );
     const me = usePage().props.auth.user!;
 
     return (
@@ -68,33 +77,70 @@ export default function UsersIndex({ users }: { users: Paginated<Row> }) {
                                     {u.region?.name ?? 'Nasional'}
                                 </span>
                             </div>
-                            <div className="mt-5 flex gap-2 border-t border-slate-100 pt-4">
-                                <Link
-                                    href={edit.url(u.id)}
-                                    className="btn-ghost flex-1 py-1.5 text-xs"
-                                >
-                                    <Icon name="edit" width={14} height={14} />
-                                    Edit
-                                </Link>
-                                {u.id !== me.id && (
-                                    <button
-                                        aria-label={`Hapus ${u.name}`}
-                                        className="btn-danger px-2.5 py-1.5 text-xs"
-                                        onClick={() =>
-                                            confirm(`Hapus ${u.name}?`) &&
-                                            router.delete(destroy.url(u.id), {
-                                                preserveScroll: true,
-                                            })
-                                        }
+                            {u.role === 'sub_admin' && (
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                    {u.permissions?.length ? (
+                                        u.permissions.map((p) => (
+                                            <span
+                                                key={p}
+                                                className="inline-flex items-center gap-1 rounded-lg bg-navy-50 px-2 py-0.5 text-[11px] font-medium text-navy-700"
+                                            >
+                                                <Icon
+                                                    name="shield"
+                                                    width={11}
+                                                    height={11}
+                                                />
+                                                {permissionLabel[p]}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span className="text-[11px] text-slate-400">
+                                            Belum diberi akses
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            {u.manageable ? (
+                                <div className="mt-5 flex gap-2 border-t border-slate-100 pt-4">
+                                    <Link
+                                        href={edit.url(u.id)}
+                                        className="btn-ghost flex-1 py-1.5 text-xs"
                                     >
                                         <Icon
-                                            name="trash"
+                                            name="edit"
                                             width={14}
                                             height={14}
                                         />
-                                    </button>
-                                )}
-                            </div>
+                                        Edit
+                                    </Link>
+                                    {u.id !== me.id && (
+                                        <button
+                                            aria-label={`Hapus ${u.name}`}
+                                            className="btn-danger px-2.5 py-1.5 text-xs"
+                                            onClick={() =>
+                                                confirm(`Hapus ${u.name}?`) &&
+                                                router.delete(
+                                                    destroy.url(u.id),
+                                                    {
+                                                        preserveScroll: true,
+                                                    },
+                                                )
+                                            }
+                                        >
+                                            <Icon
+                                                name="trash"
+                                                width={14}
+                                                height={14}
+                                            />
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="mt-5 border-t border-slate-100 pt-4 text-xs text-slate-400">
+                                    Hanya Super Admin yang dapat mengubah akun
+                                    ini.
+                                </p>
+                            )}
                         </motion.article>
                     ))}
                 </div>

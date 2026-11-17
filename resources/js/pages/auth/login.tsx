@@ -1,16 +1,18 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import {
     register as registerAction,
     store,
 } from '@/actions/App/Http/Controllers/AuthController';
 import Icon, { type IconName } from '@/components/icons';
-import Logo from '@/components/logo';
+import { LogoMark } from '@/components/logo';
 import { ease } from '@/components/motion';
+import Ticker from '@/components/ticker';
+import ZoneClock from '@/components/zone-clock';
 import { cn } from '@/lib/utils';
 import { home, login, register } from '@/routes';
-import type { Region } from '@/types';
+import type { ArticleCard, Region } from '@/types';
 
 type Mode = 'login' | 'register';
 
@@ -22,15 +24,46 @@ const COPY: Record<Mode, { title: string; lead: string; tagline: string }> = {
     },
     register: {
         title: 'Jadi kontributor',
-        lead: 'Kirim kabar dari daerahmu. Editor akan meninjau sebelum terbit.',
+        lead: 'Kirim kabar dari daerahmu. Editor meninjau sebelum terbit.',
         tagline: 'satu suara warga.',
     },
 };
 
-export default function Login({ mode: initialMode }: { mode: Mode }) {
+type Props = {
+    mode: Mode;
+    breaking: ArticleCard[];
+    stats: { cities: number; weekly: number };
+};
+
+/** Thin-thick-thin rule, like the lines under a newspaper masthead. */
+function Rule({ className }: { className?: string }) {
+    return (
+        <div aria-hidden className={cn('space-y-0.5', className)}>
+            <div className="h-px bg-navy-900" />
+            <div className="h-[3px] bg-navy-900" />
+        </div>
+    );
+}
+
+/** Login styled as a newspaper front page: masthead, lead story, and the form as its own column. */
+export default function Login({ mode: initialMode, breaking, stats }: Props) {
     const { provinces } = usePage().props.nav;
     const [mode, setMode] = useState<Mode>(initialMode);
     const copy = COPY[mode];
+    const [today, setToday] = useState('');
+
+    // Client-only so server and browser render the same markup.
+    useEffect(() => {
+        setToday(
+            new Intl.DateTimeFormat('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                timeZone: 'Asia/Jakarta',
+            }).format(new Date()),
+        );
+    }, []);
 
     // Switch tabs in place (no visit) but keep the address shareable.
     function switchTo(next: Mode) {
@@ -46,83 +79,63 @@ export default function Login({ mode: initialMode }: { mode: Mode }) {
     }
 
     return (
-        <div className="min-h-screen bg-[#faf7f5] lg:grid lg:grid-cols-[1.1fr_1fr]">
+        <div className="flex min-h-dvh flex-col bg-[#faf7f5] text-navy-900">
             <Head title={copy.title} />
 
-            {/* Photo panel: short banner on phones, full height on desktop. */}
-            <aside className="relative h-56 overflow-hidden bg-merah-dark sm:h-64 lg:sticky lg:top-0 lg:h-screen">
-                <Mosaic provinces={provinces} />
-                <span className="absolute inset-0 bg-gradient-to-t from-merah-dark via-merah-dark/80 to-merah/60" />
-
-                <div className="relative flex h-full flex-col justify-between p-6 text-white sm:p-8 lg:p-12">
-                    <Logo inverted />
-                    <motion.div
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.6, ease }}
+            <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 sm:px-8">
+                {/* Masthead */}
+                <header className="pt-4 sm:pt-6">
+                    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 pb-2 text-[11px] font-medium tracking-[0.18em] text-slate-500 uppercase">
+                        <span>Edisi Redaksi</span>
+                        <span className="hidden sm:inline">{today || ' '}</span>
+                        <Link
+                            href={home.url()}
+                            viewTransition
+                            className="flex items-center gap-1 hover:text-accent"
+                        >
+                            <Icon name="back" width={13} height={13} />
+                            Beranda
+                        </Link>
+                    </div>
+                    <Rule />
+                    <Link
+                        href={home.url()}
+                        viewTransition
+                        aria-label="NusantaraNews 360, ke beranda"
+                        className="flex items-center justify-center gap-3 py-3 sm:gap-4 sm:py-5"
                     >
-                        <h2 className="text-2xl leading-tight font-semibold sm:text-3xl lg:text-4xl">
-                            Dari {provinces.length} provinsi,
-                            <br />
-                            <AnimatePresence mode="wait" initial={false}>
-                                <motion.span
-                                    key={mode}
-                                    initial={{ opacity: 0, y: 12 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -12 }}
-                                    transition={{ duration: 0.3, ease }}
-                                    className="inline-block"
-                                >
-                                    {copy.tagline}
-                                </motion.span>
-                            </AnimatePresence>
-                        </h2>
-                        <p className="mt-2 hidden max-w-sm text-sm text-white/80 sm:block">
-                            Tulis, sunting, dan terbitkan kabar dari seluruh
-                            Nusantara.
-                        </p>
-                        <div className="mt-5 hidden gap-1.5 lg:flex">
-                            {(['login', 'register'] as const).map((m) => (
-                                <motion.span
-                                    key={m}
-                                    animate={{
-                                        width: m === mode ? 32 : 12,
-                                        opacity: m === mode ? 1 : 0.4,
-                                    }}
-                                    transition={{ duration: 0.4, ease }}
-                                    className="h-1 rounded-full bg-white"
-                                />
-                            ))}
-                        </div>
-                    </motion.div>
-                </div>
-            </aside>
+                        <LogoMark className="h-8 w-auto text-accent sm:h-12" />
+                        <span className="text-3xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+                            Nusantara<span className="text-accent">News</span>
+                        </span>
+                    </Link>
+                    <Rule />
+                    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 py-2 text-[11px] font-medium tracking-[0.18em] text-slate-500 uppercase">
+                        <span>360 · Indonesia</span>
+                        <ZoneClock className="text-[11px]" />
+                    </div>
+                    <div aria-hidden className="h-px bg-navy-900/20" />
+                </header>
 
-            <main className="flex items-start justify-center px-4 py-8 sm:py-12 lg:items-center">
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease }}
-                    className="-mt-16 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl ring-1 shadow-merah-dark/10 ring-accent/10 sm:p-8 lg:mt-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:ring-0"
-                >
-                    <Tabs mode={mode} onChange={switchTo} />
-
-                    <AutoHeight>
+                <main className="grid flex-1 gap-8 py-6 sm:py-8 lg:grid-cols-[1fr_minmax(0,22rem)] lg:gap-0">
+                    {/* The form comes first on phones: it's why people are here. */}
+                    <section
+                        aria-labelledby="auth-title"
+                        className="lg:order-2 lg:border-l lg:border-navy-900/15 lg:pl-10"
+                    >
+                        <Tabs mode={mode} onChange={switchTo} />
                         <AnimatePresence mode="wait" initial={false}>
                             <motion.div
                                 key={mode}
-                                initial={{
-                                    opacity: 0,
-                                    x: mode === 'register' ? 24 : -24,
-                                }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{
-                                    opacity: 0,
-                                    x: mode === 'register' ? -24 : 24,
-                                }}
-                                transition={{ duration: 0.25, ease }}
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.2, ease }}
                             >
-                                <h1 className="text-2xl font-semibold text-navy-900">
+                                <h1
+                                    id="auth-title"
+                                    className="text-2xl font-semibold tracking-tight"
+                                >
                                     {copy.title}
                                 </h1>
                                 <p className="mt-1 mb-6 text-sm text-slate-500">
@@ -135,92 +148,48 @@ export default function Login({ mode: initialMode }: { mode: Mode }) {
                                 )}
                             </motion.div>
                         </AnimatePresence>
-                    </AutoHeight>
+                        <p className="mt-6 border-t border-navy-900/10 pt-4 text-sm text-slate-500">
+                            {mode === 'login' ? (
+                                <>
+                                    Ingin mengirim kabar dari daerahmu?{' '}
+                                    <button
+                                        type="button"
+                                        onClick={() => switchTo('register')}
+                                        className="font-semibold text-accent hover:text-accent-dark"
+                                    >
+                                        Daftar jadi kontributor
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    Sudah punya akun?{' '}
+                                    <button
+                                        type="button"
+                                        onClick={() => switchTo('login')}
+                                        className="font-semibold text-accent hover:text-accent-dark"
+                                    >
+                                        Masuk redaksi
+                                    </button>
+                                </>
+                            )}
+                        </p>
+                    </section>
 
-                    <Link
-                        href={home.url()}
-                        viewTransition
-                        className="mt-6 flex items-center justify-center gap-1.5 text-sm text-slate-500 hover:text-accent"
-                    >
-                        <Icon name="back" width={16} height={16} />
-                        Kembali ke beranda
-                    </Link>
-                </motion.div>
-            </main>
-        </div>
-    );
-}
+                    <LeadStory
+                        provinces={provinces}
+                        tagline={copy.tagline}
+                        mode={mode}
+                        cities={stats.cities}
+                        weekly={stats.weekly}
+                    />
+                </main>
+            </div>
 
-const TILES = 9;
-
-/** 3x3 landmark grid where one random tile at a time cross-fades to another province. */
-function Mosaic({ provinces }: { provinces: Region[] }) {
-    const reduceMotion = useReducedMotion();
-    const [tiles, setTiles] = useState(() =>
-        provinces
-            .filter((p) => p.image_url)
-            .sort(() => Math.random() - 0.5)
-            .slice(0, TILES),
-    );
-    const shown = useRef(tiles);
-
-    useEffect(() => {
-        shown.current = tiles;
-    }, [tiles]);
-
-    useEffect(() => {
-        const pool = provinces.filter((p) => p.image_url);
-        if (reduceMotion || pool.length <= TILES) {
-            return;
-        }
-        let timer: number;
-        let cancelled = false;
-
-        function swapOne() {
-            const codes = new Set(shown.current.map((t) => t.code));
-            const spare = pool.filter((p) => !codes.has(p.code));
-            const next = spare[Math.floor(Math.random() * spare.length)];
-            const slot = Math.floor(Math.random() * TILES);
-            // Swap only once the new photo is loaded, so a tile never fades into blank.
-            const img = new Image();
-            img.onload = () => {
-                if (!cancelled) {
-                    setTiles((latest) =>
-                        latest.map((t, i) => (i === slot ? next : t)),
-                    );
-                }
-            };
-            img.src = next.image_url!;
-            // Irregular rhythm so the grid feels alive rather than mechanical.
-            timer = window.setTimeout(swapOne, 1400 + Math.random() * 1800);
-        }
-
-        timer = window.setTimeout(swapOne, 2000);
-
-        return () => {
-            cancelled = true;
-            window.clearTimeout(timer);
-        };
-    }, [provinces, reduceMotion]);
-
-    return (
-        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-0.5">
-            {tiles.map((p, i) => (
-                <div key={i} className="relative overflow-hidden bg-merah-dark">
-                    <AnimatePresence initial={false}>
-                        <motion.img
-                            key={p.code}
-                            src={p.image_url!}
-                            alt=""
-                            initial={{ opacity: 0, scale: 1.12 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 1.1, ease }}
-                            className="absolute inset-0 size-full object-cover"
-                        />
-                    </AnimatePresence>
-                </div>
-            ))}
+            {breaking.length > 0 && (
+                <footer className="mx-auto w-full max-w-6xl px-4 pb-4 sm:px-8 sm:pb-6">
+                    <Ticker items={breaking} label="Terkini" />
+                </footer>
+            )}
         </div>
     );
 }
@@ -235,12 +204,13 @@ function Tabs({
     return (
         <div
             role="tablist"
-            className="mb-6 grid grid-cols-2 rounded-xl bg-accent/5 p-1 ring-1 ring-accent/10"
+            aria-label="Pilih masuk atau daftar"
+            className="mb-6 flex gap-6 border-b border-navy-900/15"
         >
             {(
                 [
                     ['login', 'Masuk'],
-                    ['register', 'Daftar'],
+                    ['register', 'Daftar kontributor'],
                 ] as const
             ).map(([value, label]) => (
                 <button
@@ -250,57 +220,159 @@ function Tabs({
                     aria-selected={mode === value}
                     onClick={() => onChange(value)}
                     className={cn(
-                        'relative rounded-lg py-2 text-sm font-medium transition-colors',
+                        'relative -mb-px pb-2.5 text-xs font-semibold tracking-[0.18em] uppercase transition-colors',
                         mode === value
-                            ? 'text-white'
-                            : 'text-slate-500 hover:text-accent',
+                            ? 'text-accent'
+                            : 'text-slate-400 hover:text-navy-900',
                     )}
                 >
+                    {label}
                     {mode === value && (
                         <motion.span
                             layoutId="auth-tab"
-                            transition={{
-                                type: 'spring',
-                                stiffness: 420,
-                                damping: 34,
-                            }}
-                            className="absolute inset-0 rounded-lg bg-accent shadow-sm shadow-accent/30"
+                            transition={{ duration: 0.25, ease }}
+                            className="absolute inset-x-0 bottom-0 h-0.5 bg-accent"
                         />
                     )}
-                    <span className="relative">{label}</span>
                 </button>
             ))}
         </div>
     );
 }
 
-/** Animates its own height to fit the content, so swapping forms doesn't jump. */
-function AutoHeight({ children }: { children: ReactNode }) {
-    const ref = useRef<HTMLDivElement>(null);
-    const [height, setHeight] = useState<number | 'auto'>('auto');
-
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) {
-            return;
-        }
-        const observer = new ResizeObserver(() => setHeight(el.offsetHeight));
-        observer.observe(el);
-
-        return () => observer.disconnect();
-    }, []);
+/** The "front page" story beside the form: headline, photo, and a numbers box. */
+function LeadStory({
+    provinces,
+    tagline,
+    mode,
+    cities,
+    weekly,
+}: {
+    provinces: Region[];
+    tagline: string;
+    mode: Mode;
+    cities: number;
+    weekly: number;
+}) {
+    const fmt = new Intl.NumberFormat('id-ID');
+    const numbers = [
+        [provinces.length, 'provinsi'],
+        [cities, 'kabupaten/kota'],
+        [weekly, 'berita 7 hari terakhir'],
+    ] as const;
 
     return (
-        <motion.div
-            animate={{ height }}
-            transition={{ duration: 0.3, ease }}
-            // Negative margin + padding keeps focus rings from being clipped.
-            className="-m-1 overflow-hidden"
-        >
-            <div ref={ref} className="p-1">
-                {children}
+        <article className="border-t border-navy-900/15 pt-6 lg:order-1 lg:border-t-0 lg:pt-0 lg:pr-10">
+            <p className="text-[11px] font-semibold tracking-[0.18em] text-accent uppercase">
+                Ruang Redaksi
+            </p>
+            <h2 className="mt-2 text-3xl leading-[1.1] font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+                Dari {provinces.length} provinsi,{' '}
+                <AnimatePresence mode="wait" initial={false}>
+                    <motion.span
+                        key={mode}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-accent"
+                    >
+                        {tagline}
+                    </motion.span>
+                </AnimatePresence>
+            </h2>
+            <p className="mt-3 text-xs text-slate-500">
+                Oleh{' '}
+                <span className="font-semibold text-navy-900">
+                    Redaksi NusantaraNews
+                </span>
+            </p>
+
+            <div className="mt-5 grid gap-6 sm:grid-cols-[1fr_11rem]">
+                <figure>
+                    <Photo provinces={provinces} />
+                </figure>
+                <aside className="border-t-[3px] border-navy-900 pt-3 sm:border-t-0 sm:border-l sm:border-navy-900/15 sm:pt-0 sm:pl-5">
+                    <p className="text-[11px] font-semibold tracking-[0.18em] uppercase">
+                        Dalam angka
+                    </p>
+                    <dl className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-1 sm:gap-4">
+                        {numbers.map(([value, label]) => (
+                            <div key={label} className="flex flex-col-reverse">
+                                <dt className="text-xs text-slate-500">
+                                    {label}
+                                </dt>
+                                <dd className="text-2xl font-semibold tracking-tight tabular-nums">
+                                    {fmt.format(value)}
+                                </dd>
+                            </div>
+                        ))}
+                    </dl>
+                </aside>
             </div>
-        </motion.div>
+
+            <p className="mt-6 text-sm leading-relaxed text-slate-600 first-letter:float-left first-letter:mt-1 first-letter:mr-2 first-letter:text-5xl first-letter:leading-none first-letter:font-semibold first-letter:text-accent sm:columns-2 sm:gap-8">
+                Wartawan, editor, dan kontributor warga bekerja dari satu ruang
+                redaksi. Tulis kabar dari daerahmu, ajukan ke editor wilayah,
+                lalu terbitkan untuk pembaca di seluruh Nusantara. Kontributor
+                baru bisa langsung menulis; setiap tulisan ditinjau editor
+                sebelum tayang.
+            </p>
+        </article>
+    );
+}
+
+/** Province landmark that slowly changes, with a newspaper-style caption. */
+function Photo({ provinces }: { provinces: Region[] }) {
+    const reduceMotion = useReducedMotion();
+    const pool = useMemo(
+        () => provinces.filter((p) => p.image_url),
+        [provinces],
+    );
+    const [current, setCurrent] = useState(() => pool[0] ?? null);
+
+    useEffect(() => {
+        if (reduceMotion || pool.length < 2) {
+            return;
+        }
+        let cancelled = false;
+        const timer = window.setInterval(() => {
+            const next = pool[Math.floor(Math.random() * pool.length)];
+            // Swap only once the new photo is loaded, so it never fades into blank.
+            const img = new Image();
+            img.onload = () => !cancelled && setCurrent(next);
+            img.src = next.image_url!;
+        }, 6000);
+
+        return () => {
+            cancelled = true;
+            window.clearInterval(timer);
+        };
+    }, [pool, reduceMotion]);
+
+    return (
+        <>
+            <div className="relative aspect-[16/9] overflow-hidden bg-navy-900/5">
+                <AnimatePresence initial={false}>
+                    {current && (
+                        <motion.img
+                            key={current.code}
+                            src={current.image_url!}
+                            alt={`Lanskap ${current.name}`}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 1, ease }}
+                            className="absolute inset-0 size-full object-cover"
+                        />
+                    )}
+                </AnimatePresence>
+            </div>
+            <figcaption className="mt-1.5 text-[11px] text-slate-500">
+                {current ? `${current.name}.` : 'Nusantara.'} Liputan dari pusat
+                sampai pelosok daerah.
+            </figcaption>
+        </>
     );
 }
 

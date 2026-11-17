@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ArticleStatus;
+use App\Models\Concerns\LogsActivity;
 use Database\Factories\ArticleFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -36,7 +37,27 @@ use Illuminate\Support\Facades\Storage;
 class Article extends Model
 {
     /** @use HasFactory<ArticleFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
+
+    public function activityNoun(): string
+    {
+        return 'artikel';
+    }
+
+    /** @return array{0: string, 1: string}|null */
+    protected function activityUpdateEvent(): ?array
+    {
+        if (! $this->wasChanged('status')) {
+            return null;
+        }
+
+        return match ($this->status) {
+            ArticleStatus::Review => ['submitted', 'mengajukan'],
+            ArticleStatus::Published => ['published', 'menerbitkan'],
+            ArticleStatus::Rejected => ['rejected', 'mengembalikan'],
+            default => null,
+        };
+    }
 
     protected $guarded = ['id', 'views'];
 

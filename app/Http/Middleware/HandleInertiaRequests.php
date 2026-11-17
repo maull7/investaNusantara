@@ -41,7 +41,11 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user()?->only('id', 'name', 'email', 'role', 'region_code'),
+                'user' => $request->user() ? [
+                    ...$request->user()->only('id', 'name', 'email', 'role', 'region_code'),
+                    // Admin areas this user may open; drives the admin menu.
+                    'access' => $request->user()->access(),
+                ] : null,
             ],
             'nav' => fn () => [
                 'categories' => Category::orderBy('sort')->get(['id', 'name', 'slug']),

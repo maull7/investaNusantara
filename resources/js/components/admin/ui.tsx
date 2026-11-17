@@ -6,6 +6,7 @@ import type { ArticleStatus, Role } from '@/types';
 
 export const roleLabel: Record<Role, string> = {
     super_admin: 'Super Admin',
+    sub_admin: 'Sub Admin',
     editor: 'Editor Daerah',
     journalist: 'Wartawan',
     contributor: 'Kontributor',
@@ -13,6 +14,7 @@ export const roleLabel: Record<Role, string> = {
 
 export const roleTone: Record<Role, string> = {
     super_admin: 'bg-accent/10 text-accent ring-accent/20',
+    sub_admin: 'bg-navy-50 text-navy-700 ring-navy-100',
     editor: 'bg-violet-50 text-violet-700 ring-violet-200',
     journalist: 'bg-sky-50 text-sky-700 ring-sky-200',
     contributor: 'bg-amber-50 text-amber-700 ring-amber-200',

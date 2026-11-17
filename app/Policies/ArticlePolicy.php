@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\ArticleStatus;
+use App\Enums\Permission;
 use App\Enums\Role;
 use App\Models\Article;
 use App\Models\Region;
@@ -12,7 +13,7 @@ class ArticlePolicy
 {
     public function before(User $user): ?bool
     {
-        return $user->role === Role::SuperAdmin ? true : null;
+        return $user->canAccess(Permission::Articles) ? true : null;
     }
 
     public function create(User $user): bool

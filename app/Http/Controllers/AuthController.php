@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Role;
+use App\Models\Article;
+use App\Models\Region;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,8 +19,16 @@ class AuthController extends Controller
     /** Login and registration share one page; the route decides which tab opens first. */
     public function create(Request $request): Response
     {
+        $breaking = Article::published()->card()->where('is_breaking', true)->limit(6)->get();
+
         return Inertia::render('auth/login', [
             'mode' => $request->routeIs('register') ? 'register' : 'login',
+            // Ticker: breaking news, or the latest stories when nothing is flagged.
+            'breaking' => $breaking->isNotEmpty() ? $breaking : Article::published()->card()->limit(6)->get(),
+            'stats' => [
+                'cities' => Region::where('level', '!=', Region::PROVINCE)->count(),
+                'weekly' => Article::published()->where('published_at', '>=', now()->subWeek())->count(),
+            ],
         ]);
     }
 
