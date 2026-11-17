@@ -333,7 +333,7 @@ export default function PublicLayout({
                             ))}
                         </div>
                         <p className="mt-8 border-t border-accent/10 pt-6 text-xs text-slate-400">
-                            © {new Date().getFullYear()} NusantaraNews 360
+                            © {new Date().getFullYear()} NusantaraNews
                         </p>
                     </div>
                 </footer>

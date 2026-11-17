@@ -17,8 +17,17 @@ class PortalController extends Controller
 {
     public function home(): Response
     {
+        // Editors pick headlines; until five are picked, the newest articles with a photo fill the slider.
+        $headlines = Article::published()->card()->where('is_headline', true)->limit(5)->get();
+        if ($headlines->count() < 5) {
+            $headlines = $headlines->concat(Article::published()->card()
+                ->whereNotIn('id', $headlines->modelKeys())
+                ->whereNotNull('cover_path')
+                ->limit(5 - $headlines->count())->get());
+        }
+
         return Inertia::render('home', [
-            'headlines' => Article::published()->card()->where('is_headline', true)->limit(5)->get(),
+            'headlines' => $headlines,
             'breaking' => Article::published()->card()->where('is_breaking', true)->limit(6)->get(),
             'latest' => Article::published()->card()->limit(12)->get(),
             'national' => Article::published()->card()->whereNull('region_code')->limit(6)->get(),

@@ -11,6 +11,7 @@ import { ease } from '@/components/motion';
 import { cn } from '@/lib/utils';
 import { home, logout } from '@/routes';
 import { create, index as articles } from '@/routes/admin/articles';
+import { index as aiNews, sources as aiSources } from '@/routes/admin/ai';
 import { index as categories } from '@/routes/admin/categories';
 import { create as createUser, index as users } from '@/routes/admin/users';
 
@@ -46,6 +47,11 @@ export default function AdminLayout({
                       href: users.url(),
                       label: 'Pengguna',
                       icon: 'users' as const,
+                  },
+                  {
+                      href: aiNews.url(),
+                      label: 'Berita AI',
+                      icon: 'bolt' as const,
                   },
               ]
             : []),
@@ -91,6 +97,20 @@ export default function AdminLayout({
                       icon: 'users' as const,
                       href: users.url(),
                       keywords: 'tim user wartawan editor',
+                  },
+                  {
+                      group: 'Navigasi',
+                      label: 'Berita AI · Antrean',
+                      icon: 'bolt' as const,
+                      href: aiNews.url(),
+                      keywords: 'hermes ai antrean queue sinopsis',
+                  },
+                  {
+                      group: 'Navigasi',
+                      label: 'Berita AI · Sumber berita',
+                      icon: 'sliders' as const,
+                      href: aiSources.url(),
+                      keywords: 'hermes sumber website scraping',
                   },
               ]
             : []),

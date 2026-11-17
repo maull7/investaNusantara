@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\Storage;
  * @property string $slug
  * @property string|null $excerpt
  * @property string $body
- * @property string|null $cover_path
+ * @property string|null $cover_path URL (AI articles hotlink the source image) or public-disk path
+ * @property string|null $source_name
+ * @property string|null $source_url
+ * @property bool $is_ai_generated
  * @property int $category_id
  * @property string|null $region_code
  * @property int $author_id
@@ -45,6 +48,7 @@ class Article extends Model
             'status' => ArticleStatus::class,
             'is_headline' => 'boolean',
             'is_breaking' => 'boolean',
+            'is_ai_generated' => 'boolean',
             'published_at' => 'datetime',
         ];
     }

@@ -37,7 +37,7 @@ class ArticleController extends Controller
 
         $articles = (clone $visible)
             ->with(['category:id,name', 'region:code,name', 'author:id,name'])
-            ->select(['id', 'title', 'slug', 'status', 'cover_path', 'category_id', 'region_code', 'author_id', 'published_at', 'updated_at', 'views', 'is_headline', 'is_breaking'])
+            ->select(['id', 'title', 'slug', 'status', 'cover_path', 'category_id', 'region_code', 'author_id', 'published_at', 'updated_at', 'views', 'is_headline', 'is_breaking', 'is_ai_generated'])
             ->when($request->string('status')->value(), fn ($q, $s) => $q->where('status', $s))
             ->when($request->string('q')->trim()->value(), fn ($q, $term) => $q->where('title', 'like', "%$term%"))
             ->latest('updated_at')

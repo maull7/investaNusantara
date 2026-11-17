@@ -45,7 +45,7 @@ export default function Home({
             <Head title="Berita Nasional & Daerah">
                 <meta
                     name="description"
-                    content="NusantaraNews 360: berita nasional dan daerah dari 38 provinsi dan 514 kabupaten/kota di Indonesia."
+                    content="NusantaraNews: berita nasional dan daerah dari 38 provinsi dan 514 kabupaten/kota di Indonesia."
                 />
             </Head>
 

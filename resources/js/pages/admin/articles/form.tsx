@@ -207,6 +207,27 @@ export default function ArticleForm({
 
                 {/* Side panel */}
                 <div className="space-y-4 lg:sticky lg:top-6">
+                    {article?.source_url && (
+                        <Panel
+                            title={
+                                article.is_ai_generated
+                                    ? 'Sinopsis AI dari'
+                                    : 'Sumber'
+                            }
+                        >
+                            <a
+                                href={article.source_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block text-sm font-medium break-all text-navy-900 hover:text-accent"
+                            >
+                                {article.source_name ?? article.source_url}
+                            </a>
+                            <p className="mt-1 text-xs break-all text-slate-400">
+                                {article.source_url}
+                            </p>
+                        </Panel>
+                    )}
                     <Panel title="Gambar sampul">
                         <CoverInput
                             current={article?.cover_url ?? null}

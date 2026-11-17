@@ -224,6 +224,12 @@ export default function ArticleShow({
                                 ))}
                             </div>
 
+                            {article.source_url && (
+                                <Reveal>
+                                    <SourceCredit article={article} />
+                                </Reveal>
+                            )}
+
                             <Reveal className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-accent/15 pt-5 text-xs text-slate-400">
                                 <span>
                                     {article.author && (
@@ -258,5 +264,47 @@ export default function ArticleShow({
                 </aside>
             </div>
         </PublicLayout>
+    );
+}
+
+/** Attribution for summarized articles: original title link and photo credit. */
+function SourceCredit({ article }: { article: Article }) {
+    let host = article.source_name ?? '';
+    try {
+        host = new URL(article.source_url!).host.replace(/^www\./, '');
+    } catch {
+        // keep the source name
+    }
+
+    return (
+        <aside className="mt-8 flex gap-3 rounded-2xl bg-accent/[0.04] p-4 ring-1 ring-accent/10">
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white text-accent ring-1 ring-accent/15">
+                <Icon name="external" width={16} height={16} />
+            </span>
+            <div className="min-w-0 text-sm leading-relaxed text-slate-600">
+                <p>
+                    {article.is_ai_generated ? 'Disarikan dari ' : 'Sumber: '}
+                    <a
+                        href={article.source_url!}
+                        target="_blank"
+                        rel="noopener nofollow"
+                        className="font-semibold text-navy-900 underline decoration-accent/30 underline-offset-2 hover:text-accent"
+                    >
+                        {host || article.source_name}
+                    </a>
+                </p>
+                {article.cover_url && (
+                    <p className="mt-0.5 text-xs text-slate-400">
+                        Foto: {host || article.source_name}
+                    </p>
+                )}
+                {article.is_ai_generated && (
+                    <p className="mt-1 text-xs text-slate-400">
+                        Ringkasan ini disusun dengan bantuan AI dari artikel
+                        aslinya. Baca berita lengkap di situs sumber.
+                    </p>
+                )}
+            </div>
+        </aside>
     );
 }

@@ -34,6 +34,7 @@ type Row = {
     cover_url: string | null;
     is_headline: boolean;
     is_breaking: boolean;
+    is_ai_generated: boolean;
     published_at: string | null;
     updated_at: string;
     category: { name: string };
@@ -355,6 +356,11 @@ function ArticleRow({ article: a }: { article: Row }) {
                         <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-white">
                             <Icon name="bolt" width={12} height={12} />
                             Breaking
+                        </span>
+                    )}
+                    {a.is_ai_generated && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700 ring-1 ring-sky-200">
+                            AI
                         </span>
                     )}
                 </div>

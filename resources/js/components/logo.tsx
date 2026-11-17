@@ -1,7 +1,20 @@
 import { Link } from '@inertiajs/react';
-import Icon from '@/components/icons';
+import type { SVGProps } from 'react';
 import { cn } from '@/lib/utils';
 import { home } from '@/routes';
+
+/** NusantaraNews "N" monogram from the brand kit. Uses currentColor. */
+export function LogoMark(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="12 22 104 82" fill="currentColor" aria-hidden {...props}>
+            <g transform="translate(2 14)">
+                <path d="M14 78 L26 18 Q28 10 37 10 L45 10 L84 48 L89 19 Q90 10 100 10 L112 10 L102 71 Q100 83 89 85 L82 85 L43 46 L37 78 Q36 88 26 88 L12 88 Z" />
+                <path d="M41 58 L73 85 L61 85 L39 68 Z" opacity=".92" />
+                <path d="M38 73 L54 85 L43 85 L36 81 Z" opacity=".92" />
+            </g>
+        </svg>
+    );
+}
 
 /** Site wordmark. `inverted` is for dark/photo backgrounds. */
 export default function Logo({
@@ -15,39 +28,24 @@ export default function Logo({
         <Link
             href={home.url()}
             viewTransition
-            className={cn('flex shrink-0 items-center gap-2.5', className)}
+            aria-label="NusantaraNews"
+            className={cn('flex shrink-0 items-center gap-2', className)}
         >
+            <LogoMark
+                className={cn(
+                    'h-7 w-auto',
+                    inverted ? 'text-white' : 'text-accent',
+                )}
+            />
             <span
                 className={cn(
-                    'grid size-9 place-items-center rounded-xl shadow-sm',
-                    inverted
-                        ? 'bg-white text-accent shadow-black/20'
-                        : 'bg-accent text-white shadow-accent/30',
+                    'text-[19px] leading-none font-bold tracking-[-0.04em]',
+                    inverted ? 'text-white' : 'text-navy-900',
                 )}
             >
-                <Icon name="bolt" width={18} height={18} />
-            </span>
-            <span className="leading-none">
-                <span
-                    className={cn(
-                        'block text-[17px] font-semibold tracking-tight',
-                        inverted ? 'text-white' : 'text-navy-900',
-                    )}
-                >
-                    Nusantara
-                    <span
-                        className={inverted ? 'text-white/80' : 'text-accent'}
-                    >
-                        News
-                    </span>
-                </span>
-                <span
-                    className={cn(
-                        'text-[10px] font-medium tracking-[0.18em]',
-                        inverted ? 'text-white/70' : 'text-slate-400',
-                    )}
-                >
-                    360 · INDONESIA
+                Nusantara
+                <span className={inverted ? 'text-white' : 'text-accent'}>
+                    News
                 </span>
             </span>
         </Link>

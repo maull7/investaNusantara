@@ -35,5 +35,16 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::middleware('can:super-admin')->group(function () {
         Route::resource('categories', Admin\CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('users', Admin\UserController::class)->except('show');
+
+        Route::prefix('ai')->name('ai.')->controller(Admin\AiNewsController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('sources', 'sources')->name('sources');
+            Route::post('sources', 'store')->name('sources.store');
+            Route::put('sources/{source}', 'update')->name('sources.update');
+            Route::delete('sources/{source}', 'destroy')->name('sources.destroy');
+            Route::post('sources/{source}/fetch', 'fetch')->name('sources.fetch')->middleware('throttle:10,1');
+            Route::post('fetches/{fetch}/retry', 'retryFetch')->name('fetches.retry');
+            Route::post('items/{item}/retry', 'retryItem')->name('items.retry');
+        });
     });
 });

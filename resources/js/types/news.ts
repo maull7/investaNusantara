@@ -32,6 +32,9 @@ export type Article = ArticleCard & {
     category_id: number;
     region_code: string | null;
     is_headline: boolean;
+    source_name: string | null;
+    source_url: string | null;
+    is_ai_generated: boolean;
     author?: { id: number; name: string };
 };
 
