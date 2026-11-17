@@ -36,11 +36,11 @@ services:
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: ${DOCKER_REDIS_PORT:-6380}
       INERTIA_SSR_ENABLED: "false"
-      APP_PORT: ${APP_PORT:-8080}
+      APP_PORT: ${APP_PORT:-6003}
       APP_BIND: ${APP_BIND:-127.0.0.1}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
     healthcheck:
-      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:${APP_PORT:-8080}/up') === false ? 1 : 0);"]
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:${APP_PORT:-6003}/up') === false ? 1 : 0);"]
       interval: 30s
       timeout: 5s
       retries: 3
