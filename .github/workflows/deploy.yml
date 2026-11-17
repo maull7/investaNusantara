@@ -1,0 +1,42 @@
+name: Deploy NusantaraNews to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚀 Deploy ke VPS (Docker)
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 30m
+          script: |
+            set -e
+
+            cd ${{ secrets.SERVER_PATH }}
+
+            echo "Pull code"
+            git pull origin main
+
+            echo "Build & restart container (app migrasi otomatis; gagal jika app tidak healthy)"
+            docker compose up -d --build --remove-orphans
+
+            echo "Cek health"
+            APP_PORT="$(grep -E '^APP_PORT=' .env | cut -d= -f2)"
+            curl -fsS "http://127.0.0.1:${APP_PORT:-8080}/up" >/dev/null
+            docker compose ps
+
+            echo "Bersihkan image lama"
+            docker image prune -f

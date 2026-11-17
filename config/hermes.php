@@ -4,7 +4,8 @@ return [
     // Hermes agent gateway. Locally it is reached through an SSH tunnel:
     // ssh -N -L 8642:127.0.0.1:8642 user@host
     'base_url' => env('HERMES_BASE_URL', 'http://127.0.0.1:8642/v1'),
-    'token' => env('HERMES_TOKEN'),
+    // The gateway calls this secret API_SERVER_KEY (same fallback as investaNews).
+    'token' => env('HERMES_TOKEN') ?: env('API_SERVER_KEY'),
     'connect_timeout' => (int) env('HERMES_CONNECT_TIMEOUT', 10),
     // Per HTTP request (create run / poll once).
     'timeout' => (int) env('HERMES_TIMEOUT', 90),
