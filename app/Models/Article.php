@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,8 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $cover_path URL (AI articles hotlink the source image) or public-disk path
  * @property string|null $source_name
  * @property string|null $source_url
+ * @property string|null $source_title
+ * @property string|null $source_excerpt first 50 words of the source article
  * @property bool $is_ai_generated
  * @property int $category_id
  * @property string|null $region_code
@@ -93,6 +96,12 @@ class Article extends Model
     public function region(): BelongsTo
     {
         return $this->belongsTo(Region::class, 'region_code');
+    }
+
+    /** @return HasOne<ArticleReview, $this> */
+    public function review(): HasOne
+    {
+        return $this->hasOne(ArticleReview::class);
     }
 
     /** @return BelongsTo<User, $this> */

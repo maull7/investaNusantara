@@ -10,6 +10,7 @@ Route::controller(PortalController::class)->group(function () {
     Route::get('/cari', 'search')->name('search');
     Route::get('/kategori/{category:slug}', 'category')->name('category');
     Route::get('/berita/{article:slug}', 'article')->name('article');
+    Route::post('/berita/{article:slug}/review', 'review')->name('article.review')->middleware(['auth', 'throttle:10,1']);
     Route::inertia('/wilayah', 'region/index')->name('regions');
     Route::get('/wilayah/{province:slug}/{child:slug?}', 'region')->name('region')->scopeBindings();
     Route::get('/api/wilayah/{province:code}/kota', 'cities')->name('region.cities');

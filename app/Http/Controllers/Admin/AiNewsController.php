@@ -21,12 +21,14 @@ use Inertia\Response;
 /** "Berita AI": Hermes news sources and a live view of the queue. Super admin only (see routes). */
 class AiNewsController extends Controller
 {
-    public function index(HermesClient $hermes): Response
+    public function index(Request $request, HermesClient $hermes): Response
     {
+        $province = $this->province($request);
+        $bySource = fn ($q) => $q->whereHas('source', fn ($s) => $s->inProvince($province));
         $today = now()->startOfDay();
-        $items = NewsItem::where('created_at', '>=', $today)->selectRaw('status, count(*) as total')->groupBy('status')->toBase()->pluck('total', 'status');
-        $active = NewsFetch::whereIn('status', NewsTaskStatus::activeValues())->count()
-            + NewsItem::whereIn('status', NewsTaskStatus::activeValues())->count();
+        $items = NewsItem::where('created_at', '>=', $today)->when($province, $bySource)->selectRaw('status, count(*) as total')->groupBy('status')->toBase()->pluck('total', 'status');
+        $active = NewsFetch::whereIn('status', NewsTaskStatus::activeValues())->when($province, $bySource)->count()
+            + NewsItem::whereIn('status', NewsTaskStatus::activeValues())->when($province, $bySource)->count();
 
         return Inertia::render('admin/ai/index', [
             'hermes' => $hermes->status(),
@@ -36,20 +38,26 @@ class AiNewsController extends Controller
                 'failed' => (int) ($items[NewsTaskStatus::Failed->value] ?? 0),
                 'duplicate' => (int) ($items[NewsTaskStatus::Duplicate->value] ?? 0),
                 'active' => $active,
+                // ponytail: tokens stay global; filter through ai_runs' subject when per-province cost matters.
                 'tokens' => (int) AiRun::where('created_at', '>=', $today)->sum('total_tokens'),
             ],
-            'fetches' => NewsFetch::with([
+            'fetches' => NewsFetch::when($province, $bySource)->with([
                 'source:id,name,url',
                 'items' => fn ($q) => $q->with('article:id,slug,status')->latest('id'),
             ])->latest('id')->limit(15)->get(),
-            'sources' => NewsSource::where('active', true)->orderBy('name')->get(['id', 'name']),
+            'sources' => NewsSource::where('active', true)->inProvince($province)->orderBy('name')->get(['id', 'name']),
+            'province' => $province,
+            'provinces' => Region::provinces()->get(['code', 'name']),
         ]);
     }
 
-    public function sources(): Response
+    public function sources(Request $request): Response
     {
+        $province = $this->province($request);
+
         return Inertia::render('admin/ai/sources', [
-            'sources' => NewsSource::with(['region:code,name', 'category:id,name'])
+            'province' => $province,
+            'sources' => NewsSource::inProvince($province)->with(['region:code,name', 'category:id,name'])
                 ->withCount(['fetches as active_fetches' => fn ($q) => $q->whereIn('status', NewsTaskStatus::activeValues())])
                 ->orderBy('name')->get(),
             'counts' => NewsItem::selectRaw('news_source_id, status, count(*) as total')->groupBy('news_source_id', 'status')->toBase()->get()
@@ -107,6 +115,14 @@ class AiNewsController extends Controller
         $pipeline->retryItem($item);
 
         return back()->with('success', 'Sinopsis berita diulang.');
+    }
+
+    /** ?province= from the filter: '' (all), 'nasional', or a province code. Anything else counts as all. */
+    private function province(Request $request): string
+    {
+        $value = (string) $request->query('province', '');
+
+        return $value === 'nasional' || Region::where('code', $value)->where('level', Region::PROVINCE)->exists() ? $value : '';
     }
 
     /** @return array<string, mixed> */

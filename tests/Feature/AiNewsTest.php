@@ -6,6 +6,7 @@ use App\Enums\ArticleStatus;
 use App\Enums\NewsTaskStatus;
 use App\Enums\Role;
 use App\Jobs\DiscoverNews;
+use App\Jobs\ReviewArticle;
 use App\Jobs\SummarizeNews;
 use App\Models\AiRun;
 use App\Models\Article;
@@ -60,6 +61,21 @@ class AiNewsTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where("counts.{$this->source->id}.published", 1));
         $this->get('/admin/ai')->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('stats.published', 1));
+    }
+
+    public function test_ai_pages_filter_by_province(): void
+    {
+        $this->item(NewsTaskStatus::Published);
+        NewsSource::create(['name' => 'Kota Jambi', 'url' => 'https://kota.test', 'region_code' => '15.71', 'max_articles' => 5]);
+        NewsSource::create(['name' => 'Nasional', 'url' => 'https://nasional.test', 'max_articles' => 5]);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+
+        $this->get('/admin/ai/sources')->assertInertia(fn (Assert $page) => $page->has('sources', 3)->where('province', ''));
+        $this->get('/admin/ai/sources?province=15')->assertInertia(fn (Assert $page) => $page->has('sources', 2)->where('province', '15'));
+        $this->get('/admin/ai/sources?province=nasional')->assertInertia(fn (Assert $page) => $page->has('sources', 1));
+        $this->get('/admin/ai/sources?province=99')->assertInertia(fn (Assert $page) => $page->has('sources', 3)->where('province', ''));
+        $this->get('/admin/ai?province=15')->assertInertia(fn (Assert $page) => $page->where('stats.published', 1)->has('fetches', 1));
+        $this->get('/admin/ai?province=nasional')->assertInertia(fn (Assert $page) => $page->where('stats.published', 0)->has('fetches', 0));
     }
 
     public function test_fetch_now_queues_one_discovery_per_source(): void
@@ -249,10 +265,40 @@ class AiNewsTest extends TestCase
         $this->assertSame('Ekonomi', $article->category->name);
         $this->assertSame('Redaksi AI', $article->author->name);
         $this->assertStringContainsString("\n\n", $article->body);
+        $this->assertSame('Harga karet naik', $article->source_title);
+        $this->assertSame(NewsPipeline::firstWords('Harga karet di tingkat petani naik signifikan minggu ini menurut dinas perkebunan.'), $article->source_excerpt);
+        $this->assertSame('satu dua tiga…', NewsPipeline::firstWords("satu  dua\ntiga <b>empat</b>", 3));
 
         $this->get("/berita/{$article->slug}")->assertInertia(fn (Assert $page) => $page
             ->where('article.source_url', $item->url)
             ->where('article.is_ai_generated', true));
+    }
+
+    public function test_ai_review_needs_login_is_generated_once_and_shared(): void
+    {
+        Queue::fake();
+        $article = Article::factory()->create(['status' => ArticleStatus::Published, 'published_at' => now()->subHour()]);
+
+        $this->post("/berita/{$article->slug}/review")->assertRedirect('/login');
+        $this->get("/berita/{$article->slug}")->assertInertia(fn (Assert $page) => $page->where('review', null));
+
+        $first = User::factory()->create();
+        $this->actingAs($first)->post("/berita/{$article->slug}/review")->assertRedirect();
+        $this->actingAs(User::factory()->create())->post("/berita/{$article->slug}/review");
+        Queue::assertPushed(ReviewArticle::class, 1);
+
+        $review = $article->review;
+        Http::fake(['hermes.test/v1/runs' => Http::response(['output' => json_encode([
+            'points' => ['Harga karet naik.', 'Petani diuntungkan.'],
+            'review' => str_repeat('Kenaikan harga membantu petani karet di Jambi. ', 4)."\n\nPembaca perlu mencermati harga minggu depan.",
+        ])])]);
+        (new ReviewArticle($review->id))->handle(app(HermesClient::class));
+
+        $this->assertSame(NewsTaskStatus::Completed, $review->refresh()->status);
+        $this->actingAs(User::factory()->create())->get("/berita/{$article->slug}")->assertInertia(fn (Assert $page) => $page
+            ->where('review.status', 'completed')
+            ->where('review.points.0', 'Harga karet naik.'));
+        $this->assertSame(1, AiRun::where('operation', 'review')->count());
     }
 
     public function test_missing_image_falls_back_to_the_pages_og_image(): void

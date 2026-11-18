@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\NewsTaskStatus;
 use App\Models\Concerns\LogsActivity;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -63,6 +64,20 @@ class NewsSource extends Model
     public function hasActiveFetch(): bool
     {
         return $this->fetches()->whereIn('status', NewsTaskStatus::activeValues())->exists();
+    }
+
+    /**
+     * Admin filter: '' = all, 'nasional' = no region, otherwise a province code (its cities included).
+     *
+     * @param  Builder<NewsSource>  $query
+     */
+    public function scopeInProvince(Builder $query, string $province): void
+    {
+        match ($province) {
+            '' => null,
+            'nasional' => $query->whereNull('region_code'),
+            default => $query->where(fn (Builder $q) => $q->where('region_code', $province)->orWhere('region_code', 'like', $province.'.%')),
+        };
     }
 
     /** @return BelongsTo<Region, $this> */

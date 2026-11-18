@@ -111,6 +111,14 @@ class NewsPipeline
         return round($mine->intersect($phrases($source))->count() / $mine->count(), 3);
     }
 
+    /** Opening of the source article for the "Ringkasan" button. */
+    public static function firstWords(string $text, int $words = 50): ?string
+    {
+        $text = trim((string) preg_replace('/\s+/u', ' ', strip_tags($text)));
+
+        return $text === '' ? null : Str::words($text, $words, '…');
+    }
+
     public static function wordCount(string $text): int
     {
         return count(preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: []);

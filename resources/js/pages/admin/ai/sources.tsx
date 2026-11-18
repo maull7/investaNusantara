@@ -1,7 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
 import { type FormEvent, useEffect, useState } from 'react';
-import { AiTabs, TaskPill } from '@/components/admin/ai';
+import { AiTabs, ProvinceFilter, TaskPill } from '@/components/admin/ai';
 import { EmptyState, Field, Switch } from '@/components/admin/ui';
 import Icon from '@/components/icons';
 import { ease } from '@/components/motion';
@@ -45,6 +45,7 @@ type Props = {
     >;
     categories: Category[];
     provinces: Region[];
+    province: string;
 };
 
 const intervals = [
@@ -62,6 +63,7 @@ export default function AiSources({
     counts,
     categories,
     provinces,
+    province,
 }: Props) {
     // null = closed, 'new' = create, otherwise the source being edited.
     const [editing, setEditing] = useState<Source | 'new' | null>(null);
@@ -82,9 +84,17 @@ export default function AiSources({
             }
         >
             <Head title="Sumber berita" />
-            <AiTabs />
+            <AiTabs>
+                <ProvinceFilter value={province} provinces={provinces} />
+            </AiTabs>
 
-            {sources.length === 0 ? (
+            {sources.length === 0 && province ? (
+                <div className="card">
+                    <EmptyState icon="sliders" title="Tidak ada sumber">
+                        Belum ada sumber berita untuk wilayah ini.
+                    </EmptyState>
+                </div>
+            ) : sources.length === 0 ? (
                 <div className="card">
                     <EmptyState icon="sliders" title="Belum ada sumber berita">
                         Tambahkan situs seperti jamberita.com. Hermes akan

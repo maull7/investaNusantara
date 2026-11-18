@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Enums\ArticleStatus;
 use App\Enums\NewsTaskStatus;
 use App\Models\Article;
+use App\Models\ArticleReview;
 use App\Models\Category;
 use App\Models\NewsFetch;
 use App\Models\NewsItem;
@@ -46,7 +47,7 @@ class SummarizeNews extends HermesTask
         return (int) config('hermes.run_timeout');
     }
 
-    protected function prompt(NewsFetch|NewsItem $subject): ?string
+    protected function prompt(NewsFetch|NewsItem|ArticleReview $subject): ?string
     {
         /** @var NewsItem $subject */
         return NewsPrompts::summarize(
@@ -57,7 +58,7 @@ class SummarizeNews extends HermesTask
     }
 
     /** @param  array<string, mixed>  $output */
-    protected function complete(NewsFetch|NewsItem $subject, array $output): void
+    protected function complete(NewsFetch|NewsItem|ArticleReview $subject, array $output): void
     {
         /** @var NewsItem $subject */
         if (($output['status'] ?? 'ok') === 'not_article') {
@@ -120,6 +121,8 @@ class SummarizeNews extends HermesTask
                 'published_at' => $publish ? now() : null,
                 'source_name' => $subject->source->name,
                 'source_url' => $subject->url,
+                'source_title' => Str::limit(trim(strip_tags((string) ($output['source_title'] ?? ''))), 250, '') ?: $subject->title,
+                'source_excerpt' => NewsPipeline::firstWords((string) ($output['source_opening'] ?? '') ?: (string) $subject->feed_excerpt),
                 'is_ai_generated' => true,
             ]);
 

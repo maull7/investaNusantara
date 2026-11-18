@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import ArticleCard from '@/components/article-card';
 import Icon from '@/components/icons';
@@ -112,28 +112,58 @@ export default function RegionShow({
                     </div>
                 </Reveal>
 
-                {/* City chips */}
-                <Reveal>
-                    <div className="-mx-4 no-scrollbar flex gap-2 overflow-x-auto px-4 pb-1">
-                        <Chip
-                            href={regionRoute.url({ province: province.slug })}
-                            active={!isCity}
-                        >
-                            Semua {province.name}
-                        </Chip>
-                        {cities.map((c) => (
-                            <Chip
-                                key={c.code}
-                                href={regionRoute.url({
+                {/* Kab/kota filter */}
+                <Reveal className="flex flex-col gap-2 card p-4 sm:flex-row sm:items-center">
+                    <label
+                        htmlFor="city-filter"
+                        className="text-sm font-medium text-navy-900"
+                    >
+                        Filter kabupaten/kota
+                    </label>
+                    <select
+                        id="city-filter"
+                        value={isCity ? region.slug : ''}
+                        onChange={(e) =>
+                            router.visit(
+                                regionRoute.url({
                                     province: province.slug,
-                                    child: c.slug,
-                                })}
-                                active={c.code === region.code}
-                            >
-                                {c.name}
-                            </Chip>
-                        ))}
-                    </div>
+                                    ...(e.target.value && {
+                                        child: e.target.value,
+                                    }),
+                                }),
+                                { preserveScroll: true, viewTransition: true },
+                            )
+                        }
+                        className="input sm:ml-auto sm:w-72"
+                    >
+                        <option value="">Semua {province.name}</option>
+                        {(['kabupaten', 'kota'] as const).map((type) => {
+                            const group = cities.filter((c) =>
+                                type === 'kota'
+                                    ? c.type === 'kota'
+                                    : c.type !== 'kota',
+                            );
+
+                            return (
+                                group.length > 0 && (
+                                    <optgroup
+                                        key={type}
+                                        label={
+                                            type === 'kota'
+                                                ? 'Kota'
+                                                : 'Kabupaten'
+                                        }
+                                    >
+                                        {group.map((c) => (
+                                            <option key={c.code} value={c.slug}>
+                                                {c.name}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                )
+                            );
+                        })}
+                    </select>
                 </Reveal>
 
                 {articles.total === 0 ? (
@@ -179,37 +209,5 @@ function Stat({ value, label }: { value: number; label: string }) {
             <p className="text-lg font-semibold text-navy-900">{value}</p>
             <p className="text-xs text-slate-500">{label}</p>
         </div>
-    );
-}
-
-function Chip({
-    href,
-    active,
-    children,
-}: {
-    href: string;
-    active: boolean;
-    children: React.ReactNode;
-}) {
-    return (
-        <Link
-            href={href}
-            viewTransition
-            preserveScroll
-            className={cn(
-                'relative shrink-0 rounded-full px-4 py-2 text-sm whitespace-nowrap ring-1 transition',
-                active
-                    ? 'text-white ring-accent'
-                    : 'bg-white text-slate-600 ring-slate-200 hover:text-accent',
-            )}
-        >
-            {active && (
-                <motion.span
-                    layoutId="city-chip"
-                    className="absolute inset-0 rounded-full bg-accent"
-                />
-            )}
-            <span className="relative">{children}</span>
-        </Link>
     );
 }

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\NewsTaskStatus;
 use App\Models\AiRun;
+use App\Models\ArticleReview;
 use App\Models\NewsFetch;
 use App\Models\NewsItem;
 use App\Services\HermesClient;
@@ -39,34 +40,34 @@ abstract class HermesTask implements ShouldQueue
         $this->onQueue(config('hermes.queue'));
     }
 
-    abstract protected function subject(): NewsFetch|NewsItem|null;
+    abstract protected function subject(): NewsFetch|NewsItem|ArticleReview|null;
 
     abstract protected function operation(): string;
 
     abstract protected function runTimeout(): int;
 
     /** Prompt for a new run, or null when the subject must not run (it set its own final status). */
-    abstract protected function prompt(NewsFetch|NewsItem $subject): ?string;
+    abstract protected function prompt(NewsFetch|NewsItem|ArticleReview $subject): ?string;
 
     /**
      * Turn the run output into results and give the subject its final status. Throw to retry.
      *
      * @param  array<string, mixed>  $output
      */
-    abstract protected function complete(NewsFetch|NewsItem $subject, array $output): void;
+    abstract protected function complete(NewsFetch|NewsItem|ArticleReview $subject, array $output): void;
 
     /**
      * Output obtained without Hermes (an RSS feed, say), or null to ask Hermes.
      *
      * @return array<string, mixed>|null
      */
-    protected function shortcut(NewsFetch|NewsItem $subject): ?array
+    protected function shortcut(NewsFetch|NewsItem|ArticleReview $subject): ?array
     {
         return null;
     }
 
     /** Called once after the last attempt failed. */
-    protected function gaveUp(NewsFetch|NewsItem $subject, string $message): void {}
+    protected function gaveUp(NewsFetch|NewsItem|ArticleReview $subject, string $message): void {}
 
     public function handle(HermesClient $hermes): void
     {
@@ -150,7 +151,7 @@ abstract class HermesTask implements ShouldQueue
         }
     }
 
-    private function start(HermesClient $hermes, NewsFetch|NewsItem $subject): void
+    private function start(HermesClient $hermes, NewsFetch|NewsItem|ArticleReview $subject): void
     {
         $inFlight = AiRun::where('status', 'running')->where('created_at', '>', now()->subMinutes(15))->count();
         if ($inFlight >= (int) config('hermes.max_concurrent_runs')) {
@@ -192,14 +193,14 @@ abstract class HermesTask implements ShouldQueue
      * @param  array<string, mixed>  $output
      * @param  array<string, int|null>|null  $usage
      */
-    private function finish(HermesClient $hermes, NewsFetch|NewsItem $subject, AiRun $run, array $output, ?array $usage): void
+    private function finish(HermesClient $hermes, NewsFetch|NewsItem|ArticleReview $subject, AiRun $run, array $output, ?array $usage): void
     {
         $run->update(['status' => 'completed', 'output' => $output, ...($usage ?? []), 'finished_at' => now()]);
         $hermes->resume();
         $this->complete($subject, $output);
     }
 
-    private function failure(HermesClient $hermes, NewsFetch|NewsItem $subject, Throwable $exception): void
+    private function failure(HermesClient $hermes, NewsFetch|NewsItem|ArticleReview $subject, Throwable $exception): void
     {
         $message = $hermes->friendlyError($exception->getMessage());
         $subject->runs()->where('status', 'running')->update(['status' => 'failed', 'error' => mb_substr($exception->getMessage(), 0, 2000), 'finished_at' => now()]);

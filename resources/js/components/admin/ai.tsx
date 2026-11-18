@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import Icon from '@/components/icons';
 import { cn } from '@/lib/utils';
@@ -149,9 +149,9 @@ export function HermesBadge({ hermes }: { hermes: HermesStatus }) {
     );
 }
 
-/** Antrean | Sumber berita switcher shown on both AI pages. */
-export function AiTabs() {
-    const path = usePage().url.split('?')[0];
+/** Antrean | Sumber berita switcher shown on both AI pages. Keeps the query (province filter) across tabs. */
+export function AiTabs({ children }: { children?: React.ReactNode }) {
+    const [path, query] = usePage().url.split('?');
     const tabs = [
         { href: aiIndex.url(), label: 'Antrean', icon: 'bolt' as const },
         {
@@ -162,43 +162,82 @@ export function AiTabs() {
     ];
 
     return (
-        <div className="mb-5 inline-flex rounded-full bg-white p-1 ring-1 ring-slate-200">
-            {tabs.map((t) => {
-                const active = path === t.href;
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-full bg-white p-1 ring-1 ring-slate-200">
+                {tabs.map((t) => {
+                    const active = path === t.href;
 
-                return (
-                    <Link
-                        key={t.href}
-                        href={t.href}
-                        preserveScroll
-                        className={cn(
-                            'relative flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-                            active
-                                ? 'text-white'
-                                : 'text-slate-500 hover:text-navy-900',
-                        )}
-                    >
-                        {active && (
-                            <motion.span
-                                layoutId="ai-tab"
-                                transition={{
-                                    type: 'spring',
-                                    stiffness: 420,
-                                    damping: 34,
-                                }}
-                                className="absolute inset-0 rounded-full bg-accent"
+                    return (
+                        <Link
+                            key={t.href}
+                            href={query ? `${t.href}?${query}` : t.href}
+                            preserveScroll
+                            className={cn(
+                                'relative flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                                active
+                                    ? 'text-white'
+                                    : 'text-slate-500 hover:text-navy-900',
+                            )}
+                        >
+                            {active && (
+                                <motion.span
+                                    layoutId="ai-tab"
+                                    transition={{
+                                        type: 'spring',
+                                        stiffness: 420,
+                                        damping: 34,
+                                    }}
+                                    className="absolute inset-0 rounded-full bg-accent"
+                                />
+                            )}
+                            <Icon
+                                name={t.icon}
+                                width={16}
+                                height={16}
+                                className="relative"
                             />
-                        )}
-                        <Icon
-                            name={t.icon}
-                            width={16}
-                            height={16}
-                            className="relative"
-                        />
-                        <span className="relative">{t.label}</span>
-                    </Link>
-                );
-            })}
+                            <span className="relative">{t.label}</span>
+                        </Link>
+                    );
+                })}
+            </div>
+            {children}
         </div>
+    );
+}
+
+/** ?province= filter for the AI pages: '' = all, 'nasional' = sources without a region, otherwise a province code. */
+export function ProvinceFilter({
+    value,
+    provinces,
+}: {
+    value: string;
+    provinces: { code: string; name: string }[];
+}) {
+    return (
+        <select
+            value={value}
+            onChange={(e) =>
+                router.get(
+                    window.location.pathname,
+                    e.target.value ? { province: e.target.value } : {},
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        replace: true,
+                    },
+                )
+            }
+            aria-label="Filter provinsi"
+            className="input w-auto py-2 text-sm"
+        >
+            <option value="">Semua provinsi</option>
+            <option value="nasional">Nasional</option>
+            {provinces.map((p) => (
+                <option key={p.code} value={p.code}>
+                    {p.name}
+                </option>
+            ))}
+        </select>
     );
 }

@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     AnimatePresence,
     motion,
@@ -7,23 +7,34 @@ import {
     useSpring,
     useTransform,
 } from 'motion/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ArticleCard, { Cover } from '@/components/article-card';
 import Icon from '@/components/icons';
 import RegionAvatar from '@/components/region-avatar';
 import { Reveal, Stagger, ease } from '@/components/motion';
 import PublicLayout, { SectionTitle } from '@/layouts/public';
+import { cn } from '@/lib/utils';
 import { coverTransition, formatDate, regionHref, timeAgo } from '@/lib/news';
-import { category as categoryRoute, home } from '@/routes';
-import type { Article, ArticleCard as Card } from '@/types';
+import { category as categoryRoute, home, login } from '@/routes';
+import { review as reviewRoute } from '@/routes/article';
+import type { Article, ArticleCard as Card, ArticleReview } from '@/types';
 
 export default function ArticleShow({
     article,
     related,
+    review,
 }: {
     article: Article;
     related: Card[];
+    review: ArticleReview | null;
 }) {
+    // "Ringkasan": swap our synopsis for the source's own headline and first 50 words.
+    const [original, setOriginal] = useState(false);
+    const [reviewOpen, setReviewOpen] = useState(false);
+    // Articles without a source (written by editors) summarize themselves: own title + first 50 words.
+    const fromSource = Boolean(article.source_excerpt && article.source_url);
+    const summaryTitle = article.source_title ?? article.title;
+    const summaryText = article.source_excerpt ?? firstWords(article.body, 50);
     const { scrollY, scrollYProgress } = useScroll();
     const progress = useSpring(scrollYProgress, {
         stiffness: 120,
@@ -60,6 +71,9 @@ export default function ArticleShow({
         }
     }
 
+    const { auth } = usePage().props;
+    const pill =
+        'inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-medium text-navy-900 ring-1 ring-slate-200 transition hover:text-accent active:scale-95';
     const roundBtn =
         'grid size-10 place-items-center rounded-full border border-white/60 bg-white/70 text-navy-900 shadow-sm backdrop-blur-xl transition active:scale-90 md:hover:scale-105';
 
@@ -108,7 +122,7 @@ export default function ArticleShow({
             </AnimatePresence>
 
             <div className="grid md:gap-8 lg:grid-cols-3">
-                <article className="lg:col-span-2">
+                <article className="min-w-0 lg:col-span-2">
                     {/* Cover: full-bleed on phones, rounded on laptop */}
                     <div className="relative h-[58vh] max-h-[520px] overflow-hidden md:h-auto md:rounded-[28px] md:shadow-[0_20px_40px_-20px_rgba(107,7,18,0.5)]">
                         <motion.div
@@ -164,12 +178,12 @@ export default function ArticleShow({
                     >
                         <span className="mx-auto mb-5 block h-1 w-10 rounded-full bg-slate-200 md:hidden" />
                         <Stagger>
-                            <Reveal className="flex items-center gap-3">
+                            <Reveal className="flex items-start gap-3">
                                 <RegionAvatar
                                     region={article.region}
                                     className="size-10 ring-2 ring-accent ring-offset-2"
                                 />
-                                <div className="min-w-0 leading-tight">
+                                <div className="min-w-0 flex-1 leading-tight">
                                     {article.region ? (
                                         <Link
                                             href={regionHref(article.region)}
@@ -184,6 +198,15 @@ export default function ArticleShow({
                                         </span>
                                     )}
                                     <p className="mt-0.5 text-xs text-slate-400">
+                                        {article.source_name && (
+                                            <>
+                                                Sumber:{' '}
+                                                <span className="font-medium text-slate-600">
+                                                    {article.source_name}
+                                                </span>{' '}
+                                                ·{' '}
+                                            </>
+                                        )}
                                         {timeAgo(article.published_at)} ·{' '}
                                         {minutes} menit baca ·{' '}
                                         <Link
@@ -196,33 +219,131 @@ export default function ArticleShow({
                                             {article.category.name}
                                         </Link>
                                     </p>
+                                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setOriginal((v) => !v)
+                                            }
+                                            aria-pressed={original}
+                                            className={cn(
+                                                pill,
+                                                original &&
+                                                    'bg-accent text-white ring-accent',
+                                            )}
+                                        >
+                                            <Icon
+                                                name="file"
+                                                width={13}
+                                                height={13}
+                                            />
+                                            Ringkasan
+                                        </button>
+                                        {auth.user ? (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setReviewOpen(true)
+                                                }
+                                                className={pill}
+                                            >
+                                                <Icon
+                                                    name="star"
+                                                    width={13}
+                                                    height={13}
+                                                />
+                                                Review AI
+                                            </button>
+                                        ) : (
+                                            <Link
+                                                href={login.url()}
+                                                title="Masuk untuk melihat Review AI"
+                                                className={pill}
+                                            >
+                                                <Icon
+                                                    name="lock"
+                                                    width={13}
+                                                    height={13}
+                                                />
+                                                Review AI
+                                            </Link>
+                                        )}
+                                        {article.source_url && (
+                                            <a
+                                                href={article.source_url}
+                                                target="_blank"
+                                                rel="noopener nofollow"
+                                                className={pill}
+                                            >
+                                                <Icon
+                                                    name="external"
+                                                    width={13}
+                                                    height={13}
+                                                />
+                                                Sumber
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             </Reveal>
 
                             <Reveal>
                                 <h1 className="mt-5 text-[22px] leading-snug font-semibold text-navy-900 md:text-[34px] md:leading-tight">
-                                    {article.title}
+                                    {original ? summaryTitle : article.title}
                                 </h1>
                             </Reveal>
 
-                            {article.excerpt && (
-                                <Reveal>
-                                    <p className="mt-4 text-[15px] leading-relaxed font-medium text-slate-700 md:text-lg">
-                                        {article.excerpt}
+                            {original ? (
+                                <div className="mt-5 text-[15px] leading-[1.85] text-slate-600 md:text-[17px]">
+                                    <p className="text-xs font-semibold tracking-wide text-accent uppercase">
+                                        {fromSource
+                                            ? `Teks asli · ${article.source_name}`
+                                            : 'Ringkasan'}
                                     </p>
-                                </Reveal>
-                            )}
+                                    <p className="mt-2">{summaryText}</p>
+                                    {fromSource ? (
+                                        <a
+                                            href={article.source_url!}
+                                            target="_blank"
+                                            rel="noopener nofollow"
+                                            className="mt-3 inline-block text-sm font-semibold text-accent"
+                                        >
+                                            Baca selengkapnya di sumber →
+                                        </a>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOriginal(false)}
+                                            className="mt-3 text-sm font-semibold text-accent"
+                                        >
+                                            Baca berita lengkap →
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <>
+                                    {article.excerpt && (
+                                        <Reveal>
+                                            <p className="mt-4 text-[15px] leading-relaxed font-medium text-slate-700 md:text-lg">
+                                                {article.excerpt}
+                                            </p>
+                                        </Reveal>
+                                    )}
 
-                            {/* Plain-text body (contributor input is never rendered as HTML). */}
-                            <div className="mt-5 space-y-4 text-[15px] leading-[1.85] text-slate-600 md:text-[17px]">
-                                {article.body.split(/\n\s*\n/).map((p, i) => (
-                                    <Reveal key={i}>
-                                        <p className="whitespace-pre-line">
-                                            {p}
-                                        </p>
-                                    </Reveal>
-                                ))}
-                            </div>
+                                    {/* Plain-text body (contributor input is never rendered as HTML). */}
+                                    <div className="mt-5 space-y-4 text-[15px] leading-[1.85] text-slate-600 md:text-[17px]">
+                                        {article.body
+                                            .split(/\n\s*\n/)
+                                            .map((p, i) => (
+                                                <Reveal key={i}>
+                                                    <p className="whitespace-pre-line">
+                                                        {p}
+                                                    </p>
+                                                </Reveal>
+                                            ))}
+                                    </div>
+                                </>
+                            )}
 
                             {article.source_url && (
                                 <Reveal>
@@ -263,7 +384,157 @@ export default function ArticleShow({
                     </Reveal>
                 </aside>
             </div>
+            <AnimatePresence>
+                {reviewOpen && (
+                    <ReviewModal
+                        slug={article.slug}
+                        review={review}
+                        onClose={() => setReviewOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
         </PublicLayout>
+    );
+}
+
+/** "Review AI" popup: starts the review the first time, then shows the saved one. */
+function ReviewModal({
+    slug,
+    review,
+    onClose,
+}: {
+    slug: string;
+    review: ArticleReview | null;
+    onClose: () => void;
+}) {
+    const done = review?.status === 'completed';
+    const failed = review?.status === 'failed';
+
+    // No review yet: ask for one. Then poll until Hermes is done.
+    useEffect(() => {
+        if (!review) {
+            router.post(
+                reviewRoute.url(slug),
+                {},
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    only: ['review'],
+                },
+            );
+
+            return;
+        }
+        if (done || failed) {
+            return;
+        }
+        const t = window.setTimeout(
+            () => router.reload({ only: ['review'] }),
+            3000,
+        );
+
+        return () => window.clearTimeout(t);
+    }, [review, done, failed, slug]);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+        window.addEventListener('keydown', onKey);
+
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onClose]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-navy-900/30 backdrop-blur-sm sm:items-center sm:p-4"
+            onClick={onClose}
+        >
+            <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="review-title"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ y: 40, opacity: 0, scale: 0.98 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 40, opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.35, ease }}
+                className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-[28px] bg-white p-5 shadow-2xl sm:rounded-[28px] sm:p-6"
+            >
+                <div className="mb-4 flex items-center justify-between">
+                    <h2
+                        id="review-title"
+                        className="flex items-center gap-2 text-lg font-semibold text-navy-900"
+                    >
+                        <Icon name="star" className="text-accent" />
+                        Review AI
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Tutup"
+                        className="grid size-9 place-items-center rounded-full text-slate-400 hover:bg-slate-100"
+                    >
+                        <Icon name="x" width={18} height={18} />
+                    </button>
+                </div>
+
+                {done ? (
+                    <div className="space-y-4 text-[15px] leading-relaxed text-slate-600">
+                        <ul className="space-y-2">
+                            {review.points?.map((p, i) => (
+                                <li key={i} className="flex gap-2">
+                                    <Icon
+                                        name="check"
+                                        width={16}
+                                        height={16}
+                                        className="mt-1 shrink-0 text-accent"
+                                    />
+                                    {p}
+                                </li>
+                            ))}
+                        </ul>
+                        {review.body?.split(/\n\s*\n/).map((p, i) => (
+                            <p key={i}>{p}</p>
+                        ))}
+                        <p className="border-t border-slate-100 pt-3 text-xs text-slate-400">
+                            Dibuat oleh AI dari isi berita ini. Bisa keliru, cek
+                            kembali ke sumber berita.
+                        </p>
+                    </div>
+                ) : failed ? (
+                    <div className="space-y-3 text-sm text-slate-600">
+                        <p>Review AI gagal dibuat. Silakan coba lagi.</p>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                router.post(
+                                    reviewRoute.url(slug),
+                                    {},
+                                    {
+                                        preserveScroll: true,
+                                        preserveState: true,
+                                        only: ['review'],
+                                    },
+                                )
+                            }
+                            className="btn-primary py-2 text-sm"
+                        >
+                            Coba lagi
+                        </button>
+                    </div>
+                ) : (
+                    <div
+                        className="flex items-center gap-3 py-6 text-sm text-slate-500"
+                        aria-live="polite"
+                    >
+                        <span className="size-5 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+                        AI sedang membaca berita dan menyusun review…
+                    </div>
+                )}
+            </motion.div>
+        </motion.div>
     );
 }
 
@@ -307,4 +578,12 @@ function SourceCredit({ article }: { article: Article }) {
             </div>
         </aside>
     );
+}
+
+function firstWords(text: string, count: number) {
+    const words = text.trim().split(/\s+/);
+
+    return words.length > count
+        ? `${words.slice(0, count).join(' ')}…`
+        : words.join(' ');
 }

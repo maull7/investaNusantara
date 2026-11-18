@@ -34,6 +34,8 @@ export type Article = ArticleCard & {
     is_headline: boolean;
     source_name: string | null;
     source_url: string | null;
+    source_title: string | null;
+    source_excerpt: string | null;
     is_ai_generated: boolean;
     author?: { id: number; name: string };
 };
@@ -44,4 +46,11 @@ export type Paginated<T> = {
     last_page: number;
     total: number;
     links: { url: string | null; label: string; active: boolean }[];
+};
+
+export type ArticleReview = {
+    status: 'queued' | 'running' | 'paused' | 'completed' | 'failed';
+    points: string[] | null;
+    body: string | null;
+    error: string | null;
 };

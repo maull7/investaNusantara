@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Article;
 use App\Models\NewsItem;
 use App\Models\NewsSource;
 use Carbon\CarbonInterface;
@@ -85,7 +86,35 @@ class NewsPrompts
           "category": "salah satu dari [{$categoryList}]",{$regionLine}
           "source_title": "judul asli artikel",
           "source_published_at": "ISO 8601 atau null",
-          "source_opening": "salin persis 2 paragraf pertama artikel asli (dipakai untuk mengecek kemiripan, tidak diterbitkan)"
+          "source_opening": "salin persis 2 paragraf pertama artikel asli (dipakai untuk mengecek kemiripan; 50 kata pertamanya ditampilkan sebagai kutipan dengan tautan ke sumber)"
+        }
+        PROMPT;
+    }
+
+    /** "Review AI" shown to readers: built only from the article text we already publish. */
+    public static function review(Article $article): string
+    {
+        $body = mb_substr($article->body, 0, 8000);
+
+        return <<<PROMPT
+        Anda adalah analis berita untuk pembaca portal berita daerah Indonesia.
+
+        Tulis REVIEW singkat atas berita berikut dalam Bahasa Indonesia yang mudah dipahami.
+        Judul: {$article->title}
+        Isi:
+        """
+        {$body}
+        """
+
+        Aturan:
+        - Hanya berdasarkan teks di atas. Jangan membuka tautan, jangan menambah fakta, angka, atau nama baru.
+        - Bersikap netral. Jangan menghakimi pihak mana pun. Jika ada informasi penting yang belum dijelaskan berita, sebutkan sebagai hal yang belum diketahui.
+        - Teks biasa tanpa HTML/markdown.
+
+        Balas HANYA dengan JSON valid tanpa markdown:
+        {
+          "points": ["3 sampai 5 poin penting berita, masing-masing satu kalimat"],
+          "review": "2 sampai 3 paragraf: konteks, dampak bagi masyarakat, dan hal yang perlu dicermati pembaca. Pisahkan paragraf dengan baris kosong."
         }
         PROMPT;
     }

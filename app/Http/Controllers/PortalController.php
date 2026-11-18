@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ArticleStatus;
+use App\Enums\NewsTaskStatus;
+use App\Jobs\ReviewArticle;
 use App\Models\Article;
+use App\Models\ArticleReview;
 use App\Models\Category;
 use App\Models\Region;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
@@ -62,10 +66,13 @@ class PortalController extends Controller
         ]);
     }
 
-    public function article(Article $article): Response
+    public function article(Request $request, Article $article): Response
     {
         abort_unless($article->status === ArticleStatus::Published && $article->published_at?->isPast(), 404);
-        $article->increment('views');
+        // The review poll reloads only `review`; don't count it as another read.
+        if (! $request->header('X-Inertia-Partial-Data')) {
+            $article->increment('views');
+        }
         $article->load(['category:id,name,slug', 'region:code,name,slug,parent_code,level,image_url', 'region.parent:code,name,slug,image_url', 'author:id,name']);
 
         return Inertia::render('article/show', [
@@ -74,7 +81,25 @@ class PortalController extends Controller
                 ->whereKeyNot($article->id)
                 ->when($article->region_code, fn ($q) => $q->inRegion(substr($article->region_code, 0, 2)), fn ($q) => $q->whereBelongsTo($article->category))
                 ->limit(4)->get(),
+            // "Review AI" is for signed-in readers only.
+            'review' => fn () => $request->user() ? $article->review()->first(['status', 'points', 'body', 'error']) : null,
         ]);
+    }
+
+    /** "Review AI": the first signed-in reader to ask starts the run; everyone after sees the saved review. */
+    public function review(Request $request, Article $article): RedirectResponse
+    {
+        abort_unless($article->status === ArticleStatus::Published && $article->published_at?->isPast(), 404);
+
+        $review = ArticleReview::createOrFirst(['article_id' => $article->id], ['requested_by' => $request->user()->id]);
+        if ($review->wasRecentlyCreated) {
+            ReviewArticle::dispatch($review->id);
+        } elseif ($review->status === NewsTaskStatus::Failed) {
+            $review->update(['status' => NewsTaskStatus::Queued, 'attempts' => 0, 'error' => null]);
+            ReviewArticle::dispatch($review->id);
+        }
+
+        return back();
     }
 
     public function search(Request $request): Response

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
     AiTabs,
     HermesBadge,
+    ProvinceFilter,
     type HermesStatus,
     TaskPill,
     type TaskStatus,
@@ -58,6 +59,8 @@ type Props = {
     };
     fetches: Fetch[];
     sources: { id: number; name: string }[];
+    province: string;
+    provinces: { code: string; name: string }[];
 };
 
 const viaLabel = {
@@ -68,7 +71,14 @@ const viaLabel = {
 
 const live: TaskStatus[] = ['queued', 'running', 'paused'];
 
-export default function AiQueue({ hermes, stats, fetches, sources }: Props) {
+export default function AiQueue({
+    hermes,
+    stats,
+    fetches,
+    sources,
+    province,
+    provinces,
+}: Props) {
     const busy =
         stats.active > 0 ||
         fetches.some((f) => live.includes(f.status)) ||
@@ -147,7 +157,9 @@ export default function AiQueue({ hermes, stats, fetches, sources }: Props) {
             }
         >
             <Head title="Berita AI" />
-            <AiTabs />
+            <AiTabs>
+                <ProvinceFilter value={province} provinces={provinces} />
+            </AiTabs>
 
             <HermesPanel hermes={hermes} sources={sources} />
 
