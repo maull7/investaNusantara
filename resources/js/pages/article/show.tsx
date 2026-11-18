@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
     AnimatePresence,
     motion,
@@ -6,18 +6,18 @@ import {
     useScroll,
     useSpring,
     useTransform,
-} from 'motion/react';
-import { useEffect, useState } from 'react';
-import ArticleCard, { Cover } from '@/components/article-card';
-import Icon from '@/components/icons';
-import RegionAvatar from '@/components/region-avatar';
-import { Reveal, Stagger, ease } from '@/components/motion';
-import PublicLayout, { SectionTitle } from '@/layouts/public';
-import { cn } from '@/lib/utils';
-import { coverTransition, formatDate, regionHref, timeAgo } from '@/lib/news';
-import { category as categoryRoute, home, login } from '@/routes';
-import { review as reviewRoute } from '@/routes/article';
-import type { Article, ArticleCard as Card, ArticleReview } from '@/types';
+} from "motion/react";
+import { useEffect, useState } from "react";
+import ArticleCard, { Cover } from "@/components/article-card";
+import Icon from "@/components/icons";
+import RegionAvatar from "@/components/region-avatar";
+import { Reveal, Stagger, ease } from "@/components/motion";
+import PublicLayout, { SectionTitle } from "@/layouts/public";
+import { cn } from "@/lib/utils";
+import { coverTransition, formatDate, regionHref, timeAgo } from "@/lib/news";
+import { category as categoryRoute, home, login } from "@/routes";
+import { review as reviewRoute } from "@/routes/article";
+import type { Article, ArticleCard as Card, ArticleReview } from "@/types";
 
 export default function ArticleShow({
     article,
@@ -29,7 +29,11 @@ export default function ArticleShow({
     review: ArticleReview | null;
 }) {
     // "Ringkasan": swap our synopsis for the source's own headline and first 50 words.
-    const [original, setOriginal] = useState(false);
+    const { auth } = usePage().props;
+    // Guests only get the summary (server sends just the first 50 words as `body`).
+    const locked = !auth.user;
+    const [toggled, setOriginal] = useState(false);
+    const original = locked || toggled;
     const [reviewOpen, setReviewOpen] = useState(false);
     // Articles without a source (written by editors) summarize themselves: own title + first 50 words.
     const fromSource = Boolean(article.source_excerpt && article.source_url);
@@ -44,9 +48,9 @@ export default function ArticleShow({
     const coverY = useTransform(scrollY, [0, 400], [0, 120]);
     const coverScale = useTransform(scrollY, [0, 400], [1, 1.12]);
     const [compact, setCompact] = useState(false);
-    useMotionValueEvent(scrollY, 'change', (y) => setCompact(y > 340));
+    useMotionValueEvent(scrollY, "change", (y) => setCompact(y > 340));
 
-    const source = article.region?.name ?? 'Nasional';
+    const source = article.region?.name ?? "Nasional";
     const sourceLabel = article.region?.parent
         ? `${source}, ${article.region.parent.name}`
         : source;
@@ -71,11 +75,10 @@ export default function ArticleShow({
         }
     }
 
-    const { auth } = usePage().props;
     const pill =
-        'inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-medium text-navy-900 ring-1 ring-slate-200 transition hover:text-accent active:scale-95';
+        "inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-medium text-navy-900 ring-1 ring-slate-200 transition hover:text-accent active:scale-95";
     const roundBtn =
-        'grid size-10 place-items-center rounded-full border border-white/60 bg-white/70 text-navy-900 shadow-sm backdrop-blur-xl transition active:scale-90 md:hover:scale-105';
+        "grid size-10 place-items-center rounded-full border border-white/60 bg-white/70 text-navy-900 shadow-sm backdrop-blur-xl transition active:scale-90 md:hover:scale-105";
 
     return (
         <PublicLayout tabs={false} variant="article">
@@ -169,7 +172,7 @@ export default function ArticleShow({
                         initial={{ y: 60, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{
-                            type: 'spring',
+                            type: "spring",
                             stiffness: 140,
                             damping: 20,
                             delay: 0.1,
@@ -200,15 +203,17 @@ export default function ArticleShow({
                                     <p className="mt-0.5 text-xs text-slate-400">
                                         {article.source_name && (
                                             <>
-                                                Sumber:{' '}
+                                                Sumber:{" "}
                                                 <span className="font-medium text-slate-600">
                                                     {article.source_name}
-                                                </span>{' '}
-                                                ·{' '}
+                                                </span>{" "}
+                                                ·{" "}
                                             </>
                                         )}
-                                        {timeAgo(article.published_at)} ·{' '}
-                                        {minutes} menit baca ·{' '}
+                                        {timeAgo(article.published_at)} ·{" "}
+                                        {!locked && (
+                                            <>{minutes} menit baca · </>
+                                        )}
                                         <Link
                                             href={categoryRoute.url(
                                                 article.category.slug,
@@ -223,13 +228,14 @@ export default function ArticleShow({
                                         <button
                                             type="button"
                                             onClick={() =>
+                                                !locked &&
                                                 setOriginal((v) => !v)
                                             }
                                             aria-pressed={original}
                                             className={cn(
                                                 pill,
                                                 original &&
-                                                    'bg-accent text-white ring-accent',
+                                                    "bg-accent text-white ring-accent",
                                             )}
                                         >
                                             <Icon
@@ -280,7 +286,7 @@ export default function ArticleShow({
                                                     width={13}
                                                     height={13}
                                                 />
-                                                Sumber
+                                                Lihat Sumber
                                             </a>
                                         )}
                                     </div>
@@ -298,10 +304,22 @@ export default function ArticleShow({
                                     <p className="text-xs font-semibold tracking-wide text-accent uppercase">
                                         {fromSource
                                             ? `Teks asli · ${article.source_name}`
-                                            : 'Ringkasan'}
+                                            : "Ringkasan"}
                                     </p>
                                     <p className="mt-2">{summaryText}</p>
-                                    {fromSource ? (
+                                    {locked ? (
+                                        <Link
+                                            href={login.url()}
+                                            className="mt-4 flex items-center gap-2 rounded-2xl bg-accent/[0.06] p-4 text-sm font-semibold text-accent ring-1 ring-accent/15"
+                                        >
+                                            <Icon
+                                                name="lock"
+                                                width={15}
+                                                height={15}
+                                            />
+                                            Masuk untuk membaca berita lengkap →
+                                        </Link>
+                                    ) : fromSource ? (
                                         <a
                                             href={article.source_url!}
                                             target="_blank"
@@ -355,11 +373,11 @@ export default function ArticleShow({
                                 <span>
                                     {article.author && (
                                         <>
-                                            Oleh{' '}
+                                            Oleh{" "}
                                             <span className="font-medium text-slate-600">
                                                 {article.author.name}
-                                            </span>{' '}
-                                            ·{' '}
+                                            </span>{" "}
+                                            ·{" "}
                                         </>
                                     )}
                                     {formatDate(article.published_at)}
@@ -407,8 +425,8 @@ function ReviewModal({
     review: ArticleReview | null;
     onClose: () => void;
 }) {
-    const done = review?.status === 'completed';
-    const failed = review?.status === 'failed';
+    const done = review?.status === "completed";
+    const failed = review?.status === "failed";
 
     // No review yet: ask for one. Then poll until Hermes is done.
     useEffect(() => {
@@ -419,7 +437,7 @@ function ReviewModal({
                 {
                     preserveScroll: true,
                     preserveState: true,
-                    only: ['review'],
+                    only: ["review"],
                 },
             );
 
@@ -429,7 +447,7 @@ function ReviewModal({
             return;
         }
         const t = window.setTimeout(
-            () => router.reload({ only: ['review'] }),
+            () => router.reload({ only: ["review"] }),
             3000,
         );
 
@@ -437,10 +455,10 @@ function ReviewModal({
     }, [review, done, failed, slug]);
 
     useEffect(() => {
-        const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-        window.addEventListener('keydown', onKey);
+        const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+        window.addEventListener("keydown", onKey);
 
-        return () => window.removeEventListener('keydown', onKey);
+        return () => window.removeEventListener("keydown", onKey);
     }, [onClose]);
 
     return (
@@ -515,7 +533,7 @@ function ReviewModal({
                                     {
                                         preserveScroll: true,
                                         preserveState: true,
-                                        only: ['review'],
+                                        only: ["review"],
                                     },
                                 )
                             }
@@ -540,9 +558,9 @@ function ReviewModal({
 
 /** Attribution for summarized articles: original title link and photo credit. */
 function SourceCredit({ article }: { article: Article }) {
-    let host = article.source_name ?? '';
+    let host = article.source_name ?? "";
     try {
-        host = new URL(article.source_url!).host.replace(/^www\./, '');
+        host = new URL(article.source_url!).host.replace(/^www\./, "");
     } catch {
         // keep the source name
     }
@@ -554,7 +572,7 @@ function SourceCredit({ article }: { article: Article }) {
             </span>
             <div className="min-w-0 text-sm leading-relaxed text-slate-600">
                 <p>
-                    {article.is_ai_generated ? 'Disarikan dari ' : 'Sumber: '}
+                    {article.is_ai_generated ? "Disarikan dari " : "Sumber: "}
                     <a
                         href={article.source_url!}
                         target="_blank"
@@ -584,6 +602,6 @@ function firstWords(text: string, count: number) {
     const words = text.trim().split(/\s+/);
 
     return words.length > count
-        ? `${words.slice(0, count).join(' ')}…`
-        : words.join(' ');
+        ? `${words.slice(0, count).join(" ")}…`
+        : words.join(" ");
 }

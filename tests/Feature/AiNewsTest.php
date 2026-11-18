@@ -301,6 +301,18 @@ class AiNewsTest extends TestCase
         $this->assertSame(1, AiRun::where('operation', 'review')->count());
     }
 
+    public function test_guests_get_only_the_50_word_summary(): void
+    {
+        $body = implode(' ', array_map(fn ($i) => "kata$i", range(1, 80)));
+        $article = Article::factory()->create(['status' => ArticleStatus::Published, 'published_at' => now()->subHour(), 'body' => $body, 'source_excerpt' => null]);
+
+        $this->get("/berita/{$article->slug}")->assertInertia(fn (Assert $page) => $page
+            ->where('article.body', implode(' ', array_map(fn ($i) => "kata$i", range(1, 50))).'…')
+            ->where('article.excerpt', null));
+        $this->actingAs(User::factory()->create())->get("/berita/{$article->slug}")
+            ->assertInertia(fn (Assert $page) => $page->where('article.body', $body));
+    }
+
     public function test_missing_image_falls_back_to_the_pages_og_image(): void
     {
         $item = $this->item();

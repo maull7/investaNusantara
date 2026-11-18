@@ -45,7 +45,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return to_route('admin.articles.index')->with('success', 'Akun kontributor dibuat. Selamat menulis!');
+        return redirect()->intended(route('admin.articles.index'))->with('success', 'Akun kontributor dibuat. Selamat menulis!');
     }
 
     public function store(Request $request): RedirectResponse

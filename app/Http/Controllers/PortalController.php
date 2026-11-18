@@ -9,6 +9,7 @@ use App\Models\Article;
 use App\Models\ArticleReview;
 use App\Models\Category;
 use App\Models\Region;
+use App\Services\NewsPipeline;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,6 +75,12 @@ class PortalController extends Controller
             $article->increment('views');
         }
         $article->load(['category:id,name,slug', 'region:code,name,slug,parent_code,level,image_url', 'region.parent:code,name,slug,image_url', 'author:id,name']);
+        // Guests get only the "Ringkasan": the full body never leaves the server. Login brings them back here.
+        if (! $request->user()) {
+            $article->body = $article->source_excerpt ?? NewsPipeline::firstWords($article->body) ?? '';
+            $article->excerpt = null;
+            redirect()->setIntendedUrl($request->url());
+        }
 
         return Inertia::render('article/show', [
             'article' => $article,
