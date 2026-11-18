@@ -1,20 +1,20 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { AnimatePresence, motion } from 'motion/react';
-import { useRef, useState } from 'react';
+import { Head, Link, router, usePage } from "@inertiajs/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useRef, useState } from "react";
 import {
     CountUp,
     EmptyState,
     roleLabel,
     StatusPill,
     statusMeta,
-} from '@/components/admin/ui';
-import Icon from '@/components/icons';
-import { ease } from '@/components/motion';
-import Pagination from '@/components/pagination';
-import AdminLayout from '@/layouts/admin';
-import { timeAgo } from '@/lib/news';
-import { cn } from '@/lib/utils';
-import { article as publicArticle } from '@/routes';
+} from "@/components/admin/ui";
+import Icon from "@/components/icons";
+import { ease } from "@/components/motion";
+import Pagination from "@/components/pagination";
+import AdminLayout from "@/layouts/admin";
+import { timeAgo } from "@/lib/news";
+import { cn } from "@/lib/utils";
+import { article as publicArticle } from "@/routes";
 import {
     create,
     edit,
@@ -22,8 +22,8 @@ import {
     publish,
     reject,
     submit,
-} from '@/routes/admin/articles';
-import type { ArticleStatus, Paginated } from '@/types';
+} from "@/routes/admin/articles";
+import type { ArticleStatus, Paginated } from "@/types";
 
 type Row = {
     id: number;
@@ -40,49 +40,52 @@ type Row = {
     category: { name: string };
     region: { name: string } | null;
     author: { name: string };
+    requester: { name: string } | null;
     can: { update: boolean; publish: boolean; submit: boolean };
 };
 
 type Stats = Record<ArticleStatus, number> & { total: number; views: number };
 
-type Filters = { status?: string; q?: string };
+type Filters = { status?: string; q?: string; requester?: string };
 
-const TILES: { key: '' | ArticleStatus; label: string }[] = [
-    { key: '', label: 'Semua artikel' },
-    { key: 'draft', label: 'Draft' },
-    { key: 'review', label: 'Menunggu review' },
-    { key: 'published', label: 'Terbit' },
-    { key: 'rejected', label: 'Dikembalikan' },
+const TILES: { key: "" | ArticleStatus; label: string }[] = [
+    { key: "", label: "Semua artikel" },
+    { key: "draft", label: "Draft" },
+    { key: "review", label: "Menunggu review" },
+    { key: "published", label: "Terbit" },
+    { key: "rejected", label: "Dikembalikan" },
 ];
 
-const spring = { type: 'spring', stiffness: 420, damping: 34 } as const;
+const spring = { type: "spring", stiffness: 420, damping: 34 } as const;
 
 function greeting(): string {
     const h = new Date().getHours();
     if (h < 11) {
-        return 'Selamat pagi';
+        return "Selamat pagi";
     }
     if (h < 15) {
-        return 'Selamat siang';
+        return "Selamat siang";
     }
     if (h < 19) {
-        return 'Selamat sore';
+        return "Selamat sore";
     }
-    return 'Selamat malam';
+    return "Selamat malam";
 }
 
 export default function ArticlesIndex({
     articles,
     stats,
     filters,
+    requesters,
 }: {
     articles: Paginated<Row>;
     stats: Stats;
     filters: Filters;
+    requesters: { id: number; name: string }[];
 }) {
     const user = usePage().props.auth.user!;
-    const status = filters.status ?? '';
-    const [q, setQ] = useState(filters.q ?? '');
+    const status = filters.status ?? "";
+    const [q, setQ] = useState(filters.q ?? "");
     const [loading, setLoading] = useState(false);
     const typing = useRef<number | undefined>(undefined);
 
@@ -90,13 +93,14 @@ export default function ArticlesIndex({
         const params = {
             q: q || undefined,
             status: status || undefined,
+            requester: filters.requester || undefined,
             ...next,
         };
         router.get(index.url(), params, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
-            only: ['articles', 'filters'],
+            only: ["articles", "filters"],
             onStart: () => setLoading(true),
             onFinish: () => setLoading(false),
         });
@@ -135,12 +139,12 @@ export default function ArticlesIndex({
                             {roleLabel[user.role]}
                         </span>
                         <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">
-                            {greeting()}, {user.name.split(' ')[0]}
+                            {greeting()}, {user.name.split(" ")[0]}
                         </h2>
                         <p className="mt-1 max-w-md text-sm text-white/85">
                             {stats.review > 0
                                 ? `Ada ${stats.review} artikel menunggu review.`
-                                : 'Semua artikel sudah ditinjau. Saatnya menulis kabar baru.'}
+                                : "Semua artikel sudah ditinjau. Saatnya menulis kabar baru."}
                         </p>
                     </div>
                     {/* Frosted white card: stays readable where the gradient turns white. */}
@@ -172,7 +176,7 @@ export default function ArticlesIndex({
 
                     return (
                         <motion.button
-                            key={t.key || 'all'}
+                            key={t.key || "all"}
                             type="button"
                             onClick={() =>
                                 visit({ status: t.key || undefined })
@@ -187,10 +191,10 @@ export default function ArticlesIndex({
                             whileHover={{ y: -3 }}
                             whileTap={{ scale: 0.97 }}
                             className={cn(
-                                'relative min-w-36 shrink-0 rounded-2xl bg-white p-4 text-left ring-1 transition-shadow',
+                                "relative min-w-36 shrink-0 rounded-2xl bg-white p-4 text-left ring-1 transition-shadow",
                                 isActive
-                                    ? 'shadow-lg shadow-accent/10 ring-accent/30'
-                                    : 'ring-slate-200/80 hover:shadow-md',
+                                    ? "shadow-lg shadow-accent/10 ring-accent/30"
+                                    : "ring-slate-200/80 hover:shadow-md",
                             )}
                         >
                             {isActive && (
@@ -203,10 +207,10 @@ export default function ArticlesIndex({
                             <span className="flex items-center gap-2 text-xs font-medium text-slate-500">
                                 <span
                                     className={cn(
-                                        'size-2 rounded-full',
+                                        "size-2 rounded-full",
                                         t.key
                                             ? statusMeta[t.key].dot
-                                            : 'bg-accent',
+                                            : "bg-accent",
                                     )}
                                 />
                                 {t.label}
@@ -226,44 +230,64 @@ export default function ArticlesIndex({
                         <h2 className="font-semibold text-navy-900">
                             {status
                                 ? statusMeta[status as ArticleStatus].label
-                                : 'Semua artikel'}
+                                : "Semua artikel"}
                         </h2>
                         <p className="text-xs text-slate-500">
                             {articles.total} artikel
                             {filters.q && ` cocok dengan “${filters.q}”`}
                         </p>
                     </div>
-                    <label className="relative w-full sm:w-72">
-                        <Icon
-                            name="search"
-                            width={18}
-                            height={18}
-                            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400"
-                        />
-                        <input
-                            value={q}
-                            onChange={(e) => onSearch(e.target.value)}
-                            placeholder="Cari judul artikel…"
-                            aria-label="Cari judul artikel"
-                            className="input rounded-full bg-slate-50 pl-10"
-                        />
-                        <AnimatePresence>
-                            {loading && (
-                                <motion.span
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="absolute top-1/2 right-3.5 size-4 -translate-y-1/2 animate-spin rounded-full border-2 border-accent/20 border-t-accent"
-                                />
-                            )}
-                        </AnimatePresence>
-                    </label>
+                    <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                        <select
+                            value={filters.requester ?? ""}
+                            onChange={(e) =>
+                                visit({
+                                    requester: e.target.value || undefined,
+                                })
+                            }
+                            aria-label="Filter berita AI berdasarkan pengguna"
+                            className="input w-full rounded-full bg-slate-50 sm:w-48"
+                        >
+                            <option value="">Semua penambah</option>
+                            <option value="auto">AI terjadwal</option>
+                            {requesters.map((u) => (
+                                <option key={u.id} value={u.id}>
+                                    AI oleh {u.name}
+                                </option>
+                            ))}
+                        </select>
+                        <label className="relative w-full sm:w-72">
+                            <Icon
+                                name="search"
+                                width={18}
+                                height={18}
+                                className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400"
+                            />
+                            <input
+                                value={q}
+                                onChange={(e) => onSearch(e.target.value)}
+                                placeholder="Cari judul artikel…"
+                                aria-label="Cari judul artikel"
+                                className="input rounded-full bg-slate-50 pl-10"
+                            />
+                            <AnimatePresence>
+                                {loading && (
+                                    <motion.span
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="absolute top-1/2 right-3.5 size-4 -translate-y-1/2 animate-spin rounded-full border-2 border-accent/20 border-t-accent"
+                                    />
+                                )}
+                            </AnimatePresence>
+                        </label>
+                    </div>
                 </div>
 
                 <ul
                     className={cn(
-                        'divide-y divide-slate-100 transition-opacity',
-                        loading && 'opacity-60',
+                        "divide-y divide-slate-100 transition-opacity",
+                        loading && "opacity-60",
                     )}
                 >
                     <AnimatePresence mode="popLayout" initial={false}>
@@ -296,13 +320,13 @@ export default function ArticlesIndex({
                     <EmptyState
                         icon="file"
                         title={
-                            filters.q || status
-                                ? 'Tidak ada artikel yang cocok'
-                                : 'Belum ada artikel'
+                            filters.q || status || filters.requester
+                                ? "Tidak ada artikel yang cocok"
+                                : "Belum ada artikel"
                         }
                     >
-                        {filters.q || status ? (
-                            'Coba kata kunci atau status lain.'
+                        {filters.q || status || filters.requester ? (
+                            "Coba kata kunci atau status lain."
                         ) : (
                             <Link
                                 href={create.url()}
@@ -379,13 +403,16 @@ function ArticleRow({ article: a }: { article: Row }) {
                 <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500">
                     <span>{a.category.name}</span>
                     <span className="text-slate-300">•</span>
-                    <span>{a.region?.name ?? 'Nasional'}</span>
+                    <span>{a.region?.name ?? "Nasional"}</span>
                     <span className="text-slate-300">•</span>
-                    <span>{a.author.name}</span>
+                    <span>
+                        {a.author.name}
+                        {a.requester && ` · ditambahkan ${a.requester.name}`}
+                    </span>
                     <span className="text-slate-300">•</span>
                     <span className="inline-flex items-center gap-1">
                         <Icon name="eye" width={13} height={13} />
-                        {a.views.toLocaleString('id-ID')}
+                        {a.views.toLocaleString("id-ID")}
                     </span>
                     <span className="text-slate-300">•</span>
                     <span className="inline-flex items-center gap-1">
@@ -405,7 +432,7 @@ function ArticleRow({ article: a }: { article: Row }) {
                             Edit
                         </Link>
                     )}
-                    {a.status === 'published' && (
+                    {a.status === "published" && (
                         <a
                             href={publicArticle.url(a.slug)}
                             target="_blank"
@@ -415,7 +442,7 @@ function ArticleRow({ article: a }: { article: Row }) {
                             Lihat
                         </a>
                     )}
-                    {a.can.submit && a.status !== 'review' && (
+                    {a.can.submit && a.status !== "review" && (
                         <button
                             onClick={() => post(submit.url(a.id))}
                             className="btn-ghost px-3 py-1.5 text-xs"
@@ -424,7 +451,7 @@ function ArticleRow({ article: a }: { article: Row }) {
                             Ajukan
                         </button>
                     )}
-                    {a.can.publish && a.status !== 'published' && (
+                    {a.can.publish && a.status !== "published" && (
                         <button
                             onClick={() => post(publish.url(a.id))}
                             className="btn-success px-3 py-1.5 text-xs"
@@ -433,7 +460,7 @@ function ArticleRow({ article: a }: { article: Row }) {
                             Terbitkan
                         </button>
                     )}
-                    {a.can.publish && a.status === 'review' && (
+                    {a.can.publish && a.status === "review" && (
                         <button
                             onClick={() => post(reject.url(a.id))}
                             className="btn-danger px-3 py-1.5 text-xs"

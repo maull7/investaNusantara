@@ -76,4 +76,22 @@ class AdminDashboardTest extends TestCase
                 ->has('articles.data', 2)
                 ->where('stats.total', 4));
     }
+
+    public function test_requester_filter_shows_ai_articles_by_who_fetched_them(): void
+    {
+        $admin = User::factory()->create(['role' => Role::SuperAdmin]);
+        $budi = User::factory()->create(['name' => 'Budi']);
+        Article::factory()->create(['is_ai_generated' => true, 'requested_by' => $budi->id]);
+        Article::factory()->create(['is_ai_generated' => true, 'requested_by' => null]);
+        Article::factory()->create();
+
+        $this->actingAs($admin)->get(route('admin.articles.index', ['requester' => $budi->id]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('articles.data', 1)
+                ->where('articles.data.0.requester.name', 'Budi')
+                ->where('requesters.0.name', 'Budi'));
+
+        $this->actingAs($admin)->get(route('admin.articles.index', ['requester' => 'auto']))
+            ->assertInertia(fn (Assert $page) => $page->has('articles.data', 1));
+    }
 }

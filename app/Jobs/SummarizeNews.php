@@ -117,6 +117,7 @@ class SummarizeNews extends HermesTask
                 'category_id' => $this->category((string) ($output['category'] ?? ''), $subject),
                 'region_code' => $this->region((string) ($output['region'] ?? ''), $subject),
                 'author_id' => $pipeline->author()->id,
+                'requested_by' => $subject->fetch->requested_by,
                 'status' => $publish ? ArticleStatus::Published : ArticleStatus::Review,
                 'published_at' => $publish ? now() : null,
                 'source_name' => $subject->source->name,

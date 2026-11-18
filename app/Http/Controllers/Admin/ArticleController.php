@@ -38,10 +38,14 @@ class ArticleController extends Controller
         ];
 
         $articles = (clone $visible)
-            ->with(['category:id,name', 'region:code,name', 'author:id,name'])
-            ->select(['id', 'title', 'slug', 'status', 'cover_path', 'category_id', 'region_code', 'author_id', 'published_at', 'updated_at', 'views', 'is_headline', 'is_breaking', 'is_ai_generated'])
+            ->with(['category:id,name', 'region:code,name', 'author:id,name', 'requester:id,name'])
+            ->select(['id', 'title', 'slug', 'status', 'cover_path', 'category_id', 'region_code', 'author_id', 'requested_by', 'published_at', 'updated_at', 'views', 'is_headline', 'is_breaking', 'is_ai_generated'])
             ->when($request->string('status')->value(), fn ($q, $s) => $q->where('status', $s))
             ->when($request->string('q')->trim()->value(), fn ($q, $term) => $q->where('title', 'like', "%$term%"))
+            // ?requester=<user id> for AI articles that user fetched, 'auto' for scheduled ones.
+            ->when($request->string('requester')->value(), fn ($q, $r) => $r === 'auto'
+                ? $q->where('is_ai_generated', true)->whereNull('requested_by')
+                : $q->where('requested_by', (int) $r))
             ->latest('updated_at')
             ->paginate(20)
             ->withQueryString()
@@ -57,7 +61,9 @@ class ArticleController extends Controller
         return Inertia::render('admin/articles/index', [
             'articles' => $articles,
             'stats' => $stats,
-            'filters' => $request->only('status', 'q'),
+            'filters' => $request->only('status', 'q', 'requester'),
+            'requesters' => User::whereIn('id', (clone $visible)->reorder()->select('requested_by')->whereNotNull('requested_by')->distinct())
+                ->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

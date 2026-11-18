@@ -54,13 +54,15 @@ class AiNewsController extends Controller
     public function sources(Request $request): Response
     {
         $province = $this->province($request);
+        $sources = NewsSource::inProvince($province)->with(['region:code,name', 'category:id,name'])
+            ->withCount(['fetches as active_fetches' => fn ($q) => $q->whereIn('status', NewsTaskStatus::activeValues())])
+            ->orderBy('name')->paginate(20)->withQueryString();
 
         return Inertia::render('admin/ai/sources', [
             'province' => $province,
-            'sources' => NewsSource::inProvince($province)->with(['region:code,name', 'category:id,name'])
-                ->withCount(['fetches as active_fetches' => fn ($q) => $q->whereIn('status', NewsTaskStatus::activeValues())])
-                ->orderBy('name')->get(),
-            'counts' => NewsItem::selectRaw('news_source_id, status, count(*) as total')->groupBy('news_source_id', 'status')->toBase()->get()
+            'sources' => $sources,
+            'counts' => NewsItem::whereIn('news_source_id', $sources->pluck('id'))
+                ->selectRaw('news_source_id, status, count(*) as total')->groupBy('news_source_id', 'status')->toBase()->get()
                 ->groupBy('news_source_id')
                 ->map(fn ($rows) => $rows->pluck('total', 'status')),
             'categories' => Category::orderBy('sort')->get(['id', 'name']),

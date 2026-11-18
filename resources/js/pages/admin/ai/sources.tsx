@@ -5,6 +5,7 @@ import { AiTabs, ProvinceFilter, TaskPill } from '@/components/admin/ai';
 import { EmptyState, Field, Switch } from '@/components/admin/ui';
 import Icon from '@/components/icons';
 import { ease } from '@/components/motion';
+import Pagination from '@/components/pagination';
 import AdminLayout from '@/layouts/admin';
 import { timeAgo } from '@/lib/news';
 import { cn } from '@/lib/utils';
@@ -15,7 +16,7 @@ import {
     update,
 } from '@/routes/admin/ai/sources';
 import { cities as citiesRoute } from '@/routes/region';
-import type { Category, Region } from '@/types';
+import type { Category, Paginated, Region } from '@/types';
 
 type Source = {
     id: number;
@@ -38,7 +39,7 @@ type Source = {
 };
 
 type Props = {
-    sources: Source[];
+    sources: Paginated<Source>;
     counts: Record<
         string,
         Partial<Record<'published' | 'review' | 'failed' | 'duplicate', number>>
@@ -88,13 +89,13 @@ export default function AiSources({
                 <ProvinceFilter value={province} provinces={provinces} />
             </AiTabs>
 
-            {sources.length === 0 && province ? (
+            {sources.data.length === 0 && province ? (
                 <div className="card">
                     <EmptyState icon="sliders" title="Tidak ada sumber">
                         Belum ada sumber berita untuk wilayah ini.
                     </EmptyState>
                 </div>
-            ) : sources.length === 0 ? (
+            ) : sources.data.length === 0 ? (
                 <div className="card">
                     <EmptyState icon="sliders" title="Belum ada sumber berita">
                         Tambahkan situs seperti jamberita.com. Hermes akan
@@ -104,7 +105,7 @@ export default function AiSources({
                 </div>
             ) : (
                 <div className="grid gap-3 md:grid-cols-2">
-                    {sources.map((s, i) => (
+                    {sources.data.map((s, i) => (
                         <SourceCard
                             key={s.id}
                             source={s}
@@ -115,6 +116,8 @@ export default function AiSources({
                     ))}
                 </div>
             )}
+
+            <Pagination data={sources} />
 
             <AnimatePresence>
                 {editing && (

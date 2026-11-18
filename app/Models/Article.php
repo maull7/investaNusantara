@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Storage;
  * @property int $category_id
  * @property string|null $region_code
  * @property int $author_id
+ * @property int|null $requested_by user who ran the AI fetch; null when scheduled
  * @property int|null $editor_id
  * @property ArticleStatus $status
  * @property bool $is_headline
@@ -102,6 +103,12 @@ class Article extends Model
     public function review(): HasOne
     {
         return $this->hasOne(ArticleReview::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requested_by');
     }
 
     /** @return BelongsTo<User, $this> */

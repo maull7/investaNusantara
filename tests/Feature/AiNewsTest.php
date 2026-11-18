@@ -49,7 +49,7 @@ class AiNewsTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]))->get('/admin/ai')
             ->assertInertia(fn (Assert $page) => $page->component('admin/ai/index')->has('hermes')->has('fetches', 0));
         $this->get('/admin/ai/sources')
-            ->assertInertia(fn (Assert $page) => $page->component('admin/ai/sources')->has('sources', 1)->has('provinces', 1));
+            ->assertInertia(fn (Assert $page) => $page->component('admin/ai/sources')->has('sources.data', 1)->has('provinces', 1));
     }
 
     public function test_ai_pages_count_items_per_status(): void
@@ -70,10 +70,10 @@ class AiNewsTest extends TestCase
         NewsSource::create(['name' => 'Nasional', 'url' => 'https://nasional.test', 'max_articles' => 5]);
         $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
 
-        $this->get('/admin/ai/sources')->assertInertia(fn (Assert $page) => $page->has('sources', 3)->where('province', ''));
-        $this->get('/admin/ai/sources?province=15')->assertInertia(fn (Assert $page) => $page->has('sources', 2)->where('province', '15'));
-        $this->get('/admin/ai/sources?province=nasional')->assertInertia(fn (Assert $page) => $page->has('sources', 1));
-        $this->get('/admin/ai/sources?province=99')->assertInertia(fn (Assert $page) => $page->has('sources', 3)->where('province', ''));
+        $this->get('/admin/ai/sources')->assertInertia(fn (Assert $page) => $page->has('sources.data', 3)->where('province', ''));
+        $this->get('/admin/ai/sources?province=15')->assertInertia(fn (Assert $page) => $page->has('sources.data', 2)->where('province', '15'));
+        $this->get('/admin/ai/sources?province=nasional')->assertInertia(fn (Assert $page) => $page->has('sources.data', 1));
+        $this->get('/admin/ai/sources?province=99')->assertInertia(fn (Assert $page) => $page->has('sources.data', 3)->where('province', ''));
         $this->get('/admin/ai?province=15')->assertInertia(fn (Assert $page) => $page->where('stats.published', 1)->has('fetches', 1));
         $this->get('/admin/ai?province=nasional')->assertInertia(fn (Assert $page) => $page->where('stats.published', 0)->has('fetches', 0));
     }
