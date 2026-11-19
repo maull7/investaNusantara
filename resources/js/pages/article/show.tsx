@@ -35,6 +35,44 @@ export default function ArticleShow({
     const [toggled, setOriginal] = useState(false);
     const original = locked || toggled;
     const [reviewOpen, setReviewOpen] = useState(false);
+    // Set on first open; the review then keeps running and polling even after the modal closes.
+    const [reviewStarted, setReviewStarted] = useState(false);
+    const reviewPending =
+        review?.status !== "completed" && review?.status !== "failed";
+    // Button badge while the modal is closed: working, ready or failed.
+    const reviewBadge = !reviewStarted
+        ? null
+        : reviewPending
+          ? "working"
+          : review?.status === "completed"
+            ? "ready"
+            : "failed";
+
+    // No review yet: ask for one. Then poll until Hermes is done.
+    useEffect(() => {
+        if (!reviewStarted || !reviewPending) {
+            return;
+        }
+        if (!review) {
+            router.post(
+                reviewRoute.url(article.slug),
+                {},
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    only: ["review"],
+                },
+            );
+
+            return;
+        }
+        const t = window.setTimeout(
+            () => router.reload({ only: ["review"] }),
+            3000,
+        );
+
+        return () => window.clearTimeout(t);
+    }, [reviewStarted, reviewPending, review, article.slug]);
     // Articles without a source (written by editors) summarize themselves: own title + first 50 words.
     const fromSource = Boolean(article.source_excerpt && article.source_url);
     const summaryTitle = article.source_title ?? article.title;
@@ -248,17 +286,39 @@ export default function ArticleShow({
                                         {auth.user ? (
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    setReviewOpen(true)
-                                                }
-                                                className={pill}
+                                                onClick={() => {
+                                                    setReviewOpen(true);
+                                                    setReviewStarted(true);
+                                                }}
+                                                className={cn(
+                                                    pill,
+                                                    reviewBadge === "ready" &&
+                                                        "bg-emerald-50 text-emerald-700 ring-emerald-200",
+                                                    reviewBadge === "failed" &&
+                                                        "bg-red-50 text-red-700 ring-red-200",
+                                                )}
+                                                aria-live="polite"
                                             >
-                                                <Icon
-                                                    name="star"
-                                                    width={13}
-                                                    height={13}
-                                                />
-                                                Review AI
+                                                {reviewBadge === "working" ? (
+                                                    <span className="size-3 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+                                                ) : (
+                                                    <Icon
+                                                        name="star"
+                                                        width={13}
+                                                        height={13}
+                                                    />
+                                                )}
+                                                {reviewBadge === "working"
+                                                    ? "Menyusun review…"
+                                                    : reviewBadge === "ready"
+                                                      ? "Review AI siap"
+                                                      : reviewBadge === "failed"
+                                                        ? "Review gagal"
+                                                        : "Review AI"}
+                                                {reviewBadge === "ready" &&
+                                                    !reviewOpen && (
+                                                        <span className="size-1.5 rounded-full bg-emerald-500" />
+                                                    )}
                                             </button>
                                         ) : (
                                             <Link
@@ -428,32 +488,6 @@ function ReviewModal({
     const done = review?.status === "completed";
     const failed = review?.status === "failed";
 
-    // No review yet: ask for one. Then poll until Hermes is done.
-    useEffect(() => {
-        if (!review) {
-            router.post(
-                reviewRoute.url(slug),
-                {},
-                {
-                    preserveScroll: true,
-                    preserveState: true,
-                    only: ["review"],
-                },
-            );
-
-            return;
-        }
-        if (done || failed) {
-            return;
-        }
-        const t = window.setTimeout(
-            () => router.reload({ only: ["review"] }),
-            3000,
-        );
-
-        return () => window.clearTimeout(t);
-    }, [review, done, failed, slug]);
-
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
         window.addEventListener("keydown", onKey);
@@ -547,8 +581,17 @@ function ReviewModal({
                         className="flex items-center gap-3 py-6 text-sm text-slate-500"
                         aria-live="polite"
                     >
-                        <span className="size-5 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
-                        AI sedang membaca berita dan menyusun review…
+                        <span className="size-5 shrink-0 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+                        <div className="space-y-1">
+                            <p className="font-medium text-navy-900">
+                                AI sedang membaca berita dan menyusun review…
+                            </p>
+                            <p className="text-xs text-slate-400">
+                                Biasanya butuh 1–2 menit. Jendela ini boleh
+                                ditutup, proses tetap berjalan. Tombol Review AI
+                                akan berubah hijau saat review siap.
+                            </p>
+                        </div>
                     </div>
                 )}
             </motion.div>
