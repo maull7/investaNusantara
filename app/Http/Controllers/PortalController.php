@@ -92,6 +92,12 @@ class PortalController extends Controller
 
         return response()->json([
             'latest' => Article::published()->card()->inRegion($province)->limit(3)->get(),
+            'agenda' => DirectoryEntry::where('type', 'event')->whereNotNull('verified_at')
+                ->where(fn ($q) => $q->where('region_code', $province->code)->orWhere('region_code', 'like', $province->code.'.%'))
+                ->whereNotNull('starts_on')
+                ->where(fn ($q) => $q->where('ends_on', '>=', today())->orWhere(fn ($e) => $e->whereNull('ends_on')->where('starts_on', '>=', today())))
+                ->with('region:code,name')->orderBy('starts_on')->limit(4)
+                ->get(['id', 'slug', 'region_code', 'name', 'address', 'starts_on', 'ends_on']),
         ]);
     }
 

@@ -206,4 +206,18 @@ class DirectoryTest extends TestCase
             ->assertSee('SUMMARY:Pameran UMKM Bogor', false);
         $this->get('/')->assertInertia(fn (Assert $page) => $page->where('agenda.0.name', 'Pameran UMKM Bogor'));
     }
+
+    public function test_province_preview_shows_published_upcoming_and_ongoing_agenda(): void
+    {
+        $base = ['type' => 'event', 'name' => 'Agenda', 'verified_at' => now(), 'starts_on' => today()->addDay()];
+        $city = DirectoryEntry::create([...$base, 'name' => 'Festival Bogor', 'region_code' => '32.71']);
+        $ongoing = DirectoryEntry::create([...$base, 'name' => 'Pameran Jabar', 'region_code' => '32', 'starts_on' => today()->subDay(), 'ends_on' => today()->addDay()]);
+        DirectoryEntry::create([...$base, 'region_code' => '33']);
+        DirectoryEntry::create([...$base, 'region_code' => '32', 'verified_at' => null]);
+        DirectoryEntry::create([...$base, 'region_code' => '32', 'starts_on' => today()->subDays(2)]);
+        $this->getJson('/api/wilayah/32/preview')->assertOk()->assertJsonCount(2, 'agenda')
+            ->assertJsonPath('agenda.0.id', $ongoing->id)->assertJsonPath('agenda.1.id', $city->id)
+            ->assertJsonPath('agenda.1.region.name', 'Kota Bogor');
+        $this->getJson('/api/wilayah/32.71/preview')->assertNotFound();
+    }
 }

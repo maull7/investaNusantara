@@ -15,6 +15,8 @@ use App\Services\HermesClient;
 use App\Services\NewsPipeline;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,6 +25,15 @@ class AiNewsController extends Controller
 {
     public function index(Request $request, HermesClient $hermes): Response
     {
+        $dates = $request->validate([
+            'token_from' => ['nullable', 'date_format:Y-m-d'],
+            'token_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:token_from'],
+        ]);
+        $tokenFrom = Carbon::parse($dates['token_from'] ?? today()->toDateString())->startOfDay();
+        $tokenTo = Carbon::parse($dates['token_to'] ?? today()->toDateString())->startOfDay();
+        if ($tokenTo->lt($tokenFrom)) {
+            throw ValidationException::withMessages(['token_to' => 'Tanggal akhir harus sama atau setelah tanggal awal.']);
+        }
         $province = $this->province($request);
         $bySource = fn ($q) => $q->whereHas('source', fn ($s) => $s->inProvince($province));
         $today = now()->startOfDay();
@@ -31,6 +42,7 @@ class AiNewsController extends Controller
             + NewsItem::whereIn('status', NewsTaskStatus::activeValues())->when($province, $bySource)->count();
 
         return Inertia::render('admin/ai/index', [
+            'tokenRange' => ['from' => $tokenFrom->toDateString(), 'to' => $tokenTo->toDateString()],
             'hermes' => $hermes->status(),
             'stats' => [
                 'published' => (int) ($items[NewsTaskStatus::Published->value] ?? 0),
@@ -39,7 +51,7 @@ class AiNewsController extends Controller
                 'duplicate' => (int) ($items[NewsTaskStatus::Duplicate->value] ?? 0),
                 'active' => $active,
                 // ponytail: tokens stay global; filter through ai_runs' subject when per-province cost matters.
-                'tokens' => (int) AiRun::where('created_at', '>=', $today)->sum('total_tokens'),
+                'tokens' => (int) AiRun::where('created_at', '>=', $tokenFrom)->where('created_at', '<', $tokenTo->copy()->addDay())->sum('total_tokens'),
             ],
             'fetches' => NewsFetch::when($province, $bySource)->with([
                 'source:id,name,url',

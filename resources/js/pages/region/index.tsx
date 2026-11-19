@@ -14,13 +14,23 @@ import PublicLayout from '@/layouts/public';
 import { regionHref, timeAgo } from '@/lib/news';
 import { cn } from '@/lib/utils';
 import { cities as citiesRoute } from '@/routes/region';
-import { article as articleRoute } from '@/routes';
+import { article as articleRoute, agenda as agendaRoute } from '@/routes';
+import { show as agendaShow } from '@/routes/agenda';
 import type { ArticleCard, Region } from '@/types';
 
 type MapData = GeoJSON.FeatureCollection<
     GeoJSON.MultiPolygon,
     { code: string }
 >;
+type AgendaPreview = {
+    id: number;
+    slug: string;
+    name: string;
+    address: string | null;
+    starts_on: string;
+    ends_on: string | null;
+    region: { name: string } | null;
+};
 type Rotation = [number, number];
 type Profile = {
     capital: string | null;
@@ -56,6 +66,8 @@ export default function RegionIndex({
     const [cityMap, setCityMap] = useState<MapData | null>(null);
     const [cities, setCities] = useState<Region[]>([]);
     const [latest, setLatest] = useState<ArticleCard[]>([]);
+    const [agenda, setAgenda] = useState<AgendaPreview[]>([]);
+    const [previewError, setPreviewError] = useState(false);
     const [latestLoading, setLatestLoading] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
     const [selected, setSelected] = useState<Region | null>(null);
@@ -81,6 +93,8 @@ export default function RegionIndex({
     }, []);
 
     useEffect(() => {
+        setAgenda([]);
+        setPreviewError(false);
         if (!selected) {
             setLatest([]);
             setLatestLoading(false);
@@ -89,11 +103,24 @@ export default function RegionIndex({
         const controller = new AbortController();
         setLatest([]);
         setLatestLoading(true);
-        void fetch(`/api/wilayah/${selected.code}/preview`, { signal: controller.signal })
-            .then((response) => response.ok ? response.json() : Promise.reject())
-            .then((data: { latest: ArticleCard[] }) => setLatest(data.latest))
-            .catch(() => undefined)
-            .finally(() => { if (!controller.signal.aborted) setLatestLoading(false); });
+        void fetch(`/api/wilayah/${selected.code}/preview`, {
+            signal: controller.signal,
+        })
+            .then((response) =>
+                response.ok ? response.json() : Promise.reject(),
+            )
+            .then(
+                (data: { latest: ArticleCard[]; agenda: AgendaPreview[] }) => {
+                    setLatest(data.latest);
+                    setAgenda(data.agenda);
+                },
+            )
+            .catch(() => {
+                if (!controller.signal.aborted) setPreviewError(true);
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setLatestLoading(false);
+            });
         return () => controller.abort();
     }, [selected]);
 
@@ -361,7 +388,7 @@ export default function RegionIndex({
 
                 <div className="grid items-stretch gap-4 md:grid-cols-[minmax(0,1fr)_260px] lg:grid-cols-[minmax(0,1fr)_340px]">
                     <section
-                        className="card min-w-0 p-3 sm:p-5"
+                        className="min-w-0 card p-3 sm:p-5"
                         aria-label="Peta interaktif Indonesia"
                     >
                         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -602,85 +629,316 @@ export default function RegionIndex({
                     />
                 </div>
 
-                {selected ? <section className="space-y-4" aria-label={`Informasi ${selected.name}`}>
-                    <div className="flex flex-wrap items-end justify-between gap-2">
-                        <div><p className="text-xs font-bold uppercase tracking-wider text-merah">Sorotan daerah</p><h2 className="text-2xl font-bold text-navy-900">Kenali {selected.name}</h2></div>
-                        <Link href={regionHref(selected)} className="text-sm font-semibold text-merah hover:underline">Buka halaman provinsi →</Link>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <article className="card overflow-hidden">
-                            <div className="relative h-36 bg-merah-dark">
-                                {selected.image_url && <img src={selected.image_url} alt="" className="size-full object-cover" />}
-                                <span className="absolute inset-0 bg-gradient-to-t from-merah-dark/75 to-transparent" />
-                                <h3 className="absolute bottom-4 left-5 text-xl font-bold text-white">Profil {selected.name}</h3>
+                {selected ? (
+                    <section
+                        className="space-y-4"
+                        aria-label={`Informasi ${selected.name}`}
+                    >
+                        <div className="flex flex-wrap items-end justify-between gap-2">
+                            <div>
+                                <p className="text-xs font-bold tracking-wider text-merah uppercase">
+                                    Sorotan daerah
+                                </p>
+                                <h2 className="text-2xl font-bold text-navy-900">
+                                    Kenali {selected.name}
+                                </h2>
                             </div>
-                            <div className="space-y-3 p-5 text-sm text-slate-600">
-                                {profile?.capital && (
-                                    <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
-                                        Ibu kota {profile.capital} · {profile.region}
+                            <Link
+                                href={regionHref(selected)}
+                                className="text-sm font-semibold text-merah hover:underline"
+                            >
+                                Buka halaman provinsi →
+                            </Link>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <article className="overflow-hidden card">
+                                <div className="relative h-36 bg-merah-dark">
+                                    {selected.image_url && (
+                                        <img
+                                            src={selected.image_url}
+                                            alt=""
+                                            className="size-full object-cover"
+                                        />
+                                    )}
+                                    <span className="absolute inset-0 bg-gradient-to-t from-merah-dark/75 to-transparent" />
+                                    <h3 className="absolute bottom-4 left-5 text-xl font-bold text-white">
+                                        Profil {selected.name}
+                                    </h3>
+                                </div>
+                                <div className="space-y-3 p-5 text-sm text-slate-600">
+                                    {profile?.capital && (
+                                        <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
+                                            Ibu kota {profile.capital} ·{' '}
+                                            {profile.region}
+                                        </p>
+                                    )}
+                                    {profile?.summary && (
+                                        <p className="leading-relaxed">
+                                            {profile.summary}
+                                        </p>
+                                    )}
+                                    {profile && profile.icons.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {profile.icons.map((icon) => (
+                                                <span
+                                                    key={icon}
+                                                    className="rounded-full bg-accent/5 px-2.5 py-1 text-xs text-accent ring-1 ring-accent/10"
+                                                >
+                                                    {icon}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                                        <span className="rounded-full bg-merah/8 px-3 py-1.5">
+                                            <strong className="text-merah">
+                                                {profile?.regencies ?? '…'}
+                                            </strong>{' '}
+                                            kabupaten
+                                        </span>
+                                        <span className="rounded-full bg-merah/8 px-3 py-1.5">
+                                            <strong className="text-merah">
+                                                {profile?.cities ?? '…'}
+                                            </strong>{' '}
+                                            kota
+                                        </span>
+                                        <span className="rounded-full bg-merah/8 px-3 py-1.5">
+                                            <strong className="text-merah">
+                                                {count(selected.code)}
+                                            </strong>{' '}
+                                            berita
+                                        </span>
+                                    </div>
+                                </div>
+                            </article>
+                            <article className="card p-5">
+                                <h3 className="text-lg font-bold text-navy-900">
+                                    Berita terbaru
+                                </h3>
+                                <div className="mt-3 divide-y divide-slate-100">
+                                    {latest.map((story) => (
+                                        <Link
+                                            key={story.id}
+                                            href={articleRoute.url(story.slug)}
+                                            className="flex gap-3 py-2.5 first:pt-0 last:pb-0 hover:text-merah"
+                                        >
+                                            {story.cover_url && (
+                                                <img
+                                                    src={story.cover_url}
+                                                    alt=""
+                                                    loading="lazy"
+                                                    className="size-14 shrink-0 rounded-lg object-cover"
+                                                />
+                                            )}
+                                            <span className="min-w-0">
+                                                <span className="line-clamp-2 text-sm leading-snug font-semibold text-navy-900">
+                                                    {story.title}
+                                                </span>
+                                                <span className="mt-1 block text-xs text-slate-500">
+                                                    {timeAgo(
+                                                        story.published_at,
+                                                    )}
+                                                </span>
+                                            </span>
+                                        </Link>
+                                    ))}
+                                    {!latestLoading && latest.length === 0 && (
+                                        <p className="py-3 text-sm text-slate-500">
+                                            Belum ada berita terbaru dari
+                                            wilayah ini.
+                                        </p>
+                                    )}
+                                    {latestLoading && (
+                                        <p className="py-3 text-sm text-slate-500">
+                                            Memuat berita…
+                                        </p>
+                                    )}
+                                </div>
+                            </article>
+                            <article className="card p-5 sm:p-6">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-navy-900">
+                                            Agenda daerah
+                                        </h3>
+                                        <p className="mt-1 text-sm text-slate-500">
+                                            Event mendatang dan yang sedang
+                                            berlangsung di {selected.name}.
+                                        </p>
+                                    </div>
+                                    <Link
+                                        href={agendaRoute.url({
+                                            query: { provinsi: selected.code },
+                                        })}
+                                        className="text-sm font-semibold text-accent hover:underline"
+                                    >
+                                        Lihat semua agenda →
+                                    </Link>
+                                </div>
+                                {latestLoading ? (
+                                    <p
+                                        role="status"
+                                        className="mt-4 text-sm text-slate-500"
+                                    >
+                                        Memuat agenda…
+                                    </p>
+                                ) : previewError ? (
+                                    <p
+                                        role="status"
+                                        className="mt-4 text-sm text-slate-500"
+                                    >
+                                        Agenda belum dapat dimuat. Buka semua
+                                        agenda untuk melihat jadwal.
+                                    </p>
+                                ) : agenda.length ? (
+                                    <ul className="mt-4 divide-y divide-slate-100">
+                                        {agenda.map((event) => (
+                                            <li key={event.id}>
+                                                <Link
+                                                    href={agendaShow.url(
+                                                        event.slug,
+                                                    )}
+                                                    className="group flex items-start gap-4 rounded-xl py-4 transition hover:bg-accent/5"
+                                                >
+                                                    <div className="min-w-14 rounded-xl bg-accent/10 p-2 text-center text-accent">
+                                                        <span className="block text-xl font-bold">
+                                                            {new Date(
+                                                                event.starts_on,
+                                                            ).getUTCDate()}
+                                                        </span>
+                                                        <span className="block text-xs uppercase">
+                                                            {new Date(
+                                                                event.starts_on,
+                                                            ).toLocaleDateString(
+                                                                'id-ID',
+                                                                {
+                                                                    month: 'short',
+                                                                    timeZone:
+                                                                        'UTC',
+                                                                },
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-navy-900 group-hover:text-accent">
+                                                            {event.name}
+                                                        </p>
+                                                        <p className="mt-1 text-xs text-slate-500">
+                                                            {new Date(
+                                                                event.starts_on,
+                                                            ).toLocaleDateString(
+                                                                'id-ID',
+                                                                {
+                                                                    day: 'numeric',
+                                                                    month: 'long',
+                                                                    year: 'numeric',
+                                                                    timeZone:
+                                                                        'UTC',
+                                                                },
+                                                            )}
+                                                            {event.ends_on &&
+                                                                ` – ${new Date(event.ends_on).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}`}
+                                                        </p>
+                                                        <p className="mt-1 text-sm text-slate-500">
+                                                            {event.address ||
+                                                                event.region
+                                                                    ?.name}
+                                                        </p>
+                                                    </div>
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+                                        Belum ada agenda mendatang yang
+                                        dipublikasikan di {selected.name}.
                                     </p>
                                 )}
-                                {profile?.summary && <p className="leading-relaxed">{profile.summary}</p>}
-                                {profile && profile.icons.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {profile.icons.map((icon) => (
-                                            <span key={icon} className="rounded-full bg-accent/5 px-2.5 py-1 text-xs text-accent ring-1 ring-accent/10">{icon}</span>
-                                        ))}
-                                    </div>
-                                )}
-                                <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                                    <span className="rounded-full bg-merah/8 px-3 py-1.5"><strong className="text-merah">{profile?.regencies ?? '…'}</strong> kabupaten</span>
-                                    <span className="rounded-full bg-merah/8 px-3 py-1.5"><strong className="text-merah">{profile?.cities ?? '…'}</strong> kota</span>
-                                    <span className="rounded-full bg-merah/8 px-3 py-1.5"><strong className="text-merah">{count(selected.code)}</strong> berita</span>
-                                </div>
-                            </div>
-                        </article>
-                        <article className="card p-5">
-                            <h3 className="text-lg font-bold text-navy-900">Berita terbaru</h3>
-                            <div className="mt-3 divide-y divide-slate-100">
-                                {latest.map((story) => <Link key={story.id} href={articleRoute.url(story.slug)} className="flex gap-3 py-2.5 first:pt-0 last:pb-0 hover:text-merah">
-                                    {story.cover_url && <img src={story.cover_url} alt="" loading="lazy" className="size-14 shrink-0 rounded-lg object-cover" />}
-                                    <span className="min-w-0"><span className="line-clamp-2 text-sm font-semibold leading-snug text-navy-900">{story.title}</span><span className="mt-1 block text-xs text-slate-500">{timeAgo(story.published_at)}</span></span>
-                                </Link>)}
-                                {!latestLoading && latest.length === 0 && <p className="py-3 text-sm text-slate-500">Belum ada berita terbaru dari wilayah ini.</p>}
-                                {latestLoading && <p className="py-3 text-sm text-slate-500">Memuat berita…</p>}
-                            </div>
-                        </article>
-                        <article className="card p-5"><h3 className="text-lg font-bold text-navy-900">Agenda daerah</h3><p className="mt-2 text-sm text-slate-500">Agenda {selected.name} akan tampil di sini saat fitur agenda tersedia.</p></article>
-                        <article className="card p-5 md:col-span-2">
-                            <h3 className="text-lg font-bold text-navy-900">UMKM unggulan</h3>
-                            {!profile || profile.umkm.length === 0 ? (
-                                <p className="mt-2 text-sm text-slate-500">{profile ? `Profil UMKM unggulan ${selected.name} belum tersedia.` : 'Memuat…'}</p>
-                            ) : (
-                                <ul className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-                                    {profile.umkm.map((u) => (
-                                        <li key={u.name} className="group overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                                            <div className="relative aspect-[4/3] bg-gradient-to-br from-merah-dark to-merah">
-                                                {u.image && <img src={u.image.url} alt={u.name} loading="lazy" className="size-full object-cover transition duration-500 group-hover:scale-105" />}
-                                                <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-accent">{u.category}</span>
-                                            </div>
-                                            <div className="p-3">
-                                                <p className="text-sm font-semibold text-navy-900">{u.name}</p>
-                                                <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-slate-500">{u.description}</p>
-                                                {u.image && (
-                                                    <p className="mt-2 truncate text-[10px] text-slate-400">
-                                                        Foto: {u.image.page ? <a href={u.image.page} target="_blank" rel="noopener nofollow" className="hover:text-accent">{u.image.credit}</a> : u.image.credit} · {u.image.license}
+                            </article>
+                            <article className="card p-5 md:col-span-2">
+                                <h3 className="text-lg font-bold text-navy-900">
+                                    UMKM unggulan
+                                </h3>
+                                {!profile || profile.umkm.length === 0 ? (
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        {profile
+                                            ? `Profil UMKM unggulan ${selected.name} belum tersedia.`
+                                            : 'Memuat…'}
+                                    </p>
+                                ) : (
+                                    <ul className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+                                        {profile.umkm.map((u) => (
+                                            <li
+                                                key={u.name}
+                                                className="group overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200"
+                                            >
+                                                <div className="relative aspect-[4/3] bg-gradient-to-br from-merah-dark to-merah">
+                                                    {u.image && (
+                                                        <img
+                                                            src={u.image.url}
+                                                            alt={u.name}
+                                                            loading="lazy"
+                                                            className="size-full object-cover transition duration-500 group-hover:scale-105"
+                                                        />
+                                                    )}
+                                                    <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                                                        {u.category}
+                                                    </span>
+                                                </div>
+                                                <div className="p-3">
+                                                    <p className="text-sm font-semibold text-navy-900">
+                                                        {u.name}
                                                     </p>
-                                                )}
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </article>
-                    </div>
-                </section> : <section className="card p-4 sm:p-5">
-                    <div className="mb-3">
-                        <h2 className="text-base font-semibold text-navy-900">Pilih wilayah dengan cepat</h2>
-                        <p className="text-xs text-slate-500">Pilih provinsi dan kabupaten/kota dari menu di bawah.</p>
-                    </div>
-                    <RegionPicker />
-                </section>}
+                                                    <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-slate-500">
+                                                        {u.description}
+                                                    </p>
+                                                    {u.image && (
+                                                        <p className="mt-2 truncate text-[10px] text-slate-400">
+                                                            Foto:{' '}
+                                                            {u.image.page ? (
+                                                                <a
+                                                                    href={
+                                                                        u.image
+                                                                            .page
+                                                                    }
+                                                                    target="_blank"
+                                                                    rel="noopener nofollow"
+                                                                    className="hover:text-accent"
+                                                                >
+                                                                    {
+                                                                        u.image
+                                                                            .credit
+                                                                    }
+                                                                </a>
+                                                            ) : (
+                                                                u.image.credit
+                                                            )}{' '}
+                                                            · {u.image.license}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </article>
+                        </div>
+                    </section>
+                ) : (
+                    <section className="card p-4 sm:p-5">
+                        <div className="mb-3">
+                            <h2 className="text-base font-semibold text-navy-900">
+                                Pilih wilayah dengan cepat
+                            </h2>
+                            <p className="text-xs text-slate-500">
+                                Pilih provinsi dan kabupaten/kota dari menu di
+                                bawah.
+                            </p>
+                        </div>
+                        <RegionPicker />
+                    </section>
+                )}
             </div>
         </PublicLayout>
     );
@@ -721,7 +979,7 @@ function SidePanel({
     }
 
     return (
-        <aside className="card flex min-w-0 flex-col overflow-hidden">
+        <aside className="flex min-w-0 flex-col overflow-hidden card">
             <div className="p-4 pb-0">
                 <label
                     htmlFor="region-search"
@@ -735,7 +993,7 @@ function SidePanel({
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Contoh: Aceh"
                     autoComplete="off"
-                    className="input mt-2 rounded-full pl-4"
+                    className="mt-2 input rounded-full pl-4"
                 />
                 {results.length > 0 && (
                     <ul className="mt-2 max-h-48 overflow-y-auto rounded-2xl border border-slate-100 p-1">
@@ -839,12 +1097,14 @@ function SidePanel({
                                         {i + 1}
                                     </span>
                                     <span className="size-10 shrink-0 overflow-hidden rounded-xl bg-merah-dark">
-                                        {p.image_url && <img
-                                            src={p.image_url}
-                                            alt=""
-                                            loading="lazy"
-                                            className="size-full object-cover"
-                                        />}
+                                        {p.image_url && (
+                                            <img
+                                                src={p.image_url}
+                                                alt=""
+                                                loading="lazy"
+                                                className="size-full object-cover"
+                                            />
+                                        )}
                                     </span>
                                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-navy-900">
                                         {p.name}

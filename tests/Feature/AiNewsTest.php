@@ -530,4 +530,20 @@ class AiNewsTest extends TestCase
         $this->assertModelMissing($b);
         $this->assertSame(2, $a->articles()->count());
     }
+
+    public function test_token_usage_can_be_filtered_by_inclusive_date_range(): void
+    {
+        Http::fake(['hermes.test/*' => Http::response([], 200)]);
+        foreach ([['2026-11-01 23:59:59', 10], ['2026-11-02 00:00:00', 100], ['2026-11-03 23:59:59', 200], ['2026-11-04 00:00:00', 1000]] as [$date, $tokens]) {
+            AiRun::create(['operation' => 'summary', 'status' => 'completed', 'input' => 'test', 'total_tokens' => $tokens, 'created_at' => $date]);
+        }
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]))
+            ->get('/admin/ai?token_from=2026-11-02&token_to=2026-11-03&province=15')
+            ->assertInertia(fn (Assert $page) => $page->where('stats.tokens', 300)
+                ->where('tokenRange.from', '2026-11-02')->where('tokenRange.to', '2026-11-03')->where('province', '15'));
+        $this->get('/admin/ai?token_from=2026-11-03&token_to=2026-11-02')->assertSessionHasErrors('token_to');
+        $this->get('/admin/ai?token_from=invalid')->assertSessionHasErrors('token_from');
+        $this->get('/admin/ai')->assertInertia(fn (Assert $page) => $page
+            ->where('tokenRange.from', today()->toDateString())->where('tokenRange.to', today()->toDateString()));
+    }
 }
