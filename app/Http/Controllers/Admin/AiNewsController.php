@@ -54,12 +54,16 @@ class AiNewsController extends Controller
     public function sources(Request $request, HermesClient $hermes): Response
     {
         $province = $this->province($request);
-        $sources = NewsSource::inProvince($province)->with(['region:code,name', 'category:id,name'])
+        $city = $this->city($request, $province);
+        $sources = NewsSource::inProvince($province)
+            ->when($city, fn ($q) => $q->where('region_code', $city))
+            ->with(['region:code,name', 'category:id,name'])
             ->withCount(['fetches as active_fetches' => fn ($q) => $q->whereIn('status', NewsTaskStatus::activeValues())])
             ->orderBy('name')->paginate(20)->withQueryString();
 
         return Inertia::render('admin/ai/sources', [
             'province' => $province,
+            'city' => $city,
             'hermesToken' => ['enabled' => $hermes->enabled(), 'configured' => (bool) config('hermes.token')],
             'sources' => $sources,
             'counts' => NewsItem::whereIn('news_source_id', $sources->pluck('id'))
@@ -141,6 +145,14 @@ class AiNewsController extends Controller
         $value = (string) $request->query('province', '');
 
         return $value === 'nasional' || Region::where('code', $value)->where('level', Region::PROVINCE)->exists() ? $value : '';
+    }
+
+    /** Kabupaten/kota filter: only valid inside the chosen province. */
+    private function city(Request $request, string $province): string
+    {
+        $value = (string) $request->query('city', '');
+
+        return $province !== '' && $province !== 'nasional' && Region::where('code', $value)->where('parent_code', $province)->exists() ? $value : '';
     }
 
     /** @return array<string, mixed> */

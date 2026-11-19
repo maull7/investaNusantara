@@ -98,7 +98,7 @@ class User extends Authenticatable
      */
     protected function logActivity(string $event, string $verb, array $properties = []): void
     {
-        if ($event === 'created' && ! auth()->check() && request()->is('register')) {
+        if ($event === 'created' && ! auth()->check() && request()->is('register', 'auth/google/callback')) {
             $role = ($this->role ?? Role::Contributor)->label();
             ActivityLog::record('user.registered', "mendaftar sebagai {$role}", $this, [], $this);
 

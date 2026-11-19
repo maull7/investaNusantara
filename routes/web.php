@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\PortalController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,13 +21,15 @@ Route::controller(PortalController::class)->group(function () {
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:6,1');
+    Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
     // Same page as /login, opened on the "Daftar" tab.
     Route::get('/register', [AuthController::class, 'create'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:6,1');
 });
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
-Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(function () {
     Route::redirect('/', '/admin/articles');
     Route::resource('articles', Admin\ArticleController::class)->except('show');
     Route::post('articles/{article}/submit', [Admin\ArticleController::class, 'submit'])->name('articles.submit');

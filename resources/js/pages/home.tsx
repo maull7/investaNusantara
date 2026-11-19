@@ -142,39 +142,70 @@ export default function Home({
 /** Province "channels": compact photo chips, two rows, swipeable. */
 function Channels({ counts }: { counts: Record<string, number> }) {
     const { provinces } = usePage().props.nav;
+    const ref = useRef<HTMLDivElement>(null);
+
+    const scroll = (dir: -1 | 1) =>
+        ref.current?.scrollBy({
+            left: dir * ref.current.clientWidth * 0.8,
+            behavior: 'smooth',
+        });
+
+    const arrow =
+        'absolute top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-accent/15 bg-white text-accent shadow-sm transition-colors hover:bg-accent hover:text-white md:grid';
 
     return (
         <div>
             <SectionTitle href={regions.url()}>Kanal Provinsi</SectionTitle>
-            <div className="-mx-4 no-scrollbar grid auto-cols-max grid-flow-col grid-rows-2 gap-2 overflow-x-auto [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] px-4 pb-1">
-                {provinces.map((p, i) => (
-                    <motion.div
-                        key={p.code}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            delay: 0.05 + Math.min(i, 16) * 0.025,
-                            duration: 0.4,
-                            ease,
-                        }}
-                        whileHover={{ y: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        <Link
-                            href={regionHref(p)}
-                            viewTransition
-                            className="group flex items-center gap-2 rounded-full border border-accent/15 bg-white py-1 pr-1.5 pl-1 text-[13px] text-navy-900 transition-colors hover:border-accent/30 hover:bg-accent/5"
+            <div className="relative">
+                <button
+                    type="button"
+                    aria-label="Geser ke kiri"
+                    onClick={() => scroll(-1)}
+                    className={cn(arrow, '-left-3')}
+                >
+                    <Icon name="chevron" className="size-4 rotate-180" />
+                </button>
+                <button
+                    type="button"
+                    aria-label="Geser ke kanan"
+                    onClick={() => scroll(1)}
+                    className={cn(arrow, '-right-3')}
+                >
+                    <Icon name="chevron" className="size-4" />
+                </button>
+                <div
+                    ref={ref}
+                    className="-mx-4 no-scrollbar grid auto-cols-max grid-flow-col grid-rows-2 gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0 [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] md:[mask-image:none]"
+                >
+                    {provinces.map((p, i) => (
+                        <motion.div
+                            key={p.code}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                                delay: 0.05 + Math.min(i, 16) * 0.025,
+                                duration: 0.4,
+                                ease,
+                            }}
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.95 }}
                         >
-                            <RegionAvatar region={p} className="size-7" />
-                            <span className="font-medium whitespace-nowrap">
-                                {p.name}
-                            </span>
-                            <span className="min-w-6 rounded-full bg-accent/10 px-1.5 py-0.5 text-center text-[11px] font-medium text-accent transition-colors group-hover:bg-accent group-hover:text-white">
-                                {counts[p.code] ?? 0}
-                            </span>
-                        </Link>
-                    </motion.div>
-                ))}
+                            <Link
+                                href={regionHref(p)}
+                                viewTransition
+                                className="group flex items-center gap-2 rounded-full border border-accent/15 bg-white py-1 pr-1.5 pl-1 text-[13px] text-navy-900 transition-colors hover:border-accent/30 hover:bg-accent/5"
+                            >
+                                <RegionAvatar region={p} className="size-7" />
+                                <span className="font-medium whitespace-nowrap">
+                                    {p.name}
+                                </span>
+                                <span className="min-w-6 rounded-full bg-accent/10 px-1.5 py-0.5 text-center text-[11px] font-medium text-accent transition-colors group-hover:bg-accent group-hover:text-white">
+                                    {counts[p.code] ?? 0}
+                                </span>
+                            </Link>
+                        </motion.div>
+                    ))}
+                </div>
             </div>
         </div>
     );

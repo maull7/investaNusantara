@@ -1,8 +1,10 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import Icon from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { index as aiIndex, sources as aiSources } from '@/routes/admin/ai';
+import { cities as citiesRoute } from '@/routes/region';
 
 export type TaskStatus =
     | 'queued'
@@ -215,34 +217,169 @@ export function AiTabs({ children }: { children?: React.ReactNode }) {
 export function ProvinceFilter({
     value,
     provinces,
+    city,
 }: {
     value: string;
     provinces: { code: string; name: string }[];
+    /** Pass (even as '') to also show the kabupaten/kota filter. */
+    city?: string;
 }) {
+    const [cities, setCities] = useState<{ code: string; name: string }[]>([]);
+    const hasCity = city !== undefined;
+    const real = value !== '' && value !== 'nasional';
+
+    useEffect(() => {
+        if (!hasCity || !real) {
+            setCities([]);
+
+            return;
+        }
+        let cancelled = false;
+        void fetch(citiesRoute.url(value))
+            .then((r) => r.json())
+            .then((rows) => !cancelled && setCities(rows));
+
+        return () => {
+            cancelled = true;
+        };
+    }, [hasCity, real, value]);
+
+    const go = (query: Record<string, string>) =>
+        router.get(window.location.pathname, query, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+
     return (
-        <select
-            value={value}
-            onChange={(e) =>
-                router.get(
-                    window.location.pathname,
-                    e.target.value ? { province: e.target.value } : {},
-                    {
-                        preserveState: true,
-                        preserveScroll: true,
-                        replace: true,
-                    },
-                )
+        <div className="flex flex-wrap gap-2">
+            <FilterSelect
+                value={value}
+                label="Filter provinsi"
+                onChange={(v) => go(v ? { province: v } : {})}
+                options={[
+                    { value: '', label: 'Semua provinsi' },
+                    { value: 'nasional', label: 'Nasional' },
+                    ...provinces.map((p) => ({
+                        value: p.code,
+                        label: p.name,
+                    })),
+                ]}
+            />
+            {hasCity && (
+                <FilterSelect
+                    value={city}
+                    label="Filter kabupaten/kota"
+                    disabled={!real}
+                    onChange={(v) =>
+                        go({ province: value, ...(v && { city: v }) })
+                    }
+                    options={[
+                        { value: '', label: 'Semua kabupaten/kota' },
+                        ...cities.map((c) => ({
+                            value: c.code,
+                            label: c.name,
+                        })),
+                    ]}
+                />
+            )}
+        </div>
+    );
+}
+
+/** Pill dropdown matching the tabs; a custom list so the selected row is red, not the browser's blue. */
+function FilterSelect({
+    value,
+    options,
+    label,
+    disabled,
+    onChange,
+}: {
+    value: string;
+    options: { value: string; label: string }[];
+    label: string;
+    disabled?: boolean;
+    onChange: (value: string) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const box = useRef<HTMLDivElement>(null);
+    const current = options.find((o) => o.value === value) ?? options[0];
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+        const close = (e: MouseEvent | KeyboardEvent) => {
+            if (
+                e instanceof KeyboardEvent
+                    ? e.key === 'Escape'
+                    : !box.current?.contains(e.target as Node)
+            ) {
+                setOpen(false);
             }
-            aria-label="Filter provinsi"
-            className="input w-auto py-2 text-sm"
-        >
-            <option value="">Semua provinsi</option>
-            <option value="nasional">Nasional</option>
-            {provinces.map((p) => (
-                <option key={p.code} value={p.code}>
-                    {p.name}
-                </option>
-            ))}
-        </select>
+        };
+        document.addEventListener('mousedown', close);
+        document.addEventListener('keydown', close);
+
+        return () => {
+            document.removeEventListener('mousedown', close);
+            document.removeEventListener('keydown', close);
+        };
+    }, [open]);
+
+    return (
+        <div ref={box} className="relative">
+            <button
+                type="button"
+                aria-label={label}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                disabled={disabled}
+                onClick={() => setOpen((o) => !o)}
+                className="flex items-center gap-2 rounded-full bg-white py-2 pr-3 pl-4 text-sm font-medium text-slate-600 ring-1 ring-slate-200 transition hover:text-accent hover:ring-accent/30 focus:ring-2 focus:ring-accent/30 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+            >
+                {current.label}
+                <Icon
+                    name="chevron"
+                    width={14}
+                    height={14}
+                    className={cn(
+                        'text-slate-400 transition-transform',
+                        open ? '-rotate-90' : 'rotate-90',
+                    )}
+                />
+            </button>
+            {open && (
+                <ul
+                    role="listbox"
+                    aria-label={label}
+                    className="absolute left-0 z-20 mt-2 max-h-72 min-w-full w-max overflow-y-auto rounded-2xl border border-accent/10 bg-white p-1.5 shadow-lg shadow-accent/10"
+                >
+                    {options.map((o) => (
+                        <li
+                            key={o.value}
+                            role="option"
+                            aria-selected={o.value === value}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setOpen(false);
+                                    onChange(o.value);
+                                }}
+                                className={cn(
+                                    'block w-full rounded-xl px-3 py-1.5 text-left text-sm transition-colors',
+                                    o.value === value
+                                        ? 'bg-accent/10 font-medium text-accent'
+                                        : 'text-slate-600 hover:bg-accent/5 hover:text-accent',
+                                )}
+                            >
+                                {o.label}
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
     );
 }

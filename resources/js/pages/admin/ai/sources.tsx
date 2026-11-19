@@ -50,6 +50,7 @@ type Props = {
     categories: Category[];
     provinces: Region[];
     province: string;
+    city: string;
 };
 
 const intervals = [
@@ -69,6 +70,7 @@ export default function AiSources({
     categories,
     provinces,
     province,
+    city,
 }: Props) {
     // null = closed, 'new' = create, otherwise the source being edited.
     const tokenForm = useForm({ enabled: hermesToken.enabled });
@@ -91,7 +93,11 @@ export default function AiSources({
         >
             <Head title="Sumber berita" />
             <AiTabs>
-                <ProvinceFilter value={province} provinces={provinces} />
+                <ProvinceFilter
+                    value={province}
+                    provinces={provinces}
+                    city={city}
+                />
             </AiTabs>
 
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 card p-4">

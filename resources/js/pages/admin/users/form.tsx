@@ -25,6 +25,7 @@ const roleHint: Record<Role, string> = {
     editor: 'Meninjau dan menerbitkan berita wilayahnya',
     journalist: 'Menulis dan mengajukan berita ke editor',
     contributor: 'Warga yang mengirim draft berita',
+    customer: 'Pembaca: hanya mengakses situs publik, bukan ruang redaksi',
 };
 
 export default function UserForm({ user, roles, permissions, regions }: Props) {

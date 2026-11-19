@@ -3,7 +3,8 @@ export type Role =
     | 'sub_admin'
     | 'editor'
     | 'journalist'
-    | 'contributor';
+    | 'contributor'
+    | 'customer';
 
 /** Admin areas a Super Admin can grant to a Sub Admin (App\Enums\Permission). */
 export type Permission =

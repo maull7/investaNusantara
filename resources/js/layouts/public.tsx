@@ -18,7 +18,7 @@ import Logo from '@/components/logo';
 import { ease } from '@/components/motion';
 import { regionHref } from '@/lib/news';
 import { cn } from '@/lib/utils';
-import { category, home, login, regions, search } from '@/routes';
+import { category, home, login, logout, regions, search } from '@/routes';
 import { index as adminArticles } from '@/routes/admin/articles';
 
 /**
@@ -73,12 +73,25 @@ export default function PublicLayout({
             label: c.name,
         })),
     ];
-    const redaksi = auth.user ? adminArticles.url() : login.url();
-    const menu: { href: string; label: string; icon: IconName }[] = [
+    // Pelanggan read the public site only: no newsroom link for them.
+    const staff = auth.user && auth.user.role !== 'customer';
+    const redaksi = staff ? adminArticles.url() : login.url();
+    const menu: {
+        href: string;
+        label: string;
+        icon: IconName;
+        post?: boolean;
+    }[] = [
         { href: home.url(), label: 'Beranda', icon: 'home' },
         { href: regions.url(), label: 'Wilayah', icon: 'map' },
         { href: search.url(), label: 'Cari', icon: 'search' },
-        { href: redaksi, label: 'Redaksi', icon: 'user' },
+        auth.user && !staff
+            ? { href: logout.url(), label: 'Keluar', icon: 'user', post: true }
+            : {
+                  href: redaksi,
+                  label: staff ? 'Redaksi' : 'Masuk',
+                  icon: 'user',
+              },
     ];
     const isActive = (href: string) =>
         href === '/' ? path === '/' : path.startsWith(href);
@@ -255,13 +268,21 @@ export default function PublicLayout({
                                         )}
                                     </Link>
                                 )}
-                                <Link
-                                    href={redaksi}
-                                    className="hidden items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm shadow-accent/30 transition hover:bg-accent-dark md:flex"
-                                >
-                                    <Icon name="user" width={16} height={16} />
-                                    {auth.user ? 'Ruang Redaksi' : 'Masuk'}
-                                </Link>
+                                {auth.user && !staff ? (
+                                    <UserMenu name={auth.user.name} />
+                                ) : (
+                                    <Link
+                                        href={redaksi}
+                                        className="hidden items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm shadow-accent/30 transition hover:bg-accent-dark md:flex"
+                                    >
+                                        <Icon
+                                            name="user"
+                                            width={16}
+                                            height={16}
+                                        />
+                                        {staff ? 'Ruang Redaksi' : 'Masuk'}
+                                    </Link>
+                                )}
                             </div>
                         </div>
 
@@ -348,6 +369,8 @@ export default function PublicLayout({
                                 <Link
                                     key={i.label}
                                     href={i.href}
+                                    method={i.post ? 'post' : undefined}
+                                    as={i.post ? 'button' : undefined}
                                     viewTransition
                                     className={cn(
                                         'relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] transition',
@@ -391,6 +414,80 @@ export default function PublicLayout({
                 </nav>
             </div>
         </MotionConfig>
+    );
+}
+
+/** Name pill that opens a small dropdown with "Keluar". */
+function UserMenu({ name }: { name: string }) {
+    const [open, setOpen] = useState(false);
+    const box = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+        const close = (e: MouseEvent | KeyboardEvent) => {
+            if (
+                e instanceof KeyboardEvent
+                    ? e.key === 'Escape'
+                    : !box.current?.contains(e.target as Node)
+            ) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', close);
+        document.addEventListener('keydown', close);
+
+        return () => {
+            document.removeEventListener('mousedown', close);
+            document.removeEventListener('keydown', close);
+        };
+    }, [open]);
+
+    return (
+        <div ref={box} className="relative hidden md:block">
+            <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={open}
+                onClick={() => setOpen((o) => !o)}
+                className="flex items-center gap-2 rounded-full bg-accent/5 py-1.5 pr-3 pl-1.5 text-sm font-medium text-navy-900 ring-1 ring-accent/10 transition hover:bg-accent/10"
+            >
+                <span className="grid size-7 place-items-center rounded-full bg-accent text-xs font-semibold text-white">
+                    {name[0]}
+                </span>
+                <span className="max-w-28 truncate">{name.split(' ')[0]}</span>
+                <Icon
+                    name="chevron"
+                    width={14}
+                    height={14}
+                    className={cn(
+                        'text-slate-400 transition-transform',
+                        open ? '-rotate-90' : 'rotate-90',
+                    )}
+                />
+            </button>
+            {open && (
+                <div
+                    role="menu"
+                    className="absolute right-0 mt-2 w-48 overflow-hidden rounded-2xl border border-accent/10 bg-white p-1.5 shadow-lg shadow-accent/10"
+                >
+                    <p className="truncate px-3 py-1.5 text-xs text-slate-400">
+                        {name}
+                    </p>
+                    <Link
+                        href={logout.url()}
+                        method="post"
+                        as="button"
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-accent/5 hover:text-accent"
+                    >
+                        <Icon name="logout" width={16} height={16} />
+                        Keluar
+                    </Link>
+                </div>
+            )}
+        </div>
     );
 }
 

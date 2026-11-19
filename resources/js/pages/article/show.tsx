@@ -15,7 +15,7 @@ import { Reveal, Stagger, ease } from "@/components/motion";
 import PublicLayout, { SectionTitle } from "@/layouts/public";
 import { cn } from "@/lib/utils";
 import { coverTransition, formatDate, regionHref, timeAgo } from "@/lib/news";
-import { category as categoryRoute, home, login } from "@/routes";
+import { category as categoryRoute, home, login, register } from "@/routes";
 import { review as reviewRoute } from "@/routes/article";
 import type { Article, ArticleCard as Card, ArticleReview } from "@/types";
 
@@ -34,6 +34,8 @@ export default function ArticleShow({
     const locked = !auth.user;
     const [toggled, setOriginal] = useState(false);
     const original = locked || toggled;
+    // Guests must log in or sign up before they can open the source site.
+    const [gateOpen, setGateOpen] = useState(false);
     const [reviewOpen, setReviewOpen] = useState(false);
     // Set on first open; the review then keeps running and polling even after the modal closes.
     const [reviewStarted, setReviewStarted] = useState(false);
@@ -334,21 +336,37 @@ export default function ArticleShow({
                                                 Review AI
                                             </Link>
                                         )}
-                                        {article.source_url && (
-                                            <a
-                                                href={article.source_url}
-                                                target="_blank"
-                                                rel="noopener nofollow"
-                                                className={pill}
-                                            >
-                                                <Icon
-                                                    name="external"
-                                                    width={13}
-                                                    height={13}
-                                                />
-                                                Lihat Sumber
-                                            </a>
-                                        )}
+                                        {article.source_url &&
+                                            (locked ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setGateOpen(true)
+                                                    }
+                                                    className={pill}
+                                                >
+                                                    <Icon
+                                                        name="external"
+                                                        width={13}
+                                                        height={13}
+                                                    />
+                                                    Lihat Sumber
+                                                </button>
+                                            ) : (
+                                                <a
+                                                    href={article.source_url}
+                                                    target="_blank"
+                                                    rel="noopener nofollow"
+                                                    className={pill}
+                                                >
+                                                    <Icon
+                                                        name="external"
+                                                        width={13}
+                                                        height={13}
+                                                    />
+                                                    Lihat Sumber
+                                                </a>
+                                            ))}
                                     </div>
                                 </div>
                             </Reveal>
@@ -425,7 +443,14 @@ export default function ArticleShow({
 
                             {article.source_url && (
                                 <Reveal>
-                                    <SourceCredit article={article} />
+                                    <SourceCredit
+                                        article={article}
+                                        onGuest={
+                                            locked
+                                                ? () => setGateOpen(true)
+                                                : undefined
+                                        }
+                                    />
                                 </Reveal>
                             )}
 
@@ -470,6 +495,7 @@ export default function ArticleShow({
                         onClose={() => setReviewOpen(false)}
                     />
                 )}
+                {gateOpen && <LoginGate onClose={() => setGateOpen(false)} />}
             </AnimatePresence>
         </PublicLayout>
     );
@@ -600,7 +626,13 @@ function ReviewModal({
 }
 
 /** Attribution for summarized articles: original title link and photo credit. */
-function SourceCredit({ article }: { article: Article }) {
+function SourceCredit({
+    article,
+    onGuest,
+}: {
+    article: Article;
+    onGuest?: () => void;
+}) {
     let host = article.source_name ?? "";
     try {
         host = new URL(article.source_url!).host.replace(/^www\./, "");
@@ -616,14 +648,24 @@ function SourceCredit({ article }: { article: Article }) {
             <div className="min-w-0 text-sm leading-relaxed text-slate-600">
                 <p>
                     {article.is_ai_generated ? "Disarikan dari " : "Sumber: "}
-                    <a
-                        href={article.source_url!}
-                        target="_blank"
-                        rel="noopener nofollow"
-                        className="font-semibold text-navy-900 underline decoration-accent/30 underline-offset-2 hover:text-accent"
-                    >
-                        {host || article.source_name}
-                    </a>
+                    {onGuest ? (
+                        <button
+                            type="button"
+                            onClick={onGuest}
+                            className="font-semibold text-navy-900 underline decoration-accent/30 underline-offset-2 hover:text-accent"
+                        >
+                            {host || article.source_name}
+                        </button>
+                    ) : (
+                        <a
+                            href={article.source_url!}
+                            target="_blank"
+                            rel="noopener nofollow"
+                            className="font-semibold text-navy-900 underline decoration-accent/30 underline-offset-2 hover:text-accent"
+                        >
+                            {host || article.source_name}
+                        </a>
+                    )}
                 </p>
                 {article.cover_url && (
                     <p className="mt-0.5 text-xs text-slate-400">
@@ -638,6 +680,67 @@ function SourceCredit({ article }: { article: Article }) {
                 )}
             </div>
         </aside>
+    );
+}
+
+/** Shown to guests who try to open the source site. */
+function LoginGate({ onClose }: { onClose: () => void }) {
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+        window.addEventListener("keydown", onKey);
+
+        return () => window.removeEventListener("keydown", onKey);
+    }, [onClose]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-navy-900/40 backdrop-blur-sm sm:items-center sm:p-4"
+            onClick={onClose}
+        >
+            <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="gate-title"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ y: 40, opacity: 0, scale: 0.98 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 40, opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.3, ease }}
+                className="w-full max-w-sm rounded-t-[28px] bg-white p-6 text-center shadow-2xl sm:rounded-[28px]"
+            >
+                <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent">
+                    <Icon name="lock" width={22} height={22} />
+                </span>
+                <h2
+                    id="gate-title"
+                    className="mt-4 text-lg font-semibold text-navy-900"
+                >
+                    Masuk untuk melihat sumber
+                </h2>
+                <p className="mt-1.5 text-sm text-slate-500">
+                    Login atau daftar akun gratis dulu untuk membuka berita
+                    langsung di situs sumbernya.
+                </p>
+                <div className="mt-5 grid gap-2">
+                    <Link href={login.url()} className="btn-primary py-2.5">
+                        Masuk
+                    </Link>
+                    <Link href={register.url()} className="btn-ghost py-2.5">
+                        Daftar akun baru
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="mt-1 text-xs text-slate-400 hover:text-accent"
+                    >
+                        Nanti saja
+                    </button>
+                </div>
+            </motion.div>
+        </motion.div>
     );
 }
 

@@ -8,6 +8,7 @@ use App\Models\Region;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
@@ -32,20 +33,24 @@ class AuthController extends Controller
         ]);
     }
 
-    /** Public sign-up creates a citizen contributor: drafts only, published after editor review. */
+    /** Public sign-up: a pelanggan (reader), or a citizen contributor whose drafts an editor reviews before publishing. */
     public function register(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
+            'type' => ['nullable', 'in:customer,contributor'],
         ]);
 
-        $user = User::create([...$data, 'role' => Role::Contributor]);
+        $role = ($data['type'] ?? 'customer') === 'contributor' ? Role::Contributor : Role::Customer;
+        $user = User::create([...Arr::except($data, 'type'), 'role' => $role]);
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.articles.index'))->with('success', 'Akun kontributor dibuat. Selamat menulis!');
+        return redirect()->intended($this->landing($user))->with('success', $role === Role::Customer
+            ? 'Akun pelanggan dibuat. Selamat membaca!'
+            : 'Akun kontributor dibuat. Selamat menulis!');
     }
 
     public function store(Request $request): RedirectResponse
@@ -61,7 +66,13 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.articles.index'));
+        return redirect()->intended($this->landing($request->user()));
+    }
+
+    /** Staff land in the newsroom, pelanggan on the public home page. */
+    private function landing(User $user): string
+    {
+        return route($user->role->isStaff() ? 'admin.articles.index' : 'home');
     }
 
     public function destroy(Request $request): RedirectResponse
