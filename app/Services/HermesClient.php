@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -25,6 +26,17 @@ class HermesClient
 
     private const LAST_ERROR = 'hermes.last_error';
 
+    public function enabled(): bool
+    {
+        return (bool) (DB::table('ai_settings')->where('key', 'hermes_enabled')->value('enabled') ?? true);
+    }
+
+    public function setEnabled(bool $enabled): void
+    {
+        DB::table('ai_settings')->updateOrInsert(['key' => 'hermes_enabled'], ['enabled' => $enabled]);
+        Cache::forget('hermes.health');
+    }
+
     /**
      * `output` is set instead of `run_id` when the gateway answered synchronously.
      *
@@ -32,6 +44,10 @@ class HermesClient
      */
     public function start(string $input, string $operation): array
     {
+        if (! $this->enabled()) {
+            throw new RuntimeException('Pemakaian token Hermes dinonaktifkan oleh admin.');
+        }
+
         $response = $this->request()->post(config('hermes.endpoints.runs'), [
             'input' => $input,
             'session_id' => 'nusantara-'.$operation.'-'.now()->format('YmdHis').'-'.Str::lower(Str::random(6)),
@@ -80,9 +96,13 @@ class HermesClient
         };
     }
 
-    /** @return array{status: 'online'|'offline'|'paused', paused_until: string|null, last_error: string|null, checked_at: string} */
+    /** @return array{status: 'online'|'offline'|'paused'|'disabled', paused_until: string|null, last_error: string|null, checked_at: string} */
     public function status(): array
     {
+        if (! $this->enabled()) {
+            return ['status' => 'disabled', 'paused_until' => null, 'last_error' => null, 'checked_at' => now()->toIso8601String()];
+        }
+
         $online = Cache::remember('hermes.health', 15, function (): bool {
             try {
                 return $this->request()->connectTimeout(2)->timeout(4)->get($this->healthUrl())->successful();

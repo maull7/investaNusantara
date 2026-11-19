@@ -51,7 +51,7 @@ class AiNewsController extends Controller
         ]);
     }
 
-    public function sources(Request $request): Response
+    public function sources(Request $request, HermesClient $hermes): Response
     {
         $province = $this->province($request);
         $sources = NewsSource::inProvince($province)->with(['region:code,name', 'category:id,name'])
@@ -60,6 +60,7 @@ class AiNewsController extends Controller
 
         return Inertia::render('admin/ai/sources', [
             'province' => $province,
+            'hermesToken' => ['enabled' => $hermes->enabled(), 'configured' => (bool) config('hermes.token')],
             'sources' => $sources,
             'counts' => NewsItem::whereIn('news_source_id', $sources->pluck('id'))
                 ->selectRaw('news_source_id, status, count(*) as total')->groupBy('news_source_id', 'status')->toBase()->get()
@@ -82,6 +83,21 @@ class AiNewsController extends Controller
         $source->update($this->validated($request));
 
         return back()->with('success', 'Sumber berita diperbarui.');
+    }
+
+    public function updateActive(Request $request, NewsSource $source): RedirectResponse
+    {
+        $source->update($request->validate(['active' => ['required', 'boolean']]));
+
+        return back()->with('success', $source->active ? 'Sumber diaktifkan.' : 'Sumber dinonaktifkan.');
+    }
+
+    public function updateHermesToken(Request $request, HermesClient $hermes): RedirectResponse
+    {
+        $data = $request->validate(['enabled' => ['required', 'boolean']]);
+        $hermes->setEnabled((bool) $data['enabled']);
+
+        return back()->with('success', $data['enabled'] ? 'Pemakaian token Hermes diaktifkan.' : 'Pemakaian token Hermes dinonaktifkan.');
     }
 
     public function destroy(NewsSource $source): RedirectResponse

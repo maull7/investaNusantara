@@ -52,6 +52,45 @@ class AiNewsTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('admin/ai/sources')->has('sources.data', 1)->has('provinces', 1));
     }
 
+    public function test_source_can_be_disabled_and_enabled_without_editing_other_fields(): void
+    {
+        Queue::fake();
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $url = "/admin/ai/sources/{$this->source->id}/active";
+        $this->patch($url, ['active' => false])->assertRedirect();
+        $this->assertFalse($this->source->fresh()->active);
+        $this->assertSame('Jambi Berita', $this->source->fresh()->name);
+        $this->assertNull(app(NewsPipeline::class)->queue($this->source));
+        $this->patch($url, ['active' => true])->assertRedirect();
+        $this->assertTrue($this->source->fresh()->active);
+        $this->assertNotNull(app(NewsPipeline::class)->queue($this->source));
+    }
+
+    public function test_disabled_hermes_waits_without_sending_requests_and_can_resume(): void
+    {
+        Queue::fake();
+        Http::fake(['*' => Http::response(['output' => ['status' => 'empty']])]);
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]));
+        $this->patch('/admin/ai/hermes-token', ['enabled' => false])->assertRedirect();
+        $this->assertFalse(app(HermesClient::class)->enabled());
+        $this->assertSame('disabled', app(HermesClient::class)->status()['status']);
+        $fetch = app(NewsPipeline::class)->queue($this->source);
+        (new DiscoverNews($fetch->id))->handle(app(HermesClient::class));
+        $this->assertSame(NewsTaskStatus::Paused, $fetch->fresh()->status);
+        $this->assertSame(0, AiRun::count());
+        Http::assertNothingSent();
+        $this->patch('/admin/ai/hermes-token', ['enabled' => true])->assertRedirect();
+        (new DiscoverNews($fetch->id))->handle(app(HermesClient::class));
+        Http::assertSentCount(1);
+    }
+
+    public function test_only_super_admin_can_change_source_and_token_status(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Role::Editor]));
+        $this->patch("/admin/ai/sources/{$this->source->id}/active", ['active' => false])->assertForbidden();
+        $this->patch('/admin/ai/hermes-token', ['enabled' => false])->assertForbidden();
+    }
+
     public function test_ai_pages_count_items_per_status(): void
     {
         $this->item(NewsTaskStatus::Published);

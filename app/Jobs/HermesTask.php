@@ -121,6 +121,13 @@ abstract class HermesTask implements ShouldQueue
             }
         }
 
+        if (! $run && ! $hermes->enabled()) {
+            $subject->update(['status' => NewsTaskStatus::Paused, 'error' => 'Pemakaian token Hermes dinonaktifkan oleh admin.']);
+            $this->again(30);
+
+            return;
+        }
+
         if (! $run && ($wait = $hermes->pausedFor()) > 0) {
             $subject->update(['status' => NewsTaskStatus::Paused, 'error' => 'Menunggu Hermes: '.($hermes->lastError() ?? 'gateway/provider bermasalah')]);
             $this->again($wait);

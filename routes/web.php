@@ -43,6 +43,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::prefix('ai')->name('ai.')->controller(Admin\AiNewsController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('sources', 'sources')->name('sources');
+            Route::patch('hermes-token', 'updateHermesToken')->name('hermes-token.update');
+            Route::patch('sources/{source}/active', 'updateActive')->name('sources.active');
             Route::post('sources', 'store')->name('sources.store');
             Route::put('sources/{source}', 'update')->name('sources.update');
             Route::delete('sources/{source}', 'destroy')->name('sources.destroy');

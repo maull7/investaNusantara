@@ -233,6 +233,8 @@ function HermesPanel({
             <div className="min-w-56 flex-1">
                 <HermesBadge hermes={hermes} />
                 <p className="mt-2 text-sm text-slate-500">
+                    {hermes.status === 'disabled' &&
+                        'Pemakaian token dinonaktifkan. Aktifkan kembali di halaman Sumber berita.'}
                     {hermes.status === 'online' &&
                         'Gateway Hermes terhubung. Antrean berjalan normal.'}
                     {hermes.status === 'offline' &&

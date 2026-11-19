@@ -10,11 +10,13 @@ import AdminLayout from '@/layouts/admin';
 import { timeAgo } from '@/lib/news';
 import { cn } from '@/lib/utils';
 import {
+    active as updateActive,
     destroy,
     fetch as fetchSource,
     store,
     update,
 } from '@/routes/admin/ai/sources';
+import { update as updateHermesToken } from '@/routes/admin/ai/hermes-token';
 import { cities as citiesRoute } from '@/routes/region';
 import type { Category, Paginated, Region } from '@/types';
 
@@ -39,6 +41,7 @@ type Source = {
 };
 
 type Props = {
+    hermesToken: { enabled: boolean; configured: boolean };
     sources: Paginated<Source>;
     counts: Record<
         string,
@@ -60,6 +63,7 @@ const intervals = [
 ];
 
 export default function AiSources({
+    hermesToken,
     sources,
     counts,
     categories,
@@ -67,6 +71,7 @@ export default function AiSources({
     province,
 }: Props) {
     // null = closed, 'new' = create, otherwise the source being edited.
+    const tokenForm = useForm({ enabled: hermesToken.enabled });
     const [editing, setEditing] = useState<Source | 'new' | null>(null);
 
     return (
@@ -88,6 +93,39 @@ export default function AiSources({
             <AiTabs>
                 <ProvinceFilter value={province} provinces={provinces} />
             </AiTabs>
+
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 card p-4">
+                <div>
+                    <p className="font-semibold text-navy-900">
+                        Token Hermes:{' '}
+                        {hermesToken.enabled ? 'Aktif' : 'Nonaktif'}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                        {hermesToken.configured
+                            ? 'Token tersimpan. '
+                            : 'HERMES_TOKEN belum diatur. '}
+                        Saat nonaktif, proses AI baru menunggu. Proses yang
+                        sudah terkirim tetap diselesaikan.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    disabled={tokenForm.processing}
+                    onClick={() => {
+                        tokenForm.transform(() => ({
+                            enabled: !hermesToken.enabled,
+                        }));
+                        tokenForm.patch(updateHermesToken.url(), {
+                            preserveScroll: true,
+                        });
+                    }}
+                    className="btn-ghost px-3 py-2 text-sm"
+                >
+                    {hermesToken.enabled
+                        ? 'Nonaktifkan token'
+                        : 'Aktifkan token'}
+                </button>
+            </div>
 
             {sources.data.length === 0 && province ? (
                 <div className="card">
@@ -145,6 +183,7 @@ function SourceCard({
     index: number;
     onEdit: () => void;
 }) {
+    const activeForm = useForm({ active: s.active });
     const host = (() => {
         try {
             return new URL(s.url).host.replace(/^www\./, '');
@@ -200,7 +239,9 @@ function SourceCard({
                 <Chip tone={s.auto_publish ? 'green' : 'violet'}>
                     {s.auto_publish ? 'Terbit otomatis' : 'Selalu review'}
                 </Chip>
-                {!s.active && <Chip tone="red">Nonaktif</Chip>}
+                <Chip tone={s.active ? 'green' : 'red'}>
+                    {s.active ? 'Aktif' : 'Nonaktif'}
+                </Chip>
             </div>
 
             <p className="mt-3 text-xs text-slate-500">
@@ -223,6 +264,20 @@ function SourceCard({
                 >
                     <Icon name="bolt" width={14} height={14} />
                     Ambil sekarang
+                </button>
+                <button
+                    type="button"
+                    disabled={activeForm.processing}
+                    aria-label={`${s.active ? 'Nonaktifkan' : 'Aktifkan'} ${s.name}`}
+                    onClick={() => {
+                        activeForm.transform(() => ({ active: !s.active }));
+                        activeForm.patch(updateActive.url(s.id), {
+                            preserveScroll: true,
+                        });
+                    }}
+                    className="btn-ghost px-3 py-1.5 text-xs"
+                >
+                    {s.active ? 'Nonaktifkan' : 'Aktifkan'}
                 </button>
                 <button
                     type="button"

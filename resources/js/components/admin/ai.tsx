@@ -15,7 +15,7 @@ export type TaskStatus =
     | 'failed';
 
 export type HermesStatus = {
-    status: 'online' | 'offline' | 'paused';
+    status: 'online' | 'offline' | 'paused' | 'disabled';
     paused_until: string | null;
     last_error: string | null;
     checked_at: string;
@@ -105,6 +105,11 @@ export function TaskPill({
 }
 
 const hermesTone = {
+    disabled: {
+        label: 'Token Hermes nonaktif',
+        ring: 'ring-slate-200 bg-slate-50 text-slate-700',
+        dot: 'bg-slate-400',
+    },
     online: {
         label: 'Hermes online',
         ring: 'ring-emerald-200 bg-emerald-50 text-emerald-700',
