@@ -15,6 +15,7 @@ use App\Models\NewsFetch;
 use App\Models\NewsItem;
 use App\Models\NewsSource;
 use App\Models\Region;
+use App\Models\Tag;
 use App\Models\User;
 use App\Services\HermesClient;
 use App\Services\NewsPipeline;
@@ -480,6 +481,53 @@ class AiNewsTest extends TestCase
             'region' => 'Kota Jambi',
             'source_title' => 'Harga karet naik',
             'source_opening' => 'Harga karet di tingkat petani naik signifikan minggu ini menurut dinas perkebunan.',
+            'tags' => ['karet', 'Petani', 'Harga Karet'],
+            'seo_title' => 'Harga Karet di Kota Jambi Naik',
+            'meta_description' => 'Harga karet di tingkat petani Kota Jambi naik pekan ini.',
+            'social_post' => 'Harga karet naik! #Jambi #Karet',
         ];
+    }
+
+    public function test_ai_reuses_existing_tags_and_fills_seo_fields_for_crawlers(): void
+    {
+        $existing = Tag::create(['name' => 'Karet', 'slug' => 'karet']);
+        $item = $this->item();
+        Http::fake(['hermes.test/v1/runs' => Http::response(['output' => json_encode($this->hermesOutput())])]);
+
+        (new SummarizeNews($item->id))->handle(app(HermesClient::class));
+
+        $article = $item->refresh()->article;
+        // "karet" matched the admin's "Karet"; the rest became new tags.
+        $this->assertSame(['Harga Karet', 'Karet', 'Petani'], $article->tags->pluck('name')->sort()->values()->all());
+        $this->assertTrue($article->tags->contains($existing));
+        $this->assertSame(3, Tag::count());
+        $this->assertSame('Harga Karet di Kota Jambi Naik', $article->seo_title);
+        $this->assertSame('Harga karet naik! #Jambi #Karet', $article->social_post);
+
+        // Meta tags and JSON-LD are in the HTML itself, for crawlers that don't run JavaScript.
+        $this->get("/berita/{$article->slug}")->assertOk()
+            ->assertSee('<title>Harga Karet di Kota Jambi Naik - '.config('app.name').'</title>', false)
+            ->assertSee('<meta name="description" content="Harga karet di tingkat petani Kota Jambi naik pekan ini.">', false)
+            ->assertSee('"@type":"NewsArticle"', false)
+            ->assertSee('"keywords":"', false);
+
+        $this->get('/tag/karet')->assertOk()->assertInertia(fn (Assert $page) => $page->has('articles.data', 1));
+        $this->get('/sitemap-news.xml')->assertOk()->assertSee('<news:title>'.e($article->title).'</news:title>', false);
+    }
+
+    public function test_renaming_a_tag_onto_another_merges_them(): void
+    {
+        $admin = User::factory()->create(['role' => Role::SuperAdmin]);
+        $article = Article::factory()->create();
+        $a = Tag::create(['name' => 'Pemkot Bogor', 'slug' => 'pemkot-bogor']);
+        $b = Tag::create(['name' => 'Pemerintah Kota Bogor', 'slug' => 'pemerintah-kota-bogor']);
+        $article->tags()->attach([$a->id, $b->id]);
+        $other = Article::factory()->create();
+        $other->tags()->attach($b->id);
+
+        $this->actingAs($admin)->put("/admin/tags/{$b->id}", ['name' => 'pemkot bogor'])->assertRedirect();
+
+        $this->assertModelMissing($b);
+        $this->assertSame(2, $a->articles()->count());
     }
 }

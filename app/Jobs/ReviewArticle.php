@@ -6,6 +6,7 @@ use App\Enums\NewsTaskStatus;
 use App\Models\ArticleReview;
 use App\Models\NewsFetch;
 use App\Models\NewsItem;
+use App\Models\RegionDraft;
 use App\Services\NewsPrompts;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -28,14 +29,14 @@ class ReviewArticle extends HermesTask
         return (int) config('hermes.run_timeout');
     }
 
-    protected function prompt(NewsFetch|NewsItem|ArticleReview $subject): ?string
+    protected function prompt(NewsFetch|NewsItem|ArticleReview|RegionDraft $subject): ?string
     {
         /** @var ArticleReview $subject */
         return NewsPrompts::review($subject->article);
     }
 
     /** @param  array<string, mixed>  $output */
-    protected function complete(NewsFetch|NewsItem|ArticleReview $subject, array $output): void
+    protected function complete(NewsFetch|NewsItem|ArticleReview|RegionDraft $subject, array $output): void
     {
         $points = collect((array) ($output['points'] ?? []))
             ->map(fn ($p) => Str::limit(trim(strip_tags((string) $p)), 300))

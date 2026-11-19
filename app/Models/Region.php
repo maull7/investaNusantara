@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property string $code
@@ -41,6 +42,24 @@ class Region extends Model
     public function children(): HasMany
     {
         return $this->hasMany(Region::class, 'parent_code')->orderBy('name');
+    }
+
+    /** @return HasOne<RegionProfile, $this> */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(RegionProfile::class, 'region_code');
+    }
+
+    /** @return HasMany<DirectoryEntry, $this> */
+    public function entries(): HasMany
+    {
+        return $this->hasMany(DirectoryEntry::class, 'region_code');
+    }
+
+    /** @return HasMany<RegionDraft, $this> */
+    public function drafts(): HasMany
+    {
+        return $this->hasMany(RegionDraft::class, 'region_code');
     }
 
     /** @param Builder<Region> $query */

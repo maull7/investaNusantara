@@ -3,6 +3,8 @@
 use App\Models\Article;
 use App\Models\NewsItem;
 use App\Models\NewsSource;
+use App\Models\Region;
+use App\Models\RegionDraft;
 use App\Services\NewsFeedReader;
 use App\Services\NewsPipeline;
 use Illuminate\Support\Facades\Artisan;
@@ -35,3 +37,15 @@ Artisan::command('news:backfill-images', function (NewsFeedReader $reader) {
 
     $this->info("{$fixed} artikel AI mendapat foto.");
 })->purpose('Cari foto untuk artikel AI yang belum punya gambar (RSS atau og:image situs sumber)');
+
+Artisan::command('directory:draft {province? : Kode provinsi, misalnya 32} {--limit=50 : Maksimal daerah per perintah}', function () {
+    // Only regions without any profile yet, so re-running continues where the last run stopped.
+    $queued = Region::whereIn('level', [Region::PROVINCE, Region::CITY])
+        ->when($this->argument('province'), fn ($q, $p) => $q->where(fn ($r) => $r->where('code', $p)->orWhere('parent_code', $p)))
+        ->whereDoesntHave('profile')
+        ->orderBy('code')->limit((int) $this->option('limit'))->pluck('code')
+        ->filter(fn (string $code) => RegionDraft::queueFor($code) !== null)
+        ->count();
+
+    $this->info("{$queued} daerah masuk antrean draf AI (Hermes). Hasilnya perlu diverifikasi di Admin > Direktori.");
+})->purpose('Susun draf direktori daerah dengan Hermes untuk daerah yang belum punya profil (memakai token AI)');

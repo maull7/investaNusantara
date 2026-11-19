@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -18,8 +19,12 @@ use Illuminate\Support\Facades\Storage;
 /**
  * @property int $id
  * @property string $title
+ * @property string|null $seo_title AI or editor title for search results (max 70)
  * @property string $slug
  * @property string|null $excerpt
+ * @property string|null $meta_description
+ * @property string|null $social_post ready-to-paste text for WhatsApp/Instagram/X
+ * @property string|null $sentiment positif|netral|negatif (see SENTIMENTS)
  * @property string $body
  * @property string|null $cover_path URL (AI articles hotlink the source image) or public-disk path
  * @property string|null $source_name
@@ -63,7 +68,24 @@ class Article extends Model
         };
     }
 
+    public const SENTIMENTS = ['positif', 'netral', 'negatif'];
+
     protected $guarded = ['id', 'views'];
+
+    /**
+     * One read: lifetime total plus today's row in article_daily_views (for trends).
+     * Base queries, so updated_at (schema dateModified, admin order) stays untouched.
+     */
+    public function recordView(): void
+    {
+        static::whereKey($this->id)->toBase()->increment('views');
+        DB::table('article_daily_views')->upsert(
+            [['article_id' => $this->id, 'date' => today()->toDateString(), 'views' => 1]],
+            ['article_id', 'date'],
+            ['views' => DB::raw('article_daily_views.views + 1')],
+        );
+        $this->views++;
+    }
 
     protected $appends = ['cover_url'];
 
@@ -97,6 +119,12 @@ class Article extends Model
     public function region(): BelongsTo
     {
         return $this->belongsTo(Region::class, 'region_code');
+    }
+
+    /** @return BelongsToMany<Tag, $this> */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class);
     }
 
     /** @return HasOne<ArticleReview, $this> */
@@ -154,7 +182,7 @@ class Article extends Model
      */
     public function scopeCard(Builder $query): void
     {
-        $query->select(['id', 'title', 'slug', 'excerpt', 'cover_path', 'category_id', 'region_code', 'published_at', 'is_breaking'])
+        $query->select(['id', 'title', 'slug', 'excerpt', 'cover_path', 'category_id', 'region_code', 'published_at', 'is_breaking', 'sentiment'])
             ->with(['category:id,name,slug', 'region:code,name,slug,parent_code,level,image_url', 'region.parent:code,name,slug,image_url']);
     }
 }

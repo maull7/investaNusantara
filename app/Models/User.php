@@ -28,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password', 'role', 'region_code', 'permissions'])]
+#[Fillable(['name', 'organization', 'email', 'password', 'role', 'region_code', 'permissions', 'client_regions', 'subscription_ends_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -51,6 +51,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => Role::class,
             'permissions' => 'array',
+            'client_regions' => 'array',
+            'subscription_ends_at' => 'date',
         ];
     }
 
@@ -65,7 +67,10 @@ class User extends Authenticatable
         return in_array($this->role, $roles, true);
     }
 
-    /** Super Admin opens every admin area; a Sub Admin only the ones granted to them. */
+    /**
+     * Super Admin opens every admin area; a Sub Admin only the ones granted to them.
+     * Editors also manage the directory, limited to their own region (see canManageRegion).
+     */
     public function canAccess(Permission|string $permission): bool
     {
         $permission = $permission instanceof Permission ? $permission : Permission::from($permission);
@@ -73,8 +78,38 @@ class User extends Authenticatable
         return match ($this->role) {
             Role::SuperAdmin => true,
             Role::SubAdmin => in_array($permission->value, $this->permissions ?? [], true),
+            Role::Editor => $permission === Permission::Directory,
+            // The expiry is checked by the dashboard itself, which explains it instead of a bare 403.
+            Role::Client => $permission === Permission::Insights,
             default => false,
         };
+    }
+
+    public function subscriptionActive(): bool
+    {
+        // The end date itself is still included.
+        return $this->role !== Role::Client || ! $this->subscription_ends_at || $this->subscription_ends_at->gte(today());
+    }
+
+    /**
+     * Provinces this user may analyse in Media Intelligence; null = all of Indonesia.
+     *
+     * @return list<string>|null
+     */
+    public function insightProvinces(): ?array
+    {
+        return $this->role === Role::Client && $this->client_regions ? array_values($this->client_regions) : null;
+    }
+
+    /** Directory rows of this region: needs Directory access; region editors only inside their region. */
+    public function canManageRegion(string $code): bool
+    {
+        if (! $this->canAccess(Permission::Directory)) {
+            return false;
+        }
+
+        return $this->role !== Role::Editor || ! $this->region_code
+            || (new Region(['code' => $this->region_code]))->contains($code);
     }
 
     /** @return list<string> Admin areas this user may open. */

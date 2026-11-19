@@ -1,20 +1,44 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'motion/react';
+import { useState } from 'react';
 import ArticleCard from '@/components/article-card';
 import Icon from '@/components/icons';
 import { Reveal, Stagger } from '@/components/motion';
-import Pagination from '@/components/pagination';
+import InfiniteList from '@/components/infinite-list';
 import PublicLayout, { SectionTitle } from '@/layouts/public';
 import RegionAvatar from '@/components/region-avatar';
+import {
+    type DirectoryTab,
+    DirectoryTabs,
+    EntryList,
+    Officials,
+    ProfilePanel,
+    TopicLinks,
+} from '@/components/region-directory';
 import { cn } from '@/lib/utils';
 import { region as regionRoute, regions } from '@/routes';
-import type { ArticleCard as Card, Paginated, Region } from '@/types';
+import type {
+    ArticleCard as Card,
+    DirectoryEntry,
+    FactField,
+    Paginated,
+    Region,
+    RegionProfile,
+    Topic,
+} from '@/types';
 
 type Props = {
     province: Region;
     region: Region;
     cities: Region[];
     articles: Paginated<Card>;
+    directory: {
+        profile: RegionProfile | null;
+        factFields: FactField[];
+        entries: DirectoryEntry[];
+        types: Record<DirectoryEntry['type'], string>;
+        topics: Topic[];
+    };
 };
 
 export default function RegionShow({
@@ -22,10 +46,34 @@ export default function RegionShow({
     region,
     cities,
     articles,
+    directory,
 }: Props) {
+    const [tab, setTab] = useState<DirectoryTab>('berita');
+    const byType = (type: DirectoryEntry['type']) =>
+        directory.entries.filter((e) => e.type === type);
+    // Tabs without verified data stay hidden.
+    const tabs = [
+        { key: 'berita' as const, label: 'Berita' },
+        ...(directory.profile
+            ? [{ key: 'profil' as const, label: 'Profil' }]
+            : []),
+        ...(
+            Object.entries(directory.types) as [
+                DirectoryEntry['type'],
+                string,
+            ][]
+        )
+            .filter(([type]) => byType(type).length > 0)
+            .map(([key, label]) => ({
+                key,
+                label,
+                count: byType(key).length,
+            })),
+    ];
+    // Switching region keeps this component; fall back when the new region lacks the tab.
+    const current = tabs.some((t) => t.key === tab) ? tab : 'berita';
     const isCity = region.code !== province.code;
-    const [first, ...rest] = articles.current_page === 1 ? articles.data : [];
-    const list = articles.current_page === 1 ? rest : articles.data;
+    const [first, ...list] = articles.data;
     const label = isCity
         ? region.type === 'kota'
             ? 'Kota'
@@ -34,12 +82,7 @@ export default function RegionShow({
 
     return (
         <PublicLayout tabs={false}>
-            <Head title={`Berita ${region.name}`}>
-                <meta
-                    name="description"
-                    content={`Berita terbaru dari ${region.name}${isCity ? `, ${province.name}` : ''}.`}
-                />
-            </Head>
+            <Head title={`Berita ${region.name}`} />
 
             <Stagger className="space-y-6">
                 {/* Channel header */}
@@ -68,7 +111,7 @@ export default function RegionShow({
                                     : regions.url()
                             }
                             viewTransition
-                            className="absolute top-4 left-4 grid size-9 place-items-center rounded-full bg-white/90 text-navy-900 backdrop-blur"
+                            className="absolute top-4 left-4 grid size-9 place-items-center rounded-full bg-surface/90 text-navy-900 backdrop-blur"
                             aria-label="Kembali"
                         >
                             <Icon name="back" />
@@ -85,7 +128,7 @@ export default function RegionShow({
                                 delay: 0.15,
                             }}
                             // relative + z-10: otherwise the positioned banner above paints over the avatar's top half.
-                            className="relative z-10 -mt-10 block size-20 overflow-hidden rounded-full border-4 border-white shadow-lg ring-2 ring-accent/25 md:-mt-12 md:size-24"
+                            className="relative z-10 -mt-10 block size-20 overflow-hidden rounded-full border-4 border-surface shadow-lg ring-2 ring-accent/25 md:-mt-12 md:size-24"
                         >
                             <RegionAvatar
                                 region={{
@@ -109,6 +152,10 @@ export default function RegionShow({
                                 <Stat value={cities.length} label="Kab/Kota" />
                             )}
                         </div>
+                        <Officials
+                            profile={directory.profile}
+                            region={region}
+                        />
                     </div>
                 </Reveal>
 
@@ -166,7 +213,35 @@ export default function RegionShow({
                     </select>
                 </Reveal>
 
-                {articles.total === 0 ? (
+                <Reveal className="card p-4">
+                    <TopicLinks
+                        topics={directory.topics}
+                        province={province}
+                        region={region}
+                    />
+                </Reveal>
+
+                {tabs.length > 1 && (
+                    <Reveal>
+                        <DirectoryTabs
+                            tabs={tabs}
+                            active={current}
+                            onChange={setTab}
+                        />
+                    </Reveal>
+                )}
+
+                {current === 'profil' && directory.profile ? (
+                    <ProfilePanel
+                        profile={directory.profile}
+                        fields={directory.factFields}
+                        regionName={region.name}
+                    />
+                ) : current !== 'berita' ? (
+                    <EntryList
+                        entries={byType(current as DirectoryEntry['type'])}
+                    />
+                ) : articles.total === 0 ? (
                     <Reveal className="card p-10 text-center text-slate-500">
                         Belum ada berita dari {region.name}.
                     </Reveal>
@@ -184,7 +259,8 @@ export default function RegionShow({
                             )}
                         >
                             <SectionTitle>Berita Terbaru</SectionTitle>
-                            <div
+                            <InfiniteList
+                                data="articles"
                                 className={cn(
                                     'grid gap-5',
                                     !first && 'sm:grid-cols-2 lg:grid-cols-3',
@@ -193,12 +269,11 @@ export default function RegionShow({
                                 {list.map((a) => (
                                     <ArticleCard key={a.id} article={a} />
                                 ))}
-                            </div>
+                            </InfiniteList>
                         </Reveal>
                     </div>
                 )}
             </Stagger>
-            <Pagination data={articles} />
         </PublicLayout>
     );
 }

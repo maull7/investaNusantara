@@ -4,7 +4,8 @@ export type Role =
     | 'editor'
     | 'journalist'
     | 'contributor'
-    | 'customer';
+    | 'customer'
+    | 'client';
 
 /** Admin areas a Super Admin can grant to a Sub Admin (App\Enums\Permission). */
 export type Permission =
@@ -12,7 +13,10 @@ export type Permission =
     | 'categories'
     | 'users'
     | 'ai'
-    | 'activity';
+    | 'activity'
+    | 'directory'
+    | 'insights'
+    | 'memberships';
 
 export type PermissionOption = {
     value: Permission;
@@ -27,6 +31,8 @@ export type User = {
     role: Role;
     region_code: string | null;
     permissions?: Permission[] | null;
+    organization?: string | null;
+    subscription_ends_at?: string | null;
 };
 
 export type Auth = {

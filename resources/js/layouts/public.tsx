@@ -18,7 +18,17 @@ import Logo from '@/components/logo';
 import { ease } from '@/components/motion';
 import { regionHref } from '@/lib/news';
 import { cn } from '@/lib/utils';
-import { category, home, login, logout, regions, search } from '@/routes';
+import {
+    agenda as agendaRoute,
+    category,
+    home,
+    login,
+    logout,
+    membership,
+    regions,
+    search,
+    sentiment,
+} from '@/routes';
 import { index as adminArticles } from '@/routes/admin/articles';
 
 /**
@@ -84,6 +94,7 @@ export default function PublicLayout({
     }[] = [
         { href: home.url(), label: 'Beranda', icon: 'home' },
         { href: regions.url(), label: 'Wilayah', icon: 'map' },
+        { href: agendaRoute.url(), label: 'Agenda', icon: 'clock' },
         { href: search.url(), label: 'Cari', icon: 'search' },
         auth.user && !staff
             ? { href: logout.url(), label: 'Keluar', icon: 'user', post: true }
@@ -162,7 +173,7 @@ export default function PublicLayout({
 
     return (
         <MotionConfig reducedMotion="user">
-            <div className="min-h-screen bg-nusantara pb-24 text-slate-700 md:pb-0">
+            <div className="theme-public min-h-screen bg-nusantara pb-24 text-slate-700 md:pb-0">
                 <header
                     className={cn(
                         'top-0 z-30',
@@ -188,9 +199,9 @@ export default function PublicLayout({
                                 : { duration: 0.35, ease }
                         }
                         className={cn(
-                            'mx-auto border bg-white/85 backdrop-blur-xl backdrop-saturate-150 transition-[width,max-width,border-radius,box-shadow,border-color,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                            'mx-auto border bg-surface/85 backdrop-blur-xl backdrop-saturate-150 transition-[width,max-width,border-radius,box-shadow,border-color,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
                             floating
-                                ? 'w-[calc(100%-1.5rem)] max-w-[74rem] rounded-[1.75rem] border-accent/10 bg-white/90 shadow-[0_14px_40px_-14px_rgba(165,14,30,0.35)]'
+                                ? 'w-[calc(100%-1.5rem)] max-w-[74rem] rounded-[1.75rem] border-accent/10 bg-surface/90 shadow-[0_14px_40px_-14px_rgba(165,14,30,0.35)]'
                                 : 'w-full max-w-full rounded-none border-transparent border-b-accent/10 shadow-none',
                         )}
                     >
@@ -200,7 +211,15 @@ export default function PublicLayout({
 
                             {/* Laptop links */}
                             <nav className="ml-6 hidden h-full items-stretch gap-1 md:flex">
-                                {menu.slice(0, 2).map((i) => {
+                                {[
+                                    ...menu.slice(0, 3),
+                                    // Desktop only: the phone bottom bar has no room for a fifth tab.
+                                    {
+                                        href: sentiment.url(),
+                                        label: 'Sentimen',
+                                        icon: 'chart' as const,
+                                    },
+                                ].map((i) => {
                                     const active = isActive(i.href);
 
                                     return (
@@ -235,6 +254,7 @@ export default function PublicLayout({
 
                             <div className="ml-auto flex items-center gap-2.5">
                                 <SearchField className="hidden w-64 md:flex lg:w-72" />
+                                <ThemeToggle />
                                 {!isHome && (
                                     <Link
                                         href={search.url()}
@@ -323,7 +343,7 @@ export default function PublicLayout({
                     {children}
                 </motion.main>
 
-                <footer className="mt-12 hidden border-t border-accent/10 bg-white md:block">
+                <footer className="mt-12 hidden border-t border-accent/10 bg-surface md:block">
                     <div className="mx-auto max-w-6xl px-4 py-10 text-sm">
                         <div className="flex items-end justify-between gap-6">
                             <div>
@@ -332,14 +352,27 @@ export default function PublicLayout({
                                     Satu Indonesia, Ribuan Cerita
                                 </p>
                             </div>
-                            <Link
-                                href={regions.url()}
-                                viewTransition
-                                className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
-                            >
-                                Jelajah 514 kabupaten/kota
-                                <Icon name="chevron" width={16} height={16} />
-                            </Link>
+                            <div className="flex flex-wrap items-center gap-4">
+                                <Link
+                                    href={membership.url()}
+                                    className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1.5 font-medium text-accent transition hover:bg-accent hover:text-white"
+                                >
+                                    <Icon name="star" width={14} height={14} />
+                                    Langganan Media Intelligence
+                                </Link>
+                                <Link
+                                    href={regions.url()}
+                                    viewTransition
+                                    className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
+                                >
+                                    Jelajah 514 kabupaten/kota
+                                    <Icon
+                                        name="chevron"
+                                        width={16}
+                                        height={16}
+                                    />
+                                </Link>
+                            </div>
                         </div>
                         <div className="mt-8 grid grid-cols-3 gap-x-4 gap-y-2 lg:grid-cols-6">
                             {nav.provinces.map((p) => (
@@ -360,7 +393,7 @@ export default function PublicLayout({
                 </footer>
 
                 {/* App-style bottom navigation on phones */}
-                <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-accent/10 bg-white/90 px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
+                <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-accent/10 bg-surface/90 px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
                     <div className="flex justify-around">
                         {menu.map((i) => {
                             const active = isActive(i.href);
@@ -470,11 +503,19 @@ function UserMenu({ name }: { name: string }) {
             {open && (
                 <div
                     role="menu"
-                    className="absolute right-0 mt-2 w-48 overflow-hidden rounded-2xl border border-accent/10 bg-white p-1.5 shadow-lg shadow-accent/10"
+                    className="absolute right-0 mt-2 w-48 overflow-hidden rounded-2xl border border-accent/10 bg-surface p-1.5 shadow-lg shadow-accent/10"
                 >
                     <p className="truncate px-3 py-1.5 text-xs text-slate-400">
                         {name}
                     </p>
+                    <Link
+                        href={membership.url()}
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-accent/5 hover:text-accent"
+                    >
+                        <Icon name="star" width={16} height={16} />
+                        Langganan data
+                    </Link>
                     <Link
                         href={logout.url()}
                         method="post"
@@ -503,7 +544,7 @@ function SearchField({
             action={search.url()}
             method="get"
             className={cn(
-                'flex items-center gap-2.5 rounded-full bg-accent/5 px-4 py-2.5 text-sm ring-1 ring-accent/10 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-accent/30 md:py-2',
+                'flex items-center gap-2.5 rounded-full bg-accent/5 px-4 py-2.5 text-sm ring-1 ring-accent/10 transition focus-within:bg-surface focus-within:ring-2 focus-within:ring-accent/30 md:py-2',
                 className,
             )}
         >
@@ -531,6 +572,36 @@ function SearchField({
                 </Link>
             )}
         </Form>
+    );
+}
+
+/** Light/dark switch; the choice is remembered on this device (read by app.blade.php). */
+function ThemeToggle() {
+    const [dark, setDark] = useState(() =>
+        document.documentElement.classList.contains('dark'),
+    );
+
+    function toggle() {
+        const next = !dark;
+        document.documentElement.classList.toggle('dark', next);
+        try {
+            localStorage.setItem('theme', next ? 'dark' : 'light');
+        } catch {
+            // Private mode: the switch still works for this visit.
+        }
+        setDark(next);
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={toggle}
+            aria-label={dark ? 'Mode terang' : 'Mode gelap'}
+            aria-pressed={dark}
+            className="grid size-10 place-items-center rounded-full bg-accent/5 text-navy-900 ring-1 ring-accent/10 transition active:scale-90"
+        >
+            <Icon name={dark ? 'sun' : 'moon'} width={18} height={18} />
+        </button>
     );
 }
 

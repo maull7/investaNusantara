@@ -28,6 +28,8 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@nusantaranews.test',
             'role' => Role::SuperAdmin,
         ]);
+        $this->call(MembershipPlanSeeder::class);
+
         // Demo team accounts are for local development only.
         if (app()->isProduction()) {
             return;
@@ -50,6 +52,18 @@ class DatabaseSeeder extends Seeder
             'email' => 'kontributor@nusantaranews.test',
             'role' => Role::Contributor,
         ]);
+
+        // Media Intelligence subscriber limited to two provinces.
+        $this->user([
+            'name' => 'Klien Pemprov',
+            'organization' => 'Pemprov Contoh',
+            'email' => 'klien@nusantaranews.test',
+            'role' => Role::Client,
+            'client_regions' => ['32', '51'],
+            'subscription_ends_at' => now()->addMonths(3)->toDateString(),
+        ]);
+
+        $this->call([DirectorySeeder::class, AgendaSeeder::class, InsightsSeeder::class]);
     }
 
     /**

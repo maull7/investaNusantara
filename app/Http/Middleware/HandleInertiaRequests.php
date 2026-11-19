@@ -42,7 +42,8 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user() ? [
-                    ...$request->user()->only('id', 'name', 'email', 'role', 'region_code'),
+                    ...$request->user()->only('id', 'name', 'organization', 'email', 'role', 'region_code'),
+                    'subscription_ends_at' => $request->user()->subscription_ends_at?->toDateString(),
                     // Admin areas this user may open; drives the admin menu.
                     'access' => $request->user()->access(),
                 ] : null,

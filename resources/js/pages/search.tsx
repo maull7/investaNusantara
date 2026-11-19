@@ -2,7 +2,7 @@ import { Form, Head } from '@inertiajs/react';
 import ArticleCard from '@/components/article-card';
 import Icon from '@/components/icons';
 import { Reveal, Stagger } from '@/components/motion';
-import Pagination from '@/components/pagination';
+import InfiniteList from '@/components/infinite-list';
 import PublicLayout from '@/layouts/public';
 import { search } from '@/routes';
 import type { ArticleCard as Card, Paginated } from '@/types';
@@ -22,7 +22,7 @@ export default function Search({
                     <Form
                         action={search.url()}
                         method="get"
-                        className="flex items-center gap-3 rounded-full bg-white px-5 py-3 shadow-sm ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-accent/40"
+                        className="flex items-center gap-3 rounded-full bg-surface px-5 py-3 shadow-sm ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-accent/40"
                     >
                         <Icon name="search" className="text-slate-400" />
                         <input
@@ -52,16 +52,18 @@ export default function Search({
                     </Reveal>
                 )}
                 {articles && (
-                    <div className="grid gap-5 md:grid-cols-2">
+                    <InfiniteList
+                        data="articles"
+                        className="grid gap-5 md:grid-cols-2"
+                    >
                         {articles.data.map((a) => (
                             <Reveal key={a.id} className="card p-3">
                                 <ArticleCard article={a} />
                             </Reveal>
                         ))}
-                    </div>
+                    </InfiniteList>
                 )}
             </Stagger>
-            {articles && <Pagination data={articles} />}
         </PublicLayout>
     );
 }

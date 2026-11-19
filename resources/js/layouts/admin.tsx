@@ -15,6 +15,13 @@ import { create, index as articles } from '@/routes/admin/articles';
 import { index as activity } from '@/routes/admin/activity';
 import { index as aiNews, sources as aiSources } from '@/routes/admin/ai';
 import { index as categories } from '@/routes/admin/categories';
+import {
+    agenda as agendaQueue,
+    index as directory,
+} from '@/routes/admin/directory';
+import { insights } from '@/routes/admin';
+import { index as memberships } from '@/routes/admin/memberships';
+import { index as tags } from '@/routes/admin/tags';
 import { create as createUser, index as users } from '@/routes/admin/users';
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 } as const;
@@ -37,42 +44,129 @@ export default function AdminLayout({
     const can = (area: Permission) => user.access.includes(area);
     const path = url.split('?')[0];
 
-    const links: { href: string; label: string; icon: IconName }[] = [
-        { href: articles.url(), label: 'Artikel', icon: 'file' },
-        ...(can('categories')
-            ? [
-                  {
-                      href: categories.url(),
-                      label: 'Kategori',
-                      icon: 'tag' as const,
-                  },
-              ]
-            : []),
-        ...(can('users')
-            ? [{ href: users.url(), label: 'Pengguna', icon: 'users' as const }]
-            : []),
-        ...(can('ai')
-            ? [
-                  {
-                      href: aiNews.url(),
-                      label: 'Berita AI',
-                      icon: 'bolt' as const,
-                  },
-              ]
-            : []),
-        ...(can('activity')
-            ? [
-                  {
-                      href: activity.url(),
-                      label: 'Log Aktivitas',
-                      icon: 'activity' as const,
-                  },
-              ]
-            : []),
-    ];
-    const active = links.find((l) => path.startsWith(l.href))?.href;
+    // Sidebar groups; a group without any area this user may open is hidden.
+    // Klien Data only subscribe to Media Intelligence: no newsroom menus at all.
+    const client = user.role === 'client';
+    const allGroups: NavGroup[] = client
+        ? [
+              {
+                  label: user.organization ?? 'Klien Data',
+                  links: [
+                      {
+                          href: insights.url(),
+                          label: 'Media Intelligence',
+                          icon: 'chart',
+                      },
+                  ],
+              },
+          ]
+        : [
+              {
+                  label: 'Konten',
+                  links: [
+                      { href: articles.url(), label: 'Artikel', icon: 'file' },
+                      ...(can('categories')
+                          ? [
+                                {
+                                    href: categories.url(),
+                                    label: 'Kategori',
+                                    icon: 'tag' as const,
+                                },
+                                {
+                                    href: tags.url(),
+                                    label: 'Tag',
+                                    icon: 'hash' as const,
+                                },
+                            ]
+                          : []),
+                  ],
+              },
+              {
+                  label: 'Daerah',
+                  links: can('directory')
+                      ? [
+                            {
+                                href: directory.url(),
+                                label: 'Direktori',
+                                icon: 'map',
+                            },
+                            {
+                                href: agendaQueue.url(),
+                                label: 'Agenda',
+                                icon: 'clock',
+                            },
+                        ]
+                      : [],
+              },
+              {
+                  label: 'Analitik',
+                  links: can('insights')
+                      ? [
+                            {
+                                href: insights.url(),
+                                label: 'Media Intelligence',
+                                icon: 'chart',
+                            },
+                        ]
+                      : [],
+              },
+              {
+                  label: 'Bisnis',
+                  links: can('memberships')
+                      ? [
+                            {
+                                href: memberships.url(),
+                                label: 'Langganan',
+                                icon: 'star',
+                            },
+                        ]
+                      : [],
+              },
+              {
+                  label: 'Otomasi',
+                  links: can('ai')
+                      ? [
+                            {
+                                href: aiNews.url(),
+                                label: 'Berita AI',
+                                icon: 'bolt',
+                            },
+                        ]
+                      : [],
+              },
+              {
+                  label: 'Tim',
+                  links: [
+                      ...(can('users')
+                          ? [
+                                {
+                                    href: users.url(),
+                                    label: 'Pengguna',
+                                    icon: 'users' as const,
+                                },
+                            ]
+                          : []),
+                      ...(can('activity')
+                          ? [
+                                {
+                                    href: activity.url(),
+                                    label: 'Log Aktivitas',
+                                    icon: 'activity' as const,
+                                },
+                            ]
+                          : []),
+                  ],
+              },
+          ];
+    const groups = allGroups.filter((g) => g.links.length > 0);
+    const links = groups.flatMap((g) => g.links);
+    // Longest match wins: /admin/direktori/agenda is "Agenda", not "Direktori".
+    const active = links
+        .filter((l) => path.startsWith(l.href))
+        .sort((a, b) => b.href.length - a.href.length)[0]?.href;
     const section = links.find((l) => l.href === active);
     const [searchOpen, setSearchOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     // Ctrl/⌘ + K opens the menu search from anywhere in the admin.
     useEffect(() => {
@@ -88,187 +182,218 @@ export default function AdminLayout({
     }, []);
 
     const byStatus = (status: string) => articles.url({ query: { status } });
-    const commands: Command[] = [
-        {
-            group: 'Navigasi',
-            label: 'Dashboard',
-            icon: 'grid',
-            href: articles.url(),
-            keywords: 'beranda artikel ringkasan',
-        },
-        ...(can('categories')
-            ? [
-                  {
-                      group: 'Navigasi',
-                      label: 'Kategori',
-                      icon: 'tag' as const,
-                      href: categories.url(),
-                      keywords: 'rubrik',
-                  },
-              ]
-            : []),
-        ...(can('users')
-            ? [
-                  {
-                      group: 'Navigasi',
-                      label: 'Pengguna',
-                      icon: 'users' as const,
-                      href: users.url(),
-                      keywords: 'tim user wartawan editor sub admin',
-                  },
-              ]
-            : []),
-        ...(can('activity')
-            ? [
-                  {
-                      group: 'Navigasi',
-                      label: 'Log Aktivitas',
-                      icon: 'activity' as const,
-                      href: activity.url(),
-                      keywords: 'riwayat audit log jejak',
-                  },
-              ]
-            : []),
-        ...(can('ai')
-            ? [
-                  {
-                      group: 'Navigasi',
-                      label: 'Berita AI · Antrean',
-                      icon: 'bolt' as const,
-                      href: aiNews.url(),
-                      keywords: 'hermes ai antrean queue sinopsis',
-                  },
-                  {
-                      group: 'Navigasi',
-                      label: 'Berita AI · Sumber berita',
-                      icon: 'sliders' as const,
-                      href: aiSources.url(),
-                      keywords: 'hermes sumber website scraping',
-                  },
-              ]
-            : []),
-        {
-            group: 'Navigasi',
-            label: 'Lihat situs',
-            icon: 'external',
-            href: home.url(),
-            external: true,
-            keywords: 'publik portal',
-        },
-        {
-            group: 'Artikel',
-            label: 'Tulis artikel baru',
-            icon: 'plus',
-            href: create.url(),
-            keywords: 'buat berita',
-        },
-        {
-            group: 'Artikel',
-            label: 'Artikel draft',
-            icon: 'edit',
-            href: byStatus('draft'),
-        },
-        {
-            group: 'Artikel',
-            label: 'Menunggu review',
-            icon: 'clock',
-            href: byStatus('review'),
-            keywords: 'tinjau antrean',
-        },
-        {
-            group: 'Artikel',
-            label: 'Artikel terbit',
-            icon: 'check',
-            href: byStatus('published'),
-            keywords: 'published tayang',
-        },
-        {
-            group: 'Artikel',
-            label: 'Artikel dikembalikan',
-            icon: 'x',
-            href: byStatus('rejected'),
-            keywords: 'ditolak revisi',
-        },
-        ...(can('users')
-            ? [
-                  {
-                      group: 'Pengguna',
-                      label: 'Tambah pengguna',
-                      icon: 'plus' as const,
-                      href: createUser.url(),
-                      keywords: 'user baru akun',
-                  },
-              ]
-            : []),
-        {
-            group: 'Akun',
-            label: 'Keluar',
-            icon: 'logout',
-            run: () => router.post(logout.url()),
-            keywords: 'logout',
-        },
-    ];
+    const logoutCommand: Command = {
+        group: 'Akun',
+        label: 'Keluar',
+        icon: 'logout',
+        run: () => router.post(logout.url()),
+        keywords: 'logout',
+    };
+    const commands: Command[] = client
+        ? [
+              {
+                  group: 'Navigasi',
+                  label: 'Media Intelligence',
+                  icon: 'chart',
+                  href: insights.url(),
+                  keywords: 'dashboard analitik',
+              },
+              logoutCommand,
+          ]
+        : [
+              {
+                  group: 'Navigasi',
+                  label: 'Dashboard',
+                  icon: 'grid',
+                  href: articles.url(),
+                  keywords: 'beranda artikel ringkasan',
+              },
+              ...(can('categories')
+                  ? [
+                        {
+                            group: 'Navigasi',
+                            label: 'Kategori',
+                            icon: 'tag' as const,
+                            href: categories.url(),
+                            keywords: 'rubrik',
+                        },
+                        {
+                            group: 'Navigasi',
+                            label: 'Tag',
+                            icon: 'hash' as const,
+                            href: tags.url(),
+                            keywords: 'label topik',
+                        },
+                    ]
+                  : []),
+              ...(can('directory')
+                  ? [
+                        {
+                            group: 'Navigasi',
+                            label: 'Direktori daerah',
+                            icon: 'map' as const,
+                            href: directory.url(),
+                            keywords: 'profil wisata umkm event apbd pejabat',
+                        },
+                    ]
+                  : []),
+              ...(can('users')
+                  ? [
+                        {
+                            group: 'Navigasi',
+                            label: 'Pengguna',
+                            icon: 'users' as const,
+                            href: users.url(),
+                            keywords: 'tim user wartawan editor sub admin',
+                        },
+                    ]
+                  : []),
+              ...(can('activity')
+                  ? [
+                        {
+                            group: 'Navigasi',
+                            label: 'Log Aktivitas',
+                            icon: 'activity' as const,
+                            href: activity.url(),
+                            keywords: 'riwayat audit log jejak',
+                        },
+                    ]
+                  : []),
+              ...(can('ai')
+                  ? [
+                        {
+                            group: 'Navigasi',
+                            label: 'Berita AI · Antrean',
+                            icon: 'bolt' as const,
+                            href: aiNews.url(),
+                            keywords: 'hermes ai antrean queue sinopsis',
+                        },
+                        {
+                            group: 'Navigasi',
+                            label: 'Berita AI · Sumber berita',
+                            icon: 'sliders' as const,
+                            href: aiSources.url(),
+                            keywords: 'hermes sumber website scraping',
+                        },
+                    ]
+                  : []),
+              {
+                  group: 'Navigasi',
+                  label: 'Lihat situs',
+                  icon: 'external',
+                  href: home.url(),
+                  external: true,
+                  keywords: 'publik portal',
+              },
+              {
+                  group: 'Artikel',
+                  label: 'Tulis artikel baru',
+                  icon: 'plus',
+                  href: create.url(),
+                  keywords: 'buat berita',
+              },
+              {
+                  group: 'Artikel',
+                  label: 'Artikel draft',
+                  icon: 'edit',
+                  href: byStatus('draft'),
+              },
+              {
+                  group: 'Artikel',
+                  label: 'Menunggu review',
+                  icon: 'clock',
+                  href: byStatus('review'),
+                  keywords: 'tinjau antrean',
+              },
+              {
+                  group: 'Artikel',
+                  label: 'Artikel terbit',
+                  icon: 'check',
+                  href: byStatus('published'),
+                  keywords: 'published tayang',
+              },
+              {
+                  group: 'Artikel',
+                  label: 'Artikel dikembalikan',
+                  icon: 'x',
+                  href: byStatus('rejected'),
+                  keywords: 'ditolak revisi',
+              },
+              ...(can('users')
+                  ? [
+                        {
+                            group: 'Pengguna',
+                            label: 'Tambah pengguna',
+                            icon: 'plus' as const,
+                            href: createUser.url(),
+                            keywords: 'user baru akun',
+                        },
+                    ]
+                  : []),
+              {
+                  group: 'Akun',
+                  label: 'Keluar',
+                  icon: 'logout',
+                  run: () => router.post(logout.url()),
+                  keywords: 'logout',
+              },
+          ];
     // Redaksi › Section › Page. On a section's index page the page title replaces the section.
-    const crumbs: Crumb[] = [
-        { label: 'Ruang Redaksi', href: articles.url() },
-        ...(section && path !== section.href
-            ? [{ label: section.label, href: section.href }]
-            : []),
-        { label: title },
-    ];
+    const crumbs: Crumb[] = client
+        ? [{ label: title }]
+        : [
+              { label: 'Ruang Redaksi', href: articles.url() },
+              ...(section && path !== section.href
+                  ? [{ label: section.label, href: section.href }]
+                  : []),
+              { label: title },
+          ];
 
     return (
         <div className="min-h-screen bg-nusantara text-slate-700">
             {/* Desktop: floating sidebar */}
-            <aside className="fixed inset-y-4 left-4 z-30 hidden w-64 flex-col card p-4 lg:flex">
+            <aside className="fixed inset-y-4 left-4 z-30 hidden w-64 flex-col card p-4 lg:flex print:hidden">
                 <Logo className="px-2 pt-1" />
-                <p className="mt-6 mb-2 px-3 text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase">
-                    Ruang Redaksi
-                </p>
-                <Link
-                    href={create.url()}
-                    className="btn-primary mb-4 w-full py-2.5"
-                >
-                    <Icon name="plus" width={18} height={18} />
-                    Tulis artikel
-                </Link>
-                <nav className="space-y-1">
-                    {links.map((l) => (
-                        <Link
-                            key={l.href}
-                            href={l.href}
-                            className={cn(
-                                'relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors',
-                                active === l.href
-                                    ? 'text-accent'
-                                    : 'text-slate-500 hover:text-navy-900',
-                            )}
-                        >
-                            {active === l.href && (
-                                <motion.span
-                                    layoutId="admin-nav"
-                                    transition={spring}
-                                    className="absolute inset-0 rounded-2xl bg-accent/[0.07] ring-1 ring-accent/15"
-                                />
-                            )}
-                            <Icon name={l.icon} className="relative" />
-                            <span className="relative">{l.label}</span>
-                        </Link>
+                {!client && (
+                    <Link
+                        href={create.url()}
+                        className="btn-primary mt-6 w-full py-2.5"
+                    >
+                        <Icon name="plus" width={18} height={18} />
+                        Tulis artikel
+                    </Link>
+                )}
+                <nav className="mt-5 flex-1 space-y-5 overflow-y-auto">
+                    {groups.map((g) => (
+                        <div key={g.label}>
+                            <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase">
+                                {g.label}
+                            </p>
+                            <div className="space-y-0.5">
+                                {g.links.map((l) => (
+                                    <NavLink
+                                        key={l.href}
+                                        link={l}
+                                        active={active === l.href}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     ))}
+                </nav>
+
+                <div className="mt-4 border-t border-slate-100 pt-4">
                     <a
                         href={home.url()}
                         target="_blank"
-                        className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:text-navy-900"
+                        className="mb-2 flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:bg-accent/5 hover:text-accent"
                     >
-                        <Icon name="external" />
+                        <Icon name="external" width={18} height={18} />
                         Lihat situs
                     </a>
-                </nav>
-
-                <div className="mt-auto rounded-2xl bg-gradient-to-br from-accent/[0.06] to-transparent p-3 ring-1 ring-accent/10">
-                    <div className="flex items-center gap-3">
-                        <Avatar name={user.name} />
-                        <div className="min-w-0">
+                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-2 ring-1 ring-slate-100">
+                        <Avatar name={user.name} className="size-9 text-xs" />
+                        <div className="min-w-0 flex-1 leading-tight">
                             <p className="truncate text-sm font-semibold text-navy-900">
                                 {user.name}
                             </p>
@@ -276,18 +401,13 @@ export default function AdminLayout({
                                 {roleLabel[user.role]}
                             </p>
                         </div>
+                        <LogoutButton iconOnly />
                     </div>
-                    <Form action={logout.url()} method="post" className="mt-3">
-                        <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-2 text-xs font-medium text-slate-500 ring-1 ring-slate-200 transition hover:text-accent hover:ring-accent/30">
-                            <Icon name="logout" width={16} height={16} />
-                            Keluar
-                        </button>
-                    </Form>
                 </div>
             </aside>
 
             {/* Phones/tablets: top bar */}
-            <header className="sticky top-0 z-30 flex items-center justify-between rounded-none glass border-x-0 border-t-0 px-4 py-3 lg:hidden">
+            <header className="sticky top-0 z-30 flex items-center justify-between rounded-none glass border-x-0 border-t-0 px-4 py-3 lg:hidden print:hidden">
                 <Logo />
                 <button
                     type="button"
@@ -297,54 +417,31 @@ export default function AdminLayout({
                 >
                     <Icon name="search" width={18} height={18} />
                 </button>
-                <Form action={logout.url()} method="post">
-                    <button
-                        aria-label="Keluar"
-                        className="flex items-center gap-2 rounded-full p-0.5 pr-3 text-xs font-medium text-slate-500 ring-1 ring-slate-200"
-                    >
-                        <Avatar name={user.name} className="size-8 text-xs" />
-                        <Icon name="logout" width={16} height={16} />
-                    </button>
-                </Form>
+                <button
+                    type="button"
+                    onClick={() => setMenuOpen(true)}
+                    aria-label="Akun dan menu"
+                    className="rounded-full p-0.5 ring-1 ring-slate-200 transition hover:ring-accent/30"
+                >
+                    <Avatar name={user.name} className="size-8 text-xs" />
+                </button>
             </header>
 
-            <main className="px-4 pt-5 pb-28 sm:px-6 lg:pt-4 lg:pr-8 lg:pb-12 lg:pl-[19rem]">
+            <main className="px-4 pt-5 pb-28 sm:px-6 lg:pt-4 lg:pr-8 lg:pb-12 lg:pl-[19rem] print:p-0">
                 <div className="mx-auto max-w-6xl">
                     {/* Desktop top bar: breadcrumb + newsroom clock */}
-                    <div className="sticky top-4 z-20 mb-7 hidden min-h-[4.5rem] items-center justify-between gap-4 rounded-3xl glass py-3 pr-3 pl-4 lg:flex">
+                    <div className="sticky top-4 z-20 mb-7 hidden min-h-[4.5rem] items-center justify-between gap-4 rounded-3xl glass py-3 pr-3 pl-4 lg:flex print:hidden">
                         <Breadcrumb crumbs={crumbs} className="min-w-0" />
                         <div className="flex shrink-0 items-center gap-2">
                             <SearchTrigger
                                 onClick={() => setSearchOpen(true)}
                             />
                             <Clock />
-                            <a
-                                href={home.url()}
-                                target="_blank"
-                                aria-label="Lihat situs"
-                                title="Lihat situs"
-                                className="grid size-11 place-items-center rounded-2xl bg-white/70 text-slate-500 ring-1 ring-slate-200/70 transition hover:-translate-y-0.5 hover:text-accent hover:ring-accent/30"
-                            >
-                                <Icon name="external" width={18} height={18} />
-                            </a>
                             <span className="mx-1 h-8 w-px bg-slate-200" />
-                            <div className="flex items-center gap-3 rounded-2xl py-1 pr-3 pl-1 transition hover:bg-white/70">
-                                <span className="relative">
-                                    <Avatar
-                                        name={user.name}
-                                        className="size-10"
-                                    />
-                                    <span className="absolute right-0 bottom-0 size-3 rounded-full bg-emerald-500 ring-2 ring-white" />
-                                </span>
-                                <span className="hidden leading-tight 2xl:block">
-                                    <span className="block max-w-36 truncate text-sm font-semibold text-navy-900">
-                                        {user.name}
-                                    </span>
-                                    <span className="block text-xs text-slate-500">
-                                        {roleLabel[user.role]}
-                                    </span>
-                                </span>
-                            </div>
+                            <UserMenu
+                                name={user.name}
+                                role={roleLabel[user.role]}
+                            />
                         </div>
                     </div>
                     <Breadcrumb
@@ -405,8 +502,8 @@ export default function AdminLayout({
             </main>
 
             {/* Phones/tablets: bottom nav + floating write button */}
-            <nav className="fixed inset-x-4 bottom-4 z-30 flex items-center gap-1 rounded-full glass p-1.5 lg:hidden">
-                {links.map((l) => (
+            <nav className="fixed inset-x-4 bottom-4 z-30 flex items-center gap-1 rounded-full glass p-1.5 lg:hidden print:hidden">
+                {links.slice(0, 3).map((l) => (
                     <Link
                         key={l.href}
                         href={l.href}
@@ -433,15 +530,38 @@ export default function AdminLayout({
                         <span className="relative">{l.label}</span>
                     </Link>
                 ))}
-                <Link
-                    href={create.url()}
-                    aria-label="Tulis artikel"
-                    className="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-white shadow-lg shadow-accent/40 transition active:scale-95"
+                <button
+                    type="button"
+                    onClick={() => setMenuOpen(true)}
+                    className={cn(
+                        'relative flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-medium transition-colors',
+                        links.slice(3).some((l) => l.href === active)
+                            ? 'text-accent'
+                            : 'text-slate-500',
+                    )}
                 >
-                    <Icon name="plus" width={22} height={22} />
-                </Link>
+                    <Icon name="menu" width={20} height={20} />
+                    Menu
+                </button>
+                {!client && (
+                    <Link
+                        href={create.url()}
+                        aria-label="Tulis artikel"
+                        className="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-white shadow-lg shadow-accent/40 transition active:scale-95"
+                    >
+                        <Icon name="plus" width={22} height={22} />
+                    </Link>
+                )}
             </nav>
 
+            <MenuSheet
+                open={menuOpen}
+                onClose={() => setMenuOpen(false)}
+                groups={groups}
+                active={active}
+                name={user.name}
+                role={roleLabel[user.role]}
+            />
             <Toast />
             <CommandPalette
                 open={searchOpen}
@@ -452,6 +572,232 @@ export default function AdminLayout({
                 }
             />
         </div>
+    );
+}
+
+type NavItem = { href: string; label: string; icon: IconName };
+type NavGroup = { label: string; links: NavItem[] };
+
+function NavLink({
+    link,
+    active,
+    onClick,
+}: {
+    link: NavItem;
+    active: boolean;
+    onClick?: () => void;
+}) {
+    return (
+        <Link
+            href={link.href}
+            onClick={onClick}
+            className={cn(
+                'relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors',
+                active
+                    ? 'text-accent'
+                    : 'text-slate-500 hover:bg-accent/5 hover:text-navy-900',
+            )}
+        >
+            {active && (
+                <motion.span
+                    layoutId="admin-nav"
+                    transition={spring}
+                    className="absolute inset-0 rounded-2xl bg-accent/[0.07] ring-1 ring-accent/15"
+                />
+            )}
+            <Icon
+                name={link.icon}
+                width={18}
+                height={18}
+                className="relative"
+            />
+            <span className="relative">{link.label}</span>
+        </Link>
+    );
+}
+
+function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
+    return (
+        <Form action={logout.url()} method="post">
+            <button
+                aria-label="Keluar"
+                title="Keluar"
+                className={cn(
+                    'flex items-center gap-3 text-sm font-medium transition-colors',
+                    iconOnly
+                        ? 'grid size-9 place-items-center rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600'
+                        : 'w-full rounded-2xl px-3 py-2.5 text-red-600 hover:bg-red-50',
+                )}
+            >
+                <Icon name="logout" width={18} height={18} />
+                {!iconOnly && 'Keluar'}
+            </button>
+        </Form>
+    );
+}
+
+/** Desktop top bar: avatar opens a small account menu. */
+function UserMenu({ name, role }: { name: string; role: string }) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <div className="relative">
+            <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+                aria-haspopup="menu"
+                className="flex items-center gap-3 rounded-2xl py-1 pr-2 pl-1 transition hover:bg-white/70"
+            >
+                <span className="relative">
+                    <Avatar name={name} className="size-10" />
+                    <span className="absolute right-0 bottom-0 size-3 rounded-full bg-emerald-500 ring-2 ring-white" />
+                </span>
+                <span className="hidden text-left leading-tight 2xl:block">
+                    <span className="block max-w-36 truncate text-sm font-semibold text-navy-900">
+                        {name}
+                    </span>
+                    <span className="block text-xs text-slate-500">{role}</span>
+                </span>
+                <Icon
+                    name="chevron"
+                    width={14}
+                    height={14}
+                    className={cn(
+                        'text-slate-400 transition-transform',
+                        open ? '-rotate-90' : 'rotate-90',
+                    )}
+                />
+            </button>
+            <AnimatePresence>
+                {open && (
+                    <>
+                        <button
+                            type="button"
+                            aria-label="Tutup menu"
+                            className="fixed inset-0 z-40 cursor-default"
+                            onClick={() => setOpen(false)}
+                        />
+                        <motion.div
+                            role="menu"
+                            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                            transition={{ duration: 0.18, ease }}
+                            className="absolute right-0 z-50 mt-2 w-60 origin-top-right rounded-2xl bg-white p-1.5 shadow-xl ring-1 shadow-black/10 ring-black/5"
+                        >
+                            <div className="px-3 py-2.5">
+                                <p className="truncate text-sm font-semibold text-navy-900">
+                                    {name}
+                                </p>
+                                <p className="text-xs text-slate-500">{role}</p>
+                            </div>
+                            <div className="my-1 h-px bg-slate-100" />
+                            <a
+                                href={home.url()}
+                                target="_blank"
+                                role="menuitem"
+                                className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-accent/5 hover:text-accent"
+                            >
+                                <Icon name="external" width={18} height={18} />
+                                Lihat situs
+                            </a>
+                            <LogoutButton />
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+/** Phones/tablets: full menu and account as a bottom sheet. */
+function MenuSheet({
+    open,
+    onClose,
+    groups,
+    active,
+    name,
+    role,
+}: {
+    open: boolean;
+    onClose: () => void;
+    groups: NavGroup[];
+    active?: string;
+    name: string;
+    role: string;
+}) {
+    return (
+        <AnimatePresence>
+            {open && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={onClose}
+                    className="fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm lg:hidden"
+                >
+                    <motion.div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Menu"
+                        onClick={(e) => e.stopPropagation()}
+                        initial={{ y: '100%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '100%' }}
+                        transition={{ duration: 0.3, ease }}
+                        className="max-h-[85vh] w-full overflow-y-auto rounded-t-[28px] bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+                    >
+                        <span className="mx-auto mb-4 block h-1 w-10 rounded-full bg-slate-200" />
+                        <div className="mb-4 flex items-center gap-3 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                            <Avatar name={name} className="size-10" />
+                            <div className="min-w-0 flex-1 leading-tight">
+                                <p className="truncate text-sm font-semibold text-navy-900">
+                                    {name}
+                                </p>
+                                <p className="text-xs text-slate-500">{role}</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                aria-label="Tutup"
+                                className="grid size-9 place-items-center rounded-full text-slate-400 hover:bg-slate-100"
+                            >
+                                <Icon name="x" width={18} height={18} />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            {groups.map((g) => (
+                                <div key={g.label}>
+                                    <p className="mb-1 px-3 text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase">
+                                        {g.label}
+                                    </p>
+                                    {g.links.map((l) => (
+                                        <NavLink
+                                            key={l.href}
+                                            link={l}
+                                            active={active === l.href}
+                                            onClick={onClose}
+                                        />
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-4 space-y-1 border-t border-slate-100 pt-3">
+                            <a
+                                href={home.url()}
+                                target="_blank"
+                                className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-accent/5 hover:text-accent"
+                            >
+                                <Icon name="external" width={18} height={18} />
+                                Lihat situs
+                            </a>
+                            <LogoutButton />
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 }
 

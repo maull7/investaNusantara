@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import ArticleCard from '@/components/article-card';
 import { Reveal, Stagger } from '@/components/motion';
-import Pagination from '@/components/pagination';
+import InfiniteList from '@/components/infinite-list';
 import PublicLayout from '@/layouts/public';
 import type { ArticleCard as Card, Category, Paginated } from '@/types';
 
@@ -31,15 +31,17 @@ export default function CategoryShow({
                         <ArticleCard article={first} variant="hero" />
                     </Reveal>
                 )}
-                <div className="grid gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+                <InfiniteList
+                    data="articles"
+                    className="grid gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3"
+                >
                     {rest.map((a) => (
                         <Reveal key={a.id}>
                             <ArticleCard article={a} variant="feature" />
                         </Reveal>
                     ))}
-                </div>
+                </InfiniteList>
             </Stagger>
-            <Pagination data={articles} />
         </PublicLayout>
     );
 }

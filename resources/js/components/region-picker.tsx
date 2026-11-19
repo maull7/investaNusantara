@@ -6,7 +6,7 @@ import { cities as citiesRoute } from '@/routes/region';
 import type { Region } from '@/types';
 
 const select =
-    'w-full appearance-none rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-accent/40 disabled:opacity-50';
+    'w-full appearance-none rounded-full bg-surface px-4 py-2.5 text-sm ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-accent/40 disabled:opacity-50';
 
 /** Province > regency/city selector that navigates to the region page. */
 export default function RegionPicker({ className }: { className?: string }) {
