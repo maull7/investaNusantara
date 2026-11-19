@@ -26,6 +26,28 @@ class PortalTest extends TestCase
         ]);
     }
 
+    public function test_trending_ranks_by_recent_unique_reads_then_fills_with_newest(): void
+    {
+        $old = Article::factory()->published()->create(['region_code' => '32.73', 'published_at' => now()->subDays(5), 'views' => 999]);
+        $hot = Article::factory()->published()->create(['region_code' => '32.73', 'published_at' => now()->subDays(3)]);
+        $new = Article::factory()->published()->create(['region_code' => '32.73', 'published_at' => now()->subHour()]);
+
+        // Same visitor refreshing counts once; a second visitor makes it 2.
+        $this->get("/berita/{$hot->slug}");
+        $this->get("/berita/{$hot->slug}");
+        $this->withHeader('User-Agent', 'lain')->get("/berita/{$hot->slug}");
+        $this->assertSame(2, $hot->fresh()->views);
+
+        $this->get('/wilayah')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('region/index')
+            ->has('provinceCounts'));
+
+        $this->get('/wilayah/jawa-barat')->assertInertia(fn (Assert $page) => $page
+            ->where('popular.0.id', $hot->id)   // read this week
+            ->where('popular.1.id', $new->id)   // unread: newest first
+            ->where('popular.2.id', $old->id)); // old all-time views no longer win
+    }
+
     public function test_province_page_includes_city_articles_only_published(): void
     {
         $bandung = Article::factory()->published()->create(['region_code' => '32.73']);
@@ -36,6 +58,11 @@ class PortalTest extends TestCase
             ->component('region/show')
             ->has('articles.data', 1)
             ->where('articles.data.0.id', $bandung->id));
+
+        $this->get('/api/wilayah/32/preview')->assertOk()
+            ->assertJsonCount(1, 'latest')
+            ->assertJsonPath('latest.0.id', $bandung->id);
+        $this->get('/api/wilayah/32.73/preview')->assertNotFound();
 
         $this->get('/wilayah/jawa-barat/kota-bandung')->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('region.code', '32.73'));

@@ -49,6 +49,22 @@ class Region extends Model
         $query->where('level', self::PROVINCE)->orderBy('name');
     }
 
+    /**
+     * Landmark icon for the region page: its own, else its province's (public/landmarks, see scripts/build-landmarks.py).
+     *
+     * @return array{name: string, url: string}|null
+     */
+    public function landmark(): ?array
+    {
+        static $names;
+        $names ??= collect(file(database_path('data/landmarks.csv'), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES))
+            ->skip(1)->mapWithKeys(fn ($l) => [explode(',', $l, 2)[0] => explode(',', $l, 2)[1]]);
+
+        $code = $names->has($this->code) ? $this->code : substr($this->code, 0, 2);
+
+        return $names->has($code) ? ['name' => $names[$code], 'url' => "/landmarks/{$code}.svg"] : null;
+    }
+
     /** True when $code is this region or any region below it. */
     public function contains(?string $code): bool
     {

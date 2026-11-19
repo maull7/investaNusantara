@@ -11,9 +11,11 @@ use App\Models\Category;
 use App\Models\Region;
 use App\Services\NewsPipeline;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,14 +38,61 @@ class PortalController extends Controller
             'breaking' => Article::published()->card()->where('is_breaking', true)->limit(6)->get(),
             'latest' => Article::published()->card()->limit(12)->get(),
             'national' => Article::published()->card()->whereNull('region_code')->limit(6)->get(),
-            'popular' => Article::published()->card()->reorder('views', 'desc')->limit(5)->get(),
-            // Province code => published article count (province + its regencies/cities).
-            'provinceCounts' => Article::published()->reorder()
-                ->whereNotNull('region_code')
-                ->selectRaw('substr(region_code, 1, 2) as province, count(*) as total')
-                ->groupBy('province')
-                ->pluck('total', 'province'),
+            'popular' => Article::published()->card()->trending()->limit(5)->get(),
+            'provinceCounts' => $this->provinceCounts(),
         ]);
+    }
+
+    /** Province code => published article count (province + its regencies/cities). */
+    private function provinceCounts(): \Illuminate\Support\Collection
+    {
+        return Article::published()->reorder()
+            ->whereNotNull('region_code')
+            ->selectRaw('substr(region_code, 1, 2) as province, count(*) as total')
+            ->groupBy('province')
+            ->pluck('total', 'province');
+    }
+
+    public function regions(): Response
+    {
+        return Inertia::render('region/index', [
+            'provinceCounts' => $this->provinceCounts(),
+        ]);
+    }
+
+    public function regionPreview(Region $province): JsonResponse
+    {
+        abort_unless($province->level === Region::PROVINCE, 404);
+
+        return response()->json([
+            'latest' => Article::published()->card()->inRegion($province)->limit(3)->get(),
+        ]);
+    }
+
+    /**
+     * Article counts for a province page: per kabupaten/kota, rolled up to the first two code levels
+     * (so articles tagged to a district still count for their city).
+     *
+     * @return array<string, mixed>
+     */
+    private function regionStats(Region $province, Region $region): array
+    {
+        $perCode = Article::published()->reorder()->inRegion($province)
+            ->selectRaw('substr(region_code, 1, 5) as code, count(*) as total')
+            ->groupBy('code')->pluck('total', 'code');
+        $cities = $province->children()->get(['code', 'name', 'slug', 'type'])
+            ->map(fn (Region $c) => [...$c->only('code', 'name', 'slug', 'type'), 'total' => (int) ($perCode[$c->code] ?? 0)]);
+        $ranked = $cities->where('total', '>', 0)->sortByDesc('total')->values();
+        $pos = $region->is($province) ? false : $ranked->search(fn ($c) => $c['code'] === $region->code);
+
+        return [
+            'total' => (int) $cities->sum('total'),
+            'cities_with_news' => $ranked->count(),
+            // Every kabupaten/kota, busiest first (those without news last, by name).
+            'cities' => $cities->sortBy([['total', 'desc'], ['name', 'asc']])->values(),
+            // 1-based place of the viewed city among those with news; null for a province page or no news.
+            'rank' => $pos === false ? null : $pos + 1,
+        ];
     }
 
     public function region(Region $province, ?Region $child = null): Response
@@ -53,9 +102,11 @@ class PortalController extends Controller
 
         return Inertia::render('region/show', [
             'province' => $province->only('code', 'name', 'slug', 'image_url'),
-            'region' => $region->only('code', 'name', 'slug', 'level', 'type'),
+            'region' => [...$region->only('code', 'name', 'slug', 'level', 'type'), 'landmark' => $region->landmark()],
             'cities' => $province->children()->get(['code', 'name', 'slug', 'type']),
             'articles' => Article::published()->card()->inRegion($region)->paginate(12),
+            'popular' => Article::published()->card()->inRegion($region)->trending()->limit(5)->get(),
+            'stats' => $this->regionStats($province, $region),
         ]);
     }
 
@@ -71,8 +122,16 @@ class PortalController extends Controller
     {
         abort_unless($article->status === ArticleStatus::Published && $article->published_at?->isPast(), 404);
         // The review poll reloads only `review`; don't count it as another read.
+        // One read per visitor per day, so refreshes and bots don't inflate "views" or Trending.
         if (! $request->header('X-Inertia-Partial-Data')) {
-            $article->increment('views');
+            $first = DB::table('article_views')->insertOrIgnore([
+                'article_id' => $article->id,
+                'viewed_on' => today()->toDateString(),
+                'visitor' => $request->user() ? 'u'.$request->user()->id : sha1($request->ip().'|'.$request->userAgent()),
+            ]);
+            if ($first) {
+                $article->increment('views');
+            }
         }
         $article->load(['category:id,name,slug', 'region:code,name,slug,parent_code,level,image_url', 'region.parent:code,name,slug,image_url', 'author:id,name']);
         // Guests get only the "Ringkasan": the full body never leaves the server. Login brings them back here.
@@ -127,6 +186,21 @@ class PortalController extends Controller
     public function cities(Region $province): Collection
     {
         return $province->children()->get(['code', 'name', 'slug']);
+    }
+
+    /** Province profile for the /wilayah panel: editorial text and UMKM from province_profiles.json, plus live kab/kota counts. */
+    public function profile(Region $province): array
+    {
+        abort_unless($province->level === Region::PROVINCE, 404);
+        static $all;
+        $all ??= json_decode((string) @file_get_contents(database_path('data/province_profiles.json')), true) ?: [];
+        $children = $province->children()->get(['type']);
+
+        return [
+            ...($all[$province->code] ?? ['capital' => null, 'region' => null, 'summary' => null, 'icons' => [], 'umkm' => []]),
+            'regencies' => $children->where('type', '!=', 'kota')->count(),
+            'cities' => $children->where('type', 'kota')->count(),
+        ];
     }
 
     public function sitemap(): HttpResponse
