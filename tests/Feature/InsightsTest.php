@@ -47,6 +47,10 @@ class InsightsTest extends TestCase
         $this->get("/berita/{$article->slug}");
         $this->get("/berita/{$article->slug}");
 
+        $this->assertSame(1, $article->refresh()->views);
+        $this->assertSame(1, (int) DB::table('article_daily_views')->where('article_id', $article->id)->value('views'));
+
+        $this->withHeader('User-Agent', 'another-reader')->get("/berita/{$article->slug}");
         $this->assertSame(2, $article->refresh()->views);
         $this->assertSame(2, (int) DB::table('article_daily_views')->where('article_id', $article->id)->value('views'));
     }

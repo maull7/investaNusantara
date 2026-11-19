@@ -17,9 +17,11 @@ Route::controller(PortalController::class)->group(function () {
     Route::get('/tag/{tag:slug}', 'tag')->name('tag');
     Route::get('/berita/{article:slug}', 'article')->name('article');
     Route::post('/berita/{article:slug}/review', 'review')->name('article.review')->middleware(['auth', 'throttle:10,1']);
-    Route::inertia('/wilayah', 'region/index')->name('regions');
+    Route::get('/wilayah', 'regions')->name('regions');
     Route::get('/wilayah/{province:slug}/{child:slug?}', 'region')->name('region')->scopeBindings();
     Route::get('/api/wilayah/{province:code}/kota', 'cities')->name('region.cities');
+    Route::get('/api/wilayah/{province:code}/profil', 'profile')->name('region.profile');
+    Route::get('/api/wilayah/{province:code}/preview', 'regionPreview')->name('region.preview');
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
     Route::get('/sitemap-news.xml', 'newsSitemap')->name('sitemap.news');
     Route::get('/data/{fact}', 'compare')->name('data.compare')->whereIn('fact', RegionProfile::COMPARABLE);

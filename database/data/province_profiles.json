@@ -1,0 +1,1687 @@
+{
+ "11": {
+  "capital": "Banda Aceh",
+  "region": "Sumatera",
+  "summary": "Provinsi di ujung barat Indonesia yang dikenal dengan syariat Islam, tradisi dayah, dan kopi dataran tinggi Gayo.",
+  "icons": [
+   "Masjid Raya Baiturrahman",
+   "Tari Saman",
+   "Kopi Gayo"
+  ],
+  "umkm": [
+   {
+    "name": "Kopi Gayo",
+    "category": "Kopi",
+    "description": "Arabika dataran tinggi Gayo dengan cita rasa lembut dan aroma kuat.",
+    "image": {
+     "url": "/umkm/11-1.jpg",
+     "credit": "Adilarmaya",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kopi_Hitam_King_Gayo_Arabika.jpg"
+    }
+   },
+   {
+    "name": "Kerawang Gayo",
+    "category": "Kerajinan",
+    "description": "Sulaman bermotif flora dan fauna khas suku Gayo.",
+    "image": {
+     "url": "/umkm/11-2.jpg",
+     "credit": "Gunawan Kartapranata",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Gayo_Wedding.JPG"
+    }
+   },
+   {
+    "name": "Minyak Nilam",
+    "category": "Agro",
+    "description": "Minyak atsiri nilam Aceh yang diekspor sebagai bahan parfum.",
+    "image": {
+     "url": "/umkm/11-3.jpg",
+     "credit": "No machine-readable author provided. Valérie75 assumed (based on copyright claim",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Pogostemon_cablin_001.jpg"
+    }
+   },
+   {
+    "name": "Mi Aceh",
+    "category": "Kuliner",
+    "description": "Mi tebal berbumbu rempah dengan pilihan daging, kepiting, atau udang.",
+    "image": {
+     "url": "/umkm/11-4.jpg",
+     "credit": "Yasmina Haryono",
+     "license": "CC BY-SA 2.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Mie_Aceh_with_beef.jpg"
+    }
+   }
+  ]
+ },
+ "12": {
+  "capital": "Medan",
+  "region": "Sumatera",
+  "summary": "Provinsi dengan kekayaan budaya Batak, Melayu, dan Karo, serta perkebunan kopi dan sawit yang luas.",
+  "icons": [
+   "Danau Toba",
+   "Istana Maimun",
+   "Ulos"
+  ],
+  "umkm": [
+   {
+    "name": "Ulos Batak",
+    "category": "Tenun",
+    "description": "Kain tenun adat Batak yang dipakai dalam upacara adat.",
+    "image": {
+     "url": "/umkm/12-1.jpg",
+     "credit": "Angeline Claudia",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Halak_Batak.jpg"
+    }
+   },
+   {
+    "name": "Kopi Sidikalang",
+    "category": "Kopi",
+    "description": "Kopi arabika Dairi dengan rasa kuat dan sedikit pahit.",
+    "image": {
+     "url": "/umkm/12-2.jpg",
+     "credit": "Dyalim",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kopi_Robusta_Sidikalang.jpg"
+    }
+   },
+   {
+    "name": "Bika Ambon",
+    "category": "Kuliner",
+    "description": "Kue berongga beraroma pandan dan santan, oleh-oleh khas Medan.",
+    "image": {
+     "url": "/umkm/12-3.jpg",
+     "credit": "Agus Damanik",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Bika_ambon_pandan.jpg"
+    }
+   },
+   {
+    "name": "Sirup Markisa",
+    "category": "Minuman",
+    "description": "Sirup markisa Berastagi, minuman segar andalan dataran tinggi Karo.",
+    "image": {
+     "url": "/umkm/12-4.jpg",
+     "credit": "Astari28",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Buah_Markisa_Berastagi.jpg"
+    }
+   }
+  ]
+ },
+ "13": {
+  "capital": "Padang",
+  "region": "Sumatera",
+  "summary": "Tanah Minangkabau dengan rumah gadang, budaya merantau, dan kuliner yang dikenal sampai mancanegara.",
+  "icons": [
+   "Jam Gadang",
+   "Rumah Gadang",
+   "Rendang"
+  ],
+  "umkm": [
+   {
+    "name": "Rendang",
+    "category": "Kuliner",
+    "description": "Daging bersantan berbumbu rempah yang dimasak lama hingga kering.",
+    "image": {
+     "url": "/umkm/13-1.jpg",
+     "credit": "Wikimedia Commons",
+     "license": "CC BY-SA 2.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Lamb_rendang.jpg"
+    }
+   },
+   {
+    "name": "Songket Pandai Sikek",
+    "category": "Tenun",
+    "description": "Songket tenun tangan dengan benang emas dari Tanah Datar.",
+    "image": {
+     "url": "/umkm/13-2.jpg",
+     "credit": "Adhmi",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kain_songket_Pandai_Sikek.jpg"
+    }
+   },
+   {
+    "name": "Keripik Sanjai",
+    "category": "Kuliner",
+    "description": "Keripik singkong tipis berbumbu balado dari Bukittinggi.",
+    "image": {
+     "url": "/umkm/13-3.jpg",
+     "credit": "Sakurai Midori",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Keripik_singkong_balado_cassava_chips.JPG"
+    }
+   },
+   {
+    "name": "Perak Koto Gadang",
+    "category": "Kerajinan",
+    "description": "Kerajinan perak halus dengan teknik filigri dari Agam.",
+    "image": null
+   }
+  ]
+ },
+ "14": {
+  "capital": "Pekanbaru",
+  "region": "Sumatera",
+  "summary": "Pusat budaya Melayu dengan kekayaan minyak, sawit, dan sungai besar seperti Siak dan Kampar.",
+  "icons": [
+   "Istana Siak",
+   "Masjid An-Nur",
+   "Pacu Jalur"
+  ],
+  "umkm": [
+   {
+    "name": "Tenun Siak",
+    "category": "Tenun",
+    "description": "Songket Melayu Siak bermotif pucuk rebung dan awan larat.",
+    "image": null
+   },
+   {
+    "name": "Bolu Kemojo",
+    "category": "Kuliner",
+    "description": "Kue bolu kukus beraroma kemojo, kudapan khas Melayu Riau.",
+    "image": {
+     "url": "/umkm/14-2.jpg",
+     "credit": "Tim WikiPuluran - WikiBanua",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Bingka_Tapai.jpg"
+    }
+   },
+   {
+    "name": "Gulai Patin",
+    "category": "Kuliner",
+    "description": "Ikan patin sungai dalam kuah gulai kuning yang gurih.",
+    "image": {
+     "url": "/umkm/14-3.jpg",
+     "credit": "Abdul Hanif Arromy",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Gulai_Ikan_Patin_101601.jpg"
+    }
+   },
+   {
+    "name": "Sagu Meranti",
+    "category": "Agro",
+    "description": "Sagu dari Kepulauan Meranti, bahan dasar mi sagu dan kue tradisional.",
+    "image": null
+   }
+  ]
+ },
+ "15": {
+  "capital": "Jambi",
+  "region": "Sumatera",
+  "summary": "Provinsi di tepian Sungai Batanghari dengan peninggalan Kerajaan Melayu Kuno dan kebun teh serta kopi Kerinci.",
+  "icons": [
+   "Candi Muaro Jambi",
+   "Gunung Kerinci",
+   "Batik Jambi"
+  ],
+  "umkm": [
+   {
+    "name": "Batik Jambi",
+    "category": "Batik",
+    "description": "Batik dengan motif kapal sanggat dan angso duo khas Jambi.",
+    "image": null
+   },
+   {
+    "name": "Kopi Kerinci",
+    "category": "Kopi",
+    "description": "Kopi dataran tinggi Kerinci dengan rasa fruity yang khas.",
+    "image": null
+   },
+   {
+    "name": "Teh Kayu Aro",
+    "category": "Agro",
+    "description": "Teh dari perkebunan tertinggi di dunia di kaki Gunung Kerinci.",
+    "image": {
+     "url": "/umkm/15-3.jpg",
+     "credit": "Zhilal Darma",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kebun_Teh_Kayu_Aro_Kerinci.jpg"
+    }
+   },
+   {
+    "name": "Songket Jambi",
+    "category": "Tenun",
+    "description": "Tenun songket Jambi bermotif tegak manis dan bunga tanjung.",
+    "image": {
+     "url": "/umkm/15-4.jpg",
+     "credit": "Benchmarknews &amp; Kementerian Perdagangan Indonesia",
+     "license": "Public domain",
+     "page": "https://commons.wikimedia.org/wiki/File:Tenunan_songket_khas_Minangkabau.jpg"
+    }
+   }
+  ]
+ },
+ "16": {
+  "capital": "Palembang",
+  "region": "Sumatera",
+  "summary": "Bekas pusat Kerajaan Sriwijaya yang kini dikenal lewat Sungai Musi, Jembatan Ampera, dan kuliner pempek.",
+  "icons": [
+   "Jembatan Ampera",
+   "Benteng Kuto Besak",
+   "Pempek"
+  ],
+  "umkm": [
+   {
+    "name": "Songket Palembang",
+    "category": "Tenun",
+    "description": "Kain songket benang emas yang menjadi busana adat Sumatera Selatan.",
+    "image": {
+     "url": "/umkm/16-1.jpg",
+     "credit": "Afrinaldi Zulhen",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Melestarikan_Songket_Palembang.jpg"
+    }
+   },
+   {
+    "name": "Pempek",
+    "category": "Kuliner",
+    "description": "Olahan ikan dan sagu disajikan dengan kuah cuko asam manis pedas.",
+    "image": {
+     "url": "/umkm/16-2.jpg",
+     "credit": "Pungkas nurrohman",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Pempek_lenjer_dan_krispi.jpg"
+    }
+   },
+   {
+    "name": "Kopi Semende",
+    "category": "Kopi",
+    "description": "Kopi robusta Semende dari dataran tinggi Muara Enim.",
+    "image": null
+   },
+   {
+    "name": "Ukiran Palembang",
+    "category": "Kerajinan",
+    "description": "Ukiran kayu bersepuh emas bermotif flora khas Palembang.",
+    "image": {
+     "url": "/umkm/16-4.jpg",
+     "credit": "Cendy00",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Ukiran_Kayu_di_Monpera.jpg"
+    }
+   }
+  ]
+ },
+ "17": {
+  "capital": "Bengkulu",
+  "region": "Sumatera",
+  "summary": "Provinsi pesisir barat Sumatera, rumah bunga Rafflesia arnoldii dan benteng peninggalan Inggris.",
+  "icons": [
+   "Benteng Marlborough",
+   "Rafflesia",
+   "Batik Besurek"
+  ],
+  "umkm": [
+   {
+    "name": "Batik Besurek",
+    "category": "Batik",
+    "description": "Batik bermotif kaligrafi Arab dan bunga Rafflesia khas Bengkulu.",
+    "image": {
+     "url": "/umkm/17-1.jpg",
+     "credit": "Gunawan Kartapranata",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Batik_Besurek_Bengkulu.jpg"
+    }
+   },
+   {
+    "name": "Kopi Bengkulu",
+    "category": "Kopi",
+    "description": "Kopi robusta Kepahiang dan Rejang Lebong yang berkarakter kuat.",
+    "image": {
+     "url": "/umkm/17-2.jpg",
+     "credit": "KOPI GADING CEMPAKA",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kopi_Gading_Cempaka.jpg"
+    }
+   },
+   {
+    "name": "Pendap",
+    "category": "Kuliner",
+    "description": "Ikan berbumbu kelapa dibungkus daun talas, dikukus atau dipanggang.",
+    "image": {
+     "url": "/umkm/17-3.jpg",
+     "credit": "Naval Scene",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Pendap_from_Bengkulu_-_IMG_20220210_181317_298.jpg"
+    }
+   }
+  ]
+ },
+ "18": {
+  "capital": "Bandar Lampung",
+  "region": "Sumatera",
+  "summary": "Gerbang Sumatera dengan budaya Lampung, perkebunan kopi robusta, dan wisata pantai serta Krakatau.",
+  "icons": [
+   "Menara Siger",
+   "Gunung Anak Krakatau",
+   "Kain Tapis"
+  ],
+  "umkm": [
+   {
+    "name": "Kain Tapis",
+    "category": "Tenun",
+    "description": "Kain sulam benang emas bermotif kapal dan pucuk rebung.",
+    "image": null
+   },
+   {
+    "name": "Kopi Robusta Lampung",
+    "category": "Kopi",
+    "description": "Salah satu penghasil robusta terbesar di Indonesia.",
+    "image": null
+   },
+   {
+    "name": "Keripik Pisang",
+    "category": "Kuliner",
+    "description": "Pisang kepok diiris dan digoreng, bisa dengan aneka rasa.",
+    "image": {
+     "url": "/umkm/18-3.jpg",
+     "credit": "Taman Renyah",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Keripik_pisang_Lampung.JPG"
+    }
+   },
+   {
+    "name": "Kemplang",
+    "category": "Kuliner",
+    "description": "Kerupuk ikan panggang khas Lampung dan Sumatera Selatan.",
+    "image": {
+     "url": "/umkm/18-4.jpg",
+     "credit": "Sakurai Midori",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kerupuk_kemplang_Bandar_Lampung.JPG"
+    }
+   }
+  ]
+ },
+ "19": {
+  "capital": "Pangkalpinang",
+  "region": "Sumatera",
+  "summary": "Kepulauan timah dengan pantai berbatu granit, lada putih Muntok, dan budaya Melayu serta Tionghoa.",
+  "icons": [
+   "Pantai Tanjung Tinggi",
+   "Pelabuhan Muntok",
+   "Lada Putih"
+  ],
+  "umkm": [
+   {
+    "name": "Lada Putih Muntok",
+    "category": "Agro",
+    "description": "Lada putih bermutu tinggi yang diakui secara global.",
+    "image": {
+     "url": "/umkm/19-1.jpg",
+     "credit": "Taman Renyah",
+     "license": "CC BY 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Bangka_White_Pepper.JPG"
+    }
+   },
+   {
+    "name": "Tenun Cual",
+    "category": "Tenun",
+    "description": "Kain tenun Bangka dengan benang emas dan perak.",
+    "image": {
+     "url": "/umkm/19-2.jpg",
+     "credit": "Hiart",
+     "license": "CC0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kain_limar_(shoulder_cloth)_from_Sumatra,_Bangka_Island,_late_19th_century,_HAA.JPG"
+    }
+   },
+   {
+    "name": "Kerajinan Timah",
+    "category": "Kerajinan",
+    "description": "Cenderamata dari timah olahan perajin Bangka Belitung.",
+    "image": null
+   },
+   {
+    "name": "Kerupuk Kemplang",
+    "category": "Kuliner",
+    "description": "Kerupuk ikan khas Bangka yang dipanggang kering.",
+    "image": {
+     "url": "/umkm/19-4.jpg",
+     "credit": "nugroho adhi",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Deretan_Jemuran_Kemplang_di_Kampung_Cina,_Belinyu,_Bangka_Belitung_-_panoramio.jpg"
+    }
+   }
+  ]
+ },
+ "21": {
+  "capital": "Tanjungpinang",
+  "region": "Sumatera",
+  "summary": "Provinsi kepulauan di jalur pelayaran Selat Malaka dengan warisan kerajaan Melayu Riau-Lingga.",
+  "icons": [
+   "Pulau Penyengat",
+   "Jembatan Barelang",
+   "Gonggong"
+  ],
+  "umkm": [
+   {
+    "name": "Gonggong",
+    "category": "Kuliner",
+    "description": "Siput laut rebus yang menjadi ikon kuliner Kepulauan Riau.",
+    "image": null
+   },
+   {
+    "name": "Tenun Songket Melayu",
+    "category": "Tenun",
+    "description": "Songket khas Melayu Kepri bermotif pucuk rebung.",
+    "image": null
+   },
+   {
+    "name": "Otak-otak",
+    "category": "Kuliner",
+    "description": "Olahan ikan berbumbu yang dipanggang dalam daun kelapa.",
+    "image": {
+     "url": "/umkm/21-3.jpg",
+     "credit": "Midori",
+     "license": "CC BY 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Otak-otak_Jakarta.JPG"
+    }
+   }
+  ]
+ },
+ "31": {
+  "capital": "Jakarta",
+  "region": "Jawa",
+  "summary": "Ibu kota negara dengan budaya Betawi yang berpadu dengan pusat bisnis, pemerintahan, dan jasa.",
+  "icons": [
+   "Monumen Nasional",
+   "Ondel-ondel",
+   "Kerak Telor"
+  ],
+  "umkm": [
+   {
+    "name": "Batik Betawi",
+    "category": "Batik",
+    "description": "Batik bermotif ondel-ondel, Monas, dan flora Jakarta.",
+    "image": null
+   },
+   {
+    "name": "Kerak Telor",
+    "category": "Kuliner",
+    "description": "Telur bebek dan beras ketan dengan serundeng, jajanan khas Betawi.",
+    "image": {
+     "url": "/umkm/31-2.jpg",
+     "credit": "Dainsleaf",
+     "license": "Public domain",
+     "page": "https://commons.wikimedia.org/wiki/File:Kerak_Telor.jpg"
+    }
+   },
+   {
+    "name": "Dodol Betawi",
+    "category": "Kuliner",
+    "description": "Dodol ketan legit yang dimasak lama dengan gula dan santan.",
+    "image": {
+     "url": "/umkm/31-3.jpg",
+     "credit": "Ezagren (bicara / talk)",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Dodol_Betawi.JPG"
+    }
+   },
+   {
+    "name": "Bir Pletok",
+    "category": "Minuman",
+    "description": "Minuman jahe dan rempah tanpa alkohol khas Betawi.",
+    "image": {
+     "url": "/umkm/31-4.jpg",
+     "credit": "Swarabakti",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Bir_Pletok_(closeup,_bg_removed).png"
+    }
+   }
+  ]
+ },
+ "32": {
+  "capital": "Bandung",
+  "region": "Jawa",
+  "summary": "Provinsi terpadat dengan budaya Sunda, pegunungan sejuk, dan industri kreatif serta tekstil yang besar.",
+  "icons": [
+   "Gedung Sate",
+   "Angklung",
+   "Tangkuban Perahu"
+  ],
+  "umkm": [
+   {
+    "name": "Batik Trusmi",
+    "category": "Batik",
+    "description": "Batik Cirebon bermotif megamendung yang mendunia.",
+    "image": {
+     "url": "/umkm/32-1.jpg",
+     "credit": "Aris riyanto",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:%22%2Barya%2B%22_%EA%A6%8F%EA%A6%AE%EA%A6%B1%EA%A6%A4%EA%A7%80_%EA%A6%AE%EA%A6%B6%EA%A6%B1%EA%A6%A0_%EA%A6%A7%EA%A6%A0%EA%A6%B6%EA%A6%8F%EA%A7%80_%EA%A6%A0%EA%A6%BF%EA%A6%B8%EA%A6%B1%EA%A7%80%EA%A6%A9%EA%A6%B6_kawasan_wisata_batik_trusmi_2019.jpg"
+    }
+   },
+   {
+    "name": "Angklung",
+    "category": "Kerajinan",
+    "description": "Alat musik bambu Saung Angklung Udjo, warisan budaya UNESCO.",
+    "image": {
+     "url": "/umkm/32-2.jpg",
+     "credit": "Crisco 1492",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Single_note_angklung_(%27G%27),_2015-05-21.jpg"
+    }
+   },
+   {
+    "name": "Sepatu Cibaduyut",
+    "category": "Kriya",
+    "description": "Sentra sepatu kulit buatan tangan dari Bandung.",
+    "image": null
+   },
+   {
+    "name": "Tahu Sumedang",
+    "category": "Kuliner",
+    "description": "Tahu goreng kuning gurih dengan tekstur kenyal dari Sumedang.",
+    "image": {
+     "url": "/umkm/32-4.jpg",
+     "credit": "Serenity",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Tahu_sumedang.jpg"
+    }
+   }
+  ]
+ },
+ "33": {
+  "capital": "Semarang",
+  "region": "Jawa",
+  "summary": "Jantung budaya Jawa dengan Candi Borobudur, kota batik Pekalongan, dan sentra ukir Jepara.",
+  "icons": [
+   "Candi Borobudur",
+   "Lawang Sewu",
+   "Batik Pekalongan"
+  ],
+  "umkm": [
+   {
+    "name": "Batik Pekalongan",
+    "category": "Batik",
+    "description": "Batik pesisir yang berwarna cerah dengan motif jlamprang.",
+    "image": {
+     "url": "/umkm/33-1.jpg",
+     "credit": "Uncredited",
+     "license": "Public domain",
+     "page": "https://commons.wikimedia.org/wiki/File:Loro_Blonyo_at_the_Pekalongan_Batik_Museum.jpg"
+    }
+   },
+   {
+    "name": "Ukiran Jepara",
+    "category": "Kerajinan",
+    "description": "Mebel dan ukiran kayu jati halus dari Jepara.",
+    "image": {
+     "url": "/umkm/33-2.jpg",
+     "credit": "Barokah Ukir Jepara",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Tempat_Tidur_Ukiran_Mewah_Jepara.jpg"
+    }
+   },
+   {
+    "name": "Lumpia Semarang",
+    "category": "Kuliner",
+    "description": "Lumpia isi rebung dan udang, kuliner khas Semarang.",
+    "image": {
+     "url": "/umkm/33-3.jpg",
+     "credit": "Midori",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Loenpia_Semarang.JPG"
+    }
+   },
+   {
+    "name": "Kopi Temanggung",
+    "category": "Kopi",
+    "description": "Kopi robusta dan arabika dari lereng Sindoro-Sumbing.",
+    "image": null
+   }
+  ]
+ },
+ "34": {
+  "capital": "Yogyakarta",
+  "region": "Jawa",
+  "summary": "Daerah istimewa dengan keraton hidup, tradisi batik dan gamelan, serta kehidupan kampus dan seni.",
+  "icons": [
+   "Tugu Yogyakarta",
+   "Keraton",
+   "Malioboro"
+  ],
+  "umkm": [
+   {
+    "name": "Batik Yogyakarta",
+    "category": "Batik",
+    "description": "Batik keraton bermotif parang dan kawung.",
+    "image": {
+     "url": "/umkm/34-1.jpg",
+     "credit": "Aconkyeah",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Maestro_Batik_Tulis_di_Imogiri.jpg"
+    }
+   },
+   {
+    "name": "Gudeg",
+    "category": "Kuliner",
+    "description": "Nangka muda dimasak manis dengan santan, makanan khas Yogyakarta.",
+    "image": {
+     "url": "/umkm/34-2.jpg",
+     "credit": "Indonesiagood",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Gudeg_Ayam.jpg"
+    }
+   },
+   {
+    "name": "Perak Kotagede",
+    "category": "Kerajinan",
+    "description": "Kerajinan perak berukir halus dari Kotagede.",
+    "image": {
+     "url": "/umkm/34-3.jpg",
+     "credit": "Irfantraveller",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kotagede_silversmiths.jpg"
+    }
+   },
+   {
+    "name": "Gerabah Kasongan",
+    "category": "Kerajinan",
+    "description": "Gerabah tanah liat hias dari sentra Kasongan, Bantul.",
+    "image": {
+     "url": "/umkm/34-4.jpg",
+     "credit": "Awtux",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Gerabah_dari_Kasongan.jpg"
+    }
+   }
+  ]
+ },
+ "35": {
+  "capital": "Surabaya",
+  "region": "Jawa",
+  "summary": "Provinsi dengan Surabaya sebagai kota pahlawan, Gunung Bromo, serta pusat industri dan perdagangan Indonesia timur.",
+  "icons": [
+   "Tugu Pahlawan",
+   "Gunung Bromo",
+   "Batik Madura"
+  ],
+  "umkm": [
+   {
+    "name": "Batik Madura",
+    "category": "Batik",
+    "description": "Batik tulis Madura berwarna tegas dan berani.",
+    "image": {
+     "url": "/umkm/35-1.jpg",
+     "credit": "Bella Kharisma Rindiantika",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Batik_Madura_dengan_Motif_Batik.jpg"
+    }
+   },
+   {
+    "name": "Keripik Apel Batu",
+    "category": "Kuliner",
+    "description": "Camilan dari apel Malang yang renyah dan manis.",
+    "image": null
+   },
+   {
+    "name": "Tas Tanggulangin",
+    "category": "Kriya",
+    "description": "Tas dan produk kulit dari sentra Tanggulangin, Sidoarjo.",
+    "image": null
+   },
+   {
+    "name": "Kerupuk Udang",
+    "category": "Kuliner",
+    "description": "Kerupuk udang Sidoarjo yang gurih dan renyah.",
+    "image": null
+   }
+  ]
+ },
+ "36": {
+  "capital": "Serang",
+  "region": "Jawa",
+  "summary": "Gerbang Pulau Jawa di barat dengan jejak Kesultanan Banten, suku Baduy, dan kawasan industri Cilegon.",
+  "icons": [
+   "Masjid Agung Banten",
+   "Suku Baduy",
+   "Ujung Kulon"
+  ],
+  "umkm": [
+   {
+    "name": "Batik Banten",
+    "category": "Batik",
+    "description": "Batik bermotif Surosowan dan Pamarayan dari Banten Lama.",
+    "image": {
+     "url": "/umkm/36-1.jpg",
+     "credit": "National Archaeologist of Indonesia",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:75_Ragam_Hias_Khas_Banten,_Rekonstruksi_Arkeolog_Nasional.jpg"
+    }
+   },
+   {
+    "name": "Emping Melinjo",
+    "category": "Kuliner",
+    "description": "Emping melinjo Pandeglang yang renyah dan sedikit pahit.",
+    "image": {
+     "url": "/umkm/36-2.jpg",
+     "credit": "Midori",
+     "license": "CC BY 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Emping_blinjo_Sidoarjo.jpg"
+    }
+   },
+   {
+    "name": "Sate Bandeng",
+    "category": "Kuliner",
+    "description": "Ikan bandeng tanpa duri berisi bumbu, dipanggang di atas bara.",
+    "image": {
+     "url": "/umkm/36-3.jpg",
+     "credit": "Gunawan Kartapranata",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Sate_Bandeng_2.jpg"
+    }
+   },
+   {
+    "name": "Golok Ciomas",
+    "category": "Kerajinan",
+    "description": "Golok tempa tradisional dari Ciomas yang tersohor.",
+    "image": null
+   }
+  ]
+ },
+ "51": {
+  "capital": "Denpasar",
+  "region": "Bali dan Nusa Tenggara",
+  "summary": "Pulau Dewata dengan seni, upacara, dan pariwisata budaya yang menggerakkan ekonomi kreatif.",
+  "icons": [
+   "Pura Ulun Danu Bratan",
+   "Tari Kecak",
+   "Subak"
+  ],
+  "umkm": [
+   {
+    "name": "Kain Endek",
+    "category": "Tenun",
+    "description": "Tenun ikat Bali dengan beragam motif untuk busana dan dekorasi.",
+    "image": {
+     "url": "/umkm/51-1.jpg",
+     "credit": "Chris Hazzard",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Balinese_endek_selendand,_Silk_Ikat_of_the_warp._Collection_of_Balique_Arts_of_Indonesia..jpg"
+    }
+   },
+   {
+    "name": "Ukiran Mas",
+    "category": "Kerajinan",
+    "description": "Patung dan ukiran kayu dari desa Mas, Ubud.",
+    "image": null
+   },
+   {
+    "name": "Perak Celuk",
+    "category": "Kerajinan",
+    "description": "Perhiasan perak berornamen dari desa Celuk.",
+    "image": null
+   },
+   {
+    "name": "Kopi Kintamani",
+    "category": "Kopi",
+    "description": "Kopi arabika Kintamani yang ditanam bersama jeruk di kebun subak abian.",
+    "image": null
+   }
+  ]
+ },
+ "52": {
+  "capital": "Mataram",
+  "region": "Bali dan Nusa Tenggara",
+  "summary": "Provinsi dengan Gunung Rinjani, pantai Mandalika, serta budaya Sasak dan Samawa.",
+  "icons": [
+   "Gunung Rinjani",
+   "Sirkuit Mandalika",
+   "Tenun Sasak"
+  ],
+  "umkm": [
+   {
+    "name": "Tenun Sasak",
+    "category": "Tenun",
+    "description": "Kain tenun Lombok dengan motif subahnale dan ragi genep.",
+    "image": {
+     "url": "/umkm/52-1.jpg",
+     "credit": "Trisno Utomo Cibodas",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Tenun_Kain_Sasak_03.jpg"
+    }
+   },
+   {
+    "name": "Mutiara Lombok",
+    "category": "Perhiasan",
+    "description": "Mutiara laut Lombok yang dibudidayakan di Teluk Sekotong.",
+    "image": null
+   },
+   {
+    "name": "Gerabah Banyumulek",
+    "category": "Kerajinan",
+    "description": "Gerabah tanah liat bakar dari desa Banyumulek.",
+    "image": {
+     "url": "/umkm/52-3.jpg",
+     "credit": "Bq Ismi",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Gerabah_Banyumulek.jpg"
+    }
+   },
+   {
+    "name": "Madu Sumbawa",
+    "category": "Agro",
+    "description": "Madu hutan liar yang dipanen secara tradisional.",
+    "image": null
+   }
+  ]
+ },
+ "53": {
+  "capital": "Kupang",
+  "region": "Bali dan Nusa Tenggara",
+  "summary": "Provinsi kepulauan dengan savana, Komodo, Danau Kelimutu, dan tradisi tenun ikat yang kaya.",
+  "icons": [
+   "Pulau Komodo",
+   "Danau Kelimutu",
+   "Tenun Ikat"
+  ],
+  "umkm": [
+   {
+    "name": "Tenun Ikat NTT",
+    "category": "Tenun",
+    "description": "Tenun ikat bermotif khas tiap pulau dan suku.",
+    "image": {
+     "url": "/umkm/53-1.jpg",
+     "credit": "Rintobili",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Tenun_Ikat_Kodi,_SBD,_NTT.jpg"
+    }
+   },
+   {
+    "name": "Kopi Bajawa",
+    "category": "Kopi",
+    "description": "Kopi arabika Flores Bajawa dengan karakter kompleks.",
+    "image": {
+     "url": "/umkm/53-2.jpg",
+     "credit": "Indikasi Geografis Indonesia",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kopi_Arabika_Flores_Bajawa.jpg"
+    }
+   },
+   {
+    "name": "Sasando",
+    "category": "Kerajinan",
+    "description": "Alat musik petik dari daun lontar khas Pulau Rote.",
+    "image": {
+     "url": "/umkm/53-3.jpg",
+     "credit": "Fakhri Anindita",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Alat_Musik_Sasando.jpg"
+    }
+   },
+   {
+    "name": "Madu Hutan Timor",
+    "category": "Agro",
+    "description": "Madu dari hutan Timor yang dipanen oleh kelompok tani.",
+    "image": null
+   }
+  ]
+ },
+ "61": {
+  "capital": "Pontianak",
+  "region": "Kalimantan",
+  "summary": "Provinsi yang dilintasi garis khatulistiwa dengan kebudayaan Dayak, Melayu, dan Tionghoa.",
+  "icons": [
+   "Tugu Khatulistiwa",
+   "Sungai Kapuas",
+   "Songket Sambas"
+  ],
+  "umkm": [
+   {
+    "name": "Songket Sambas",
+    "category": "Tenun",
+    "description": "Kain tenun songket Sambas bermotif pucuk rebung dan bunga cengkeh.",
+    "image": {
+     "url": "/umkm/61-1.jpg",
+     "credit": "Andiamd",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kain_Samping_Songket_Lelaki.jpg"
+    }
+   },
+   {
+    "name": "Tenun Ikat Sintang",
+    "category": "Tenun",
+    "description": "Tenun ikat Dayak Sintang dengan pewarna alami.",
+    "image": {
+     "url": "/umkm/61-2.jpg",
+     "credit": "Steijlen, Fridus.",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Andaye_Steijlen_bekijkt_ikats_geweven_in_een_longhouse_te_Ensaid_Panjang_bij_Sintang,_KITLV_177609.tiff"
+    }
+   },
+   {
+    "name": "Lidah Buaya Pontianak",
+    "category": "Agro",
+    "description": "Olahan lidah buaya yang menjadi oleh-oleh khas Pontianak.",
+    "image": null
+   }
+  ]
+ },
+ "62": {
+  "capital": "Palangka Raya",
+  "region": "Kalimantan",
+  "summary": "Provinsi dengan hutan gambut luas dan budaya Dayak Ngaju, Kahayan, serta sungai besar.",
+  "icons": [
+   "Rumah Betang",
+   "Tari Mandau",
+   "Taman Nasional Tanjung Puting"
+  ],
+  "umkm": [
+   {
+    "name": "Batik Benang Bintik",
+    "category": "Batik",
+    "description": "Batik Kalimantan Tengah bermotif Dayak dengan teknik benang bintik.",
+    "image": null
+   },
+   {
+    "name": "Anyaman Rotan",
+    "category": "Kerajinan",
+    "description": "Tas dan wadah anyaman rotan khas Dayak.",
+    "image": {
+     "url": "/umkm/62-2.jpg",
+     "credit": "Edelweiss blogger",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Lantai_anyaman_rotan_Lamin_Taman_Jamrud.jpg"
+    }
+   },
+   {
+    "name": "Manik Dayak",
+    "category": "Kerajinan",
+    "description": "Aksesori manik-manik tradisional Dayak.",
+    "image": {
+     "url": "/umkm/62-3.jpg",
+     "credit": "Martini Rahman",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Manik_Manik_Dayak.jpg"
+    }
+   }
+  ]
+ },
+ "63": {
+  "capital": "Banjarmasin",
+  "region": "Kalimantan",
+  "summary": "Kota seribu sungai dengan pasar terapung, budaya Banjar, dan tambang intan di Martapura.",
+  "icons": [
+   "Pasar Terapung",
+   "Rumah Banjar",
+   "Sasirangan"
+  ],
+  "umkm": [
+   {
+    "name": "Kain Sasirangan",
+    "category": "Kain",
+    "description": "Kain celup ikat Banjar dengan motif sarigading dan hiris gagatas.",
+    "image": {
+     "url": "/umkm/63-1.jpg",
+     "credit": "(pembuat)",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Sasirangan_C.JPG"
+    }
+   },
+   {
+    "name": "Intan Martapura",
+    "category": "Perhiasan",
+    "description": "Pusat pendulangan dan penggosokan intan di Kalimantan Selatan.",
+    "image": {
+     "url": "/umkm/63-2.jpg",
+     "credit": "Ilham Mufti Laksono",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Tugu_Pancasila_Kota_Intan_Martapura.jpg"
+    }
+   },
+   {
+    "name": "Anyaman Purun",
+    "category": "Kerajinan",
+    "description": "Tas dan tikar dari purun rawa buatan perajin Banjar.",
+    "image": {
+     "url": "/umkm/63-3.jpg",
+     "credit": "Diranputri12",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Anyaman_Tikar_Purun.jpg"
+    }
+   },
+   {
+    "name": "Amplang",
+    "category": "Kuliner",
+    "description": "Kerupuk ikan renyah khas Kalimantan.",
+    "image": {
+     "url": "/umkm/63-4.jpg",
+     "credit": "Crisco 1492",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Amplang_from_Kotabaru,_South_Kalimantan_2015-05-23_01.jpg"
+    }
+   }
+  ]
+ },
+ "64": {
+  "capital": "Samarinda",
+  "region": "Kalimantan",
+  "summary": "Provinsi penghasil energi dengan Sungai Mahakam, Kutai, dan lokasi calon ibu kota baru.",
+  "icons": [
+   "Islamic Center Samarinda",
+   "Pesut Mahakam",
+   "Ulap Doyo"
+  ],
+  "umkm": [
+   {
+    "name": "Sarung Samarinda",
+    "category": "Tenun",
+    "description": "Tenun sarung Samarinda berpola kotak-kotak berwarna cerah.",
+    "image": {
+     "url": "/umkm/64-1.jpg",
+     "credit": "NeniRiska",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kerajinan_Tenun_Sarung,_Samarinda_28_Januari_2023.jpg"
+    }
+   },
+   {
+    "name": "Ulap Doyo",
+    "category": "Tenun",
+    "description": "Kain tenun serat daun doyo suku Dayak Benuaq.",
+    "image": {
+     "url": "/umkm/64-2.jpg",
+     "credit": "Ezagren (bicara / talk)",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Penenun_Ulap_Doyo.jpg"
+    }
+   },
+   {
+    "name": "Amplang",
+    "category": "Kuliner",
+    "description": "Kerupuk ikan khas Samarinda yang gurih.",
+    "image": {
+     "url": "/umkm/64-3.jpg",
+     "credit": "Minnie ina",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Amplang_Kuku_Macan_Khas_Samarinda.jpg"
+    }
+   }
+  ]
+ },
+ "65": {
+  "capital": "Tanjung Selor",
+  "region": "Kalimantan",
+  "summary": "Provinsi termuda di Kalimantan di perbatasan Malaysia dengan budaya Dayak dan Tidung.",
+  "icons": [
+   "Hutan Kayan Mentarang",
+   "Pulau Derawan",
+   "Tarakan"
+  ],
+  "umkm": [
+   {
+    "name": "Rumput Laut Nunukan",
+    "category": "Laut",
+    "description": "Budidaya rumput laut Nunukan untuk ekspor.",
+    "image": null
+   },
+   {
+    "name": "Kepiting Soka",
+    "category": "Kuliner",
+    "description": "Kepiting lunak yang dapat dimakan dengan cangkangnya.",
+    "image": {
+     "url": "/umkm/65-2.jpg",
+     "credit": "Andy Li",
+     "license": "CC0",
+     "page": "https://commons.wikimedia.org/wiki/File:Soft_shell_crab_tempura,_mango,_lemongrass_%26_ancho_chilli_salsa,_coriander_-_English%27s_of_Brighton_2025-07-29.jpg"
+    }
+   },
+   {
+    "name": "Manik Dayak",
+    "category": "Kerajinan",
+    "description": "Aksesori manik khas Dayak Kenyah.",
+    "image": {
+     "url": "/umkm/65-3.jpg",
+     "credit": "Ezagren (bicara / talk)",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Bening_Aban_150503.jpg"
+    }
+   }
+  ]
+ },
+ "71": {
+  "capital": "Manado",
+  "region": "Sulawesi",
+  "summary": "Provinsi di ujung utara Sulawesi dengan Taman Laut Bunaken, budaya Minahasa, dan kuliner pedas.",
+  "icons": [
+   "Taman Laut Bunaken",
+   "Tugu Yesus Memberkati",
+   "Cakalang Fufu"
+  ],
+  "umkm": [
+   {
+    "name": "Cakalang Fufu",
+    "category": "Kuliner",
+    "description": "Ikan cakalang asap khas Manado.",
+    "image": {
+     "url": "/umkm/71-1.jpg",
+     "credit": "Tumanisme",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Ikan_Cakalang_Fufu_Asap_Khas_Manado.jpg"
+    }
+   },
+   {
+    "name": "Klappertaart",
+    "category": "Kuliner",
+    "description": "Kue kelapa muda berisi susu dan kismis warisan Belanda.",
+    "image": {
+     "url": "/umkm/71-2.jpg",
+     "credit": "Supardisahabu",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Klappertaart_Khas_Manado.jpg"
+    }
+   },
+   {
+    "name": "Kain Bentenan",
+    "category": "Tenun",
+    "description": "Tenun tradisional Minahasa yang kembali dihidupkan.",
+    "image": null
+   }
+  ]
+ },
+ "72": {
+  "capital": "Palu",
+  "region": "Sulawesi",
+  "summary": "Provinsi dengan Teluk Palu, megalit lembah Lore, dan tradisi tenun Donggala.",
+  "icons": [
+   "Jembatan Palu IV",
+   "Lore Lindu",
+   "Sarung Donggala"
+  ],
+  "umkm": [
+   {
+    "name": "Bawang Goreng Palu",
+    "category": "Kuliner",
+    "description": "Bawang merah goreng renyah, oleh-oleh khas Palu.",
+    "image": null
+   },
+   {
+    "name": "Sarung Donggala",
+    "category": "Tenun",
+    "description": "Sarung tenun dengan motif buya bomba dan subi kumbaja.",
+    "image": null
+   },
+   {
+    "name": "Abon Ikan",
+    "category": "Kuliner",
+    "description": "Abon dari ikan laut Teluk Palu.",
+    "image": {
+     "url": "/umkm/72-3.jpg",
+     "credit": "Syakirah2020",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:ABON_IKAN_BANDENG.jpg"
+    }
+   }
+  ]
+ },
+ "73": {
+  "capital": "Makassar",
+  "region": "Sulawesi",
+  "summary": "Pintu gerbang Indonesia timur dengan budaya Bugis-Makassar, Toraja, dan pelabuhan dagang bersejarah.",
+  "icons": [
+   "Pantai Losari",
+   "Tongkonan Toraja",
+   "Perahu Pinisi"
+  ],
+  "umkm": [
+   {
+    "name": "Sutra Sengkang",
+    "category": "Tenun",
+    "description": "Kain sutra Wajo dari ulat sutra hingga tenunan.",
+    "image": null
+   },
+   {
+    "name": "Kopi Toraja",
+    "category": "Kopi",
+    "description": "Kopi arabika Toraja yang diekspor ke pasar dunia.",
+    "image": null
+   },
+   {
+    "name": "Ukiran Toraja",
+    "category": "Kerajinan",
+    "description": "Ukiran kayu bermotif pa'tedong dan pa'barre allo.",
+    "image": {
+     "url": "/umkm/73-3.jpg",
+     "credit": "Silentwinner",
+     "license": "CC0",
+     "page": "https://commons.wikimedia.org/wiki/File:Museum_Pong_Tiku_Toraja_Utara_23.jpg"
+    }
+   }
+  ]
+ },
+ "74": {
+  "capital": "Kendari",
+  "region": "Sulawesi",
+  "summary": "Provinsi jazirah tenggara Sulawesi dengan Benteng Keraton Buton, pulau-pulau Wakatobi, dan kerajinan tenun.",
+  "icons": [
+   "Benteng Keraton Buton",
+   "Wakatobi",
+   "Tenun Buton"
+  ],
+  "umkm": [
+   {
+    "name": "Tenun Buton",
+    "category": "Tenun",
+    "description": "Kain tenun tradisional Buton yang dibuat perajin setempat.",
+    "image": {
+     "url": "/umkm/74-1.jpg",
+     "credit": "Andrydenisah",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Tenun_Buton.jpg"
+    }
+   },
+   {
+    "name": "Perak Kendari",
+    "category": "Kerajinan",
+    "description": "Perhiasan dan kerajinan perak Kendari.",
+    "image": null
+   },
+   {
+    "name": "Jambu Mete",
+    "category": "Agro",
+    "description": "Kacang mete olahan dari kebun rakyat Sulawesi Tenggara.",
+    "image": null
+   }
+  ]
+ },
+ "75": {
+  "capital": "Gorontalo",
+  "region": "Sulawesi",
+  "summary": "Provinsi di leher Sulawesi dengan benteng Otanaha, Danau Limboto, dan budaya berbasis adat dan Islam.",
+  "icons": [
+   "Benteng Otanaha",
+   "Danau Limboto",
+   "Karawo"
+  ],
+  "umkm": [
+   {
+    "name": "Sulaman Karawo",
+    "category": "Kerajinan",
+    "description": "Sulaman benang pada kain yang dipotong dan ditarik, ikon Gorontalo.",
+    "image": {
+     "url": "/umkm/75-1.jpg",
+     "credit": "Rosydi A Azhar",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Sulaman_Karawo.jpg"
+    }
+   },
+   {
+    "name": "Binte Biluhuta",
+    "category": "Kuliner",
+    "description": "Sup jagung bersantan dengan ikan dan sayuran khas Gorontalo.",
+    "image": {
+     "url": "/umkm/75-2.jpg",
+     "credit": "Supardisahabu",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Binte_Biluhuta.jpg"
+    }
+   },
+   {
+    "name": "Kopi Pinogu",
+    "category": "Kopi",
+    "description": "Kopi dari dataran tinggi Pinogu di Bone Bolango.",
+    "image": null
+   }
+  ]
+ },
+ "76": {
+  "capital": "Mamuju",
+  "region": "Sulawesi",
+  "summary": "Provinsi Mandar dengan tradisi pelaut sandeq, tenun sutra, dan kebun kakao.",
+  "icons": [
+   "Perahu Sandeq",
+   "Pantai Manakarra",
+   "Sutra Mandar"
+  ],
+  "umkm": [
+   {
+    "name": "Sutra Mandar",
+    "category": "Tenun",
+    "description": "Tenun sutra Mandar bermotif sure' dengan warna lembut.",
+    "image": null
+   },
+   {
+    "name": "Kopi Mamasa",
+    "category": "Kopi",
+    "description": "Kopi arabika Mamasa yang tumbuh di pegunungan.",
+    "image": null
+   },
+   {
+    "name": "Kakao Mamuju",
+    "category": "Agro",
+    "description": "Biji kakao dari kebun rakyat Sulawesi Barat.",
+    "image": null
+   }
+  ]
+ },
+ "81": {
+  "capital": "Ambon",
+  "region": "Maluku",
+  "summary": "Kepulauan rempah dengan sejarah perdagangan pala dan cengkih serta pantai-pantai yang indah.",
+  "icons": [
+   "Gong Perdamaian Dunia",
+   "Pulau Banda",
+   "Pala"
+  ],
+  "umkm": [
+   {
+    "name": "Pala Banda",
+    "category": "Rempah",
+    "description": "Rempah pala dari Kepulauan Banda yang dulu diperebutkan bangsa Eropa.",
+    "image": {
+     "url": "/umkm/81-1.jpg",
+     "credit": "Jeevan Jose, Kerala, India",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Myristica_fragrans_by_kadavoor.jpg"
+    }
+   },
+   {
+    "name": "Minyak Kayu Putih Buru",
+    "category": "Agro",
+    "description": "Minyak kayu putih dari Pulau Buru.",
+    "image": null
+   },
+   {
+    "name": "Tenun Tanimbar",
+    "category": "Tenun",
+    "description": "Kain tenun ikat Kepulauan Tanimbar bermotif tradisional.",
+    "image": {
+     "url": "/umkm/81-3.jpg",
+     "credit": "Unknown authorUnknown author",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:COLLECTIE_TROPENMUSEUM_Tanimbar_vrouw_aan_weefgetouw_TMnr_60015606.jpg"
+    }
+   },
+   {
+    "name": "Sagu Lempeng",
+    "category": "Kuliner",
+    "description": "Roti sagu kering yang menjadi makanan pokok Maluku.",
+    "image": {
+     "url": "/umkm/81-4.jpg",
+     "credit": "Rik Schuiling / TropCrop - Tropical Crops Services",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Sago_starch_product_sagu_lempeng_from_Maluku,ID_feb2002.jpg"
+    }
+   }
+  ]
+ },
+ "82": {
+  "capital": "Sofifi",
+  "region": "Maluku",
+  "summary": "Provinsi kepulauan rempah dengan Kesultanan Ternate dan Tidore serta Gunung Gamalama.",
+  "icons": [
+   "Gunung Gamalama",
+   "Benteng Tolukko",
+   "Cengkih"
+  ],
+  "umkm": [
+   {
+    "name": "Cengkih Ternate",
+    "category": "Rempah",
+    "description": "Cengkih dari kebun rakyat Ternate dan Tidore.",
+    "image": null
+   },
+   {
+    "name": "Pala Tidore",
+    "category": "Rempah",
+    "description": "Pala halmahera yang dikumpulkan petani kecil.",
+    "image": {
+     "url": "/umkm/82-2.jpg",
+     "credit": "Ana Ainina",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Pohon_pala.jpg"
+    }
+   },
+   {
+    "name": "Bagea",
+    "category": "Kuliner",
+    "description": "Kue kering dari sagu dengan kenari, khas Ternate.",
+    "image": {
+     "url": "/umkm/82-3.jpg",
+     "credit": "Malesung",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Bagea_Kenari_Manado.jpg"
+    }
+   }
+  ]
+ },
+ "91": {
+  "capital": "Jayapura",
+  "region": "Papua",
+  "summary": "Provinsi di ujung timur Indonesia dengan Danau Sentani, budaya Tabi, dan kerajinan noken.",
+  "icons": [
+   "Danau Sentani",
+   "Pegunungan Cyclops",
+   "Noken"
+  ],
+  "umkm": [
+   {
+    "name": "Noken",
+    "category": "Kerajinan",
+    "description": "Tas rajut serat kulit kayu dan anggrek, warisan budaya UNESCO.",
+    "image": {
+     "url": "/umkm/91-1.jpg",
+     "credit": "Keenan63",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Membuat_noken.jpg"
+    }
+   },
+   {
+    "name": "Kopi Wamena",
+    "category": "Kopi",
+    "description": "Kopi arabika Wamena dari Lembah Baliem.",
+    "image": null
+   },
+   {
+    "name": "Buah Merah",
+    "category": "Agro",
+    "description": "Buah pandan merah Papua untuk minyak dan olahan kesehatan.",
+    "image": {
+     "url": "/umkm/91-3.jpg",
+     "credit": "Paul from Working and living in Jayapura (Papua Province) and Jakarta, Indonesia",
+     "license": "CC BY 2.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Red_Fruit.jpg"
+    }
+   },
+   {
+    "name": "Batik Papua",
+    "category": "Batik",
+    "description": "Batik bermotif cenderawasih, honai, dan ukiran Asmat.",
+    "image": {
+     "url": "/umkm/91-4.jpg",
+     "credit": "Post of Indonesia",
+     "license": "Public domain",
+     "page": "https://commons.wikimedia.org/wiki/File:Stamp_of_Indonesia_-_2011_-_Colnect_691618_-_Batik_Papua_Papua.jpeg"
+    }
+   }
+  ]
+ },
+ "92": {
+  "capital": "Manokwari",
+  "region": "Papua",
+  "summary": "Provinsi di Kepala Burung dengan hutan hujan, Pegunungan Arfak, dan budaya Arfak dan Biak.",
+  "icons": [
+   "Pegunungan Arfak",
+   "Cenderawasih",
+   "Noken"
+  ],
+  "umkm": [
+   {
+    "name": "Pala Fakfak",
+    "category": "Rempah",
+    "description": "Pala Fakfak yang menjadi komoditas ekspor andalan Papua Barat.",
+    "image": {
+     "url": "/umkm/92-1.jpg",
+     "credit": "Dinas Perkebunan Kabupaten Fakfak",
+     "license": "Public domain",
+     "page": "https://commons.wikimedia.org/wiki/File:Kebun_Pala_Tomandin_Fakfak.webp"
+    }
+   },
+   {
+    "name": "Noken Arfak",
+    "category": "Kerajinan",
+    "description": "Noken rajut dari serat anggrek khas suku Arfak.",
+    "image": null
+   },
+   {
+    "name": "Sagu Papua",
+    "category": "Kuliner",
+    "description": "Sagu sebagai makanan pokok masyarakat Papua.",
+    "image": {
+     "url": "/umkm/92-3.jpg",
+     "credit": "Radio Republik Indonesia",
+     "license": "Public domain",
+     "page": "https://commons.wikimedia.org/wiki/File:Sagu_Sorong.jpg"
+    }
+   }
+  ]
+ },
+ "93": {
+  "capital": "Merauke",
+  "region": "Papua",
+  "summary": "Provinsi selatan Papua yang mencakup lumbung padi Merauke, kawasan Asmat, dan Taman Nasional Wasur.",
+  "icons": [
+   "Tugu Sabang-Merauke",
+   "Taman Nasional Wasur",
+   "Ukiran Asmat"
+  ],
+  "umkm": [
+   {
+    "name": "Ukiran Asmat",
+    "category": "Kerajinan",
+    "description": "Patung kayu Asmat yang diakui seni rupa dunia.",
+    "image": {
+     "url": "/umkm/93-1.jpg",
+     "credit": "olekinderhook",
+     "license": "CC BY 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Asmat_bis_poles_from_Indonesian_New_Guinea_-_the_poles_are_named_for_deceased_people_and_the_huge_phalluses_on_top_represent_fertility._-_panoramio.jpg"
+    }
+   },
+   {
+    "name": "Beras Merauke",
+    "category": "Agro",
+    "description": "Beras dari lumbung pangan Merauke.",
+    "image": null
+   },
+   {
+    "name": "Gaharu",
+    "category": "Agro",
+    "description": "Kayu gaharu yang bernilai tinggi dari hutan Papua Selatan.",
+    "image": {
+     "url": "/umkm/93-3.jpg",
+     "credit": "Hafizmuar at English Wikipedia",
+     "license": "CC BY-SA 3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Agarwood_top_grade.jpg"
+    }
+   }
+  ]
+ },
+ "94": {
+  "capital": "Nabire",
+  "region": "Papua",
+  "summary": "Provinsi di pedalaman dan pesisir tengah Papua dengan tambang Mimika, Teluk Cenderawasih, dan budaya Kamoro.",
+  "icons": [
+   "Teluk Cenderawasih",
+   "Puncak Jaya",
+   "Ukiran Kamoro"
+  ],
+  "umkm": [
+   {
+    "name": "Ukiran Kamoro",
+    "category": "Kerajinan",
+    "description": "Ukiran kayu suku Kamoro di pesisir Mimika.",
+    "image": {
+     "url": "/umkm/94-1.jpg",
+     "credit": "Unknown authorUnknown author",
+     "license": "CC BY 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Collectie_Wereldmuseum,_RV-5959-3,_Houtsnijwerk,_%27Houtsnijwerk%27,_2000.jpg"
+    }
+   },
+   {
+    "name": "Kopi Moanemani",
+    "category": "Kopi",
+    "description": "Kopi arabika Dogiyai yang dikelola petani setempat.",
+    "image": null
+   },
+   {
+    "name": "Noken",
+    "category": "Kerajinan",
+    "description": "Tas rajut tradisional masyarakat Papua.",
+    "image": null
+   }
+  ]
+ },
+ "95": {
+  "capital": "Jayawijaya",
+  "region": "Papua",
+  "summary": "Provinsi pegunungan dengan Lembah Baliem, suku Dani, dan tradisi bakar batu.",
+  "icons": [
+   "Lembah Baliem",
+   "Honai",
+   "Festival Budaya Lembah Baliem"
+  ],
+  "umkm": [
+   {
+    "name": "Kopi Wamena",
+    "category": "Kopi",
+    "description": "Kopi arabika organik dari Lembah Baliem.",
+    "image": null
+   },
+   {
+    "name": "Ubi Jalar Wamena",
+    "category": "Agro",
+    "description": "Ubi jalar atau hipere, makanan pokok masyarakat pegunungan.",
+    "image": {
+     "url": "/umkm/95-2.jpg",
+     "credit": "Sandhi Irawan",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Traditional_Method_of_Cooking.jpg"
+    }
+   },
+   {
+    "name": "Noken Dani",
+    "category": "Kerajinan",
+    "description": "Noken rajut khas suku Dani.",
+    "image": null
+   }
+  ]
+ },
+ "96": {
+  "capital": "Sorong",
+  "region": "Papua",
+  "summary": "Provinsi dengan gerbang Raja Ampat, hamparan karang, dan hutan Kepala Burung bagian barat.",
+  "icons": [
+   "Raja Ampat",
+   "Pulau Wayag",
+   "Noken"
+  ],
+  "umkm": [
+   {
+    "name": "Sagu Sorong",
+    "category": "Kuliner",
+    "description": "Olahan sagu masyarakat pesisir Sorong.",
+    "image": null
+   },
+   {
+    "name": "Noken Sorong",
+    "category": "Kerajinan",
+    "description": "Noken rajut tradisional dari perajin Papua Barat Daya.",
+    "image": {
+     "url": "/umkm/96-2.jpg",
+     "credit": "Lefaan",
+     "license": "CC BY-SA 4.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Daun_Koba-Koba.jpg"
+    }
+   },
+   {
+    "name": "Cenderamata Raja Ampat",
+    "category": "Kerajinan",
+    "description": "Kerajinan kerang dan kayu dari Raja Ampat.",
+    "image": null
+   }
+  ]
+ }
+}

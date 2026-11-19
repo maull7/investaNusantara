@@ -176,6 +176,20 @@ class Article extends Model
     }
 
     /**
+     * Most read in the last 7 days (unique visitors per day); ties and unread articles fall back to newest first.
+     *
+     * @param  Builder<Article>  $query
+     */
+    public function scopeTrending(Builder $query): void
+    {
+        $query->reorder()
+            ->orderByDesc(DB::table('article_views')->selectRaw('count(*)')
+                ->whereColumn('article_id', 'articles.id')
+                ->where('viewed_on', '>=', now()->subDays(7)->toDateString()))
+            ->orderByDesc('published_at');
+    }
+
+    /**
      * Fields needed by article cards.
      *
      * @param  Builder<Article>  $query

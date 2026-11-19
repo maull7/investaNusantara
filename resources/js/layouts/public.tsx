@@ -387,7 +387,8 @@ export default function PublicLayout({
                             ))}
                         </div>
                         <p className="mt-8 border-t border-accent/10 pt-6 text-xs text-slate-400">
-                            © {new Date().getFullYear()} NusantaraNews
+                            © {new Date().getFullYear()} NusantaraNews · Peta
+                            wilayah: geoBoundaries (CC BY 3.0 IGO)
                         </p>
                     </div>
                 </footer>
