@@ -5,11 +5,13 @@ namespace App\Services;
 use App\Enums\NewsTaskStatus;
 use App\Enums\Role;
 use App\Jobs\DiscoverNews;
+use App\Jobs\DraftRegion;
 use App\Jobs\SummarizeNews;
 use App\Models\Article;
 use App\Models\NewsFetch;
 use App\Models\NewsItem;
 use App\Models\NewsSource;
+use App\Models\RegionDraft;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +79,11 @@ class NewsPipeline
         NewsItem::where($stale)->each(function (NewsItem $item) use (&$count) {
             $item->touch();
             SummarizeNews::dispatch($item->id);
+            $count++;
+        });
+        RegionDraft::where($stale)->each(function (RegionDraft $draft) use (&$count) {
+            $draft->touch();
+            DraftRegion::dispatch($draft->id);
             $count++;
         });
 

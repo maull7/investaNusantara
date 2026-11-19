@@ -72,7 +72,11 @@ class AuthController extends Controller
     /** Staff land in the newsroom, pelanggan on the public home page. */
     private function landing(User $user): string
     {
-        return route($user->role->isStaff() ? 'admin.articles.index' : 'home');
+        return route(match (true) {
+            $user->role === Role::Client => 'admin.insights',
+            $user->role->isStaff() => 'admin.articles.index',
+            default => 'home',
+        });
     }
 
     public function destroy(Request $request): RedirectResponse

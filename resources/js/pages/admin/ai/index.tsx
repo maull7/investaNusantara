@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import {
@@ -16,7 +16,7 @@ import AdminLayout from '@/layouts/admin';
 import { timeAgo } from '@/lib/news';
 import { cn } from '@/lib/utils';
 import { article as articleRoute } from '@/routes';
-import { sources as sourcesPage } from '@/routes/admin/ai';
+import { index as aiIndex, sources as sourcesPage } from '@/routes/admin/ai';
 import { retry as retryFetch } from '@/routes/admin/ai/fetches';
 import { retry as retryItem } from '@/routes/admin/ai/items';
 import { fetch as fetchSource } from '@/routes/admin/ai/sources';
@@ -48,6 +48,7 @@ type Fetch = {
 };
 
 type Props = {
+    tokenRange: { from: string; to: string };
     hermes: HermesStatus;
     stats: {
         published: number;
@@ -78,7 +79,13 @@ export default function AiQueue({
     sources,
     province,
     provinces,
+    tokenRange,
 }: Props) {
+    const dateForm = useForm({
+        token_from: tokenRange.from,
+        token_to: tokenRange.to,
+        province,
+    });
     const busy =
         stats.active > 0 ||
         fetches.some((f) => live.includes(f.status)) ||
@@ -134,7 +141,7 @@ export default function AiQueue({
             tone: 'text-slate-500 bg-slate-100',
         },
         {
-            label: 'Token hari ini',
+            label: 'Token periode terpilih',
             value: stats.tokens,
             icon: 'flame',
             tone: 'text-amber-600 bg-amber-50',
@@ -158,10 +165,93 @@ export default function AiQueue({
         >
             <Head title="Berita AI" />
             <AiTabs>
-                <ProvinceFilter value={province} provinces={provinces} />
+                <ProvinceFilter
+                    value={province}
+                    provinces={provinces}
+                    extraQuery={{
+                        token_from: tokenRange.from,
+                        token_to: tokenRange.to,
+                    }}
+                />
             </AiTabs>
 
             <HermesPanel hermes={hermes} sources={sources} />
+
+            <form
+                className="mt-5 card p-4 sm:p-5"
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    dateForm.transform((data) => ({ ...data, province }));
+                    dateForm.get(aiIndex.url(), {
+                        preserveScroll: true,
+                        preserveState: true,
+                    });
+                }}
+            >
+                <h2 className="font-semibold text-navy-900">
+                    Periode penggunaan token
+                </h2>
+                <p className="mt-1 text-xs text-slate-500">
+                    Total token seluruh wilayah selama tanggal yang dipilih,
+                    termasuk tanggal akhir. Statistik antrean tetap menampilkan
+                    hari ini.
+                </p>
+                <div className="mt-4 flex flex-wrap items-end gap-3">
+                    <label className="text-sm font-medium text-navy-900">
+                        Dari tanggal
+                        <input
+                            aria-label="Token dari tanggal"
+                            type="date"
+                            required
+                            value={dateForm.data.token_from}
+                            onChange={(e) =>
+                                dateForm.setData('token_from', e.target.value)
+                            }
+                            className="mt-1 input"
+                        />
+                        {dateForm.errors.token_from && (
+                            <span className="block text-xs text-red-600">
+                                {dateForm.errors.token_from}
+                            </span>
+                        )}
+                    </label>
+                    <label className="text-sm font-medium text-navy-900">
+                        Sampai tanggal
+                        <input
+                            aria-label="Token sampai tanggal"
+                            type="date"
+                            required
+                            min={dateForm.data.token_from}
+                            value={dateForm.data.token_to}
+                            onChange={(e) =>
+                                dateForm.setData('token_to', e.target.value)
+                            }
+                            className="mt-1 input"
+                        />
+                        {dateForm.errors.token_to && (
+                            <span className="block text-xs text-red-600">
+                                {dateForm.errors.token_to}
+                            </span>
+                        )}
+                    </label>
+                    <button
+                        disabled={dateForm.processing}
+                        className="btn-primary"
+                    >
+                        Terapkan
+                    </button>
+                    <Link
+                        href={aiIndex.url({ query: { province } })}
+                        preserveScroll
+                        className="btn-ghost"
+                    >
+                        Hari ini
+                    </Link>
+                </div>
+                <p className="mt-3 text-xs text-slate-500">
+                    Periode aktif: {tokenRange.from} sampai {tokenRange.to}
+                </p>
+            </form>
 
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 {tiles.map((t, i) => (

@@ -363,7 +363,7 @@ function Chips({ article }: { article: Card }) {
                     Breaking
                 </span>
             )}
-            <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-navy-900 uppercase backdrop-blur">
+            <span className="rounded-full bg-surface/90 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-navy-900 uppercase backdrop-blur">
                 {article.category.name}
             </span>
         </div>

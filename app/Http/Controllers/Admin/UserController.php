@@ -26,7 +26,8 @@ class UserController extends Controller
         return Inertia::render('admin/users/index', [
             'users' => User::with('region:code,name')->orderBy('name')->paginate(20)
                 ->through(fn (User $u) => [
-                    ...$u->only('id', 'name', 'email', 'role', 'region_code', 'permissions', 'region'),
+                    ...$u->only('id', 'name', 'organization', 'email', 'role', 'region_code', 'permissions', 'region', 'client_regions'),
+                    'subscription_ends_at' => $u->subscription_ends_at?->toDateString(),
                     'manageable' => $this->manageable($request->user(), $u),
                 ]),
             'permissions' => $this->permissionOptions(),
@@ -79,7 +80,10 @@ class UserController extends Controller
     private function form(User $actor, ?User $user): Response
     {
         return Inertia::render('admin/users/form', [
-            'user' => $user?->only('id', 'name', 'email', 'role', 'region_code', 'permissions'),
+            'user' => $user ? [
+                ...$user->only('id', 'name', 'organization', 'email', 'role', 'region_code', 'permissions', 'client_regions'),
+                'subscription_ends_at' => $user->subscription_ends_at?->toDateString(),
+            ] : null,
             'roles' => collect($this->assignableRoles($actor))->map(fn (Role $r) => ['value' => $r->value, 'label' => $r->label()]),
             'permissions' => $this->permissionOptions(),
             'regions' => Region::whereIn('level', [1, 2])->orderBy('code')->get(['code', 'name', 'level']),
@@ -131,7 +135,17 @@ class UserController extends Controller
             'region_code' => ['nullable', 'exists:regions,code'],
             'permissions' => ['array'],
             'permissions.*' => [Rule::enum(Permission::class)],
-        ]);
+            // Klien Data: who they are, which provinces, until when.
+            'organization' => ['nullable', 'required_if:role,client', 'string', 'max:255'],
+            'client_regions' => ['array'],
+            'client_regions.*' => [Rule::exists('regions', 'code')->where('level', Region::PROVINCE)],
+            'subscription_ends_at' => ['nullable', 'date'],
+        ], ['organization.required_if' => 'Nama organisasi wajib untuk Klien Data.']);
+        $client = $data['role'] === Role::Client->value;
+        $data['organization'] = $client ? $data['organization'] : null;
+        // No provinces picked = all of Indonesia.
+        $data['client_regions'] = $client && ! empty($data['client_regions']) ? array_values(array_unique($data['client_regions'])) : null;
+        $data['subscription_ends_at'] = $client ? ($data['subscription_ends_at'] ?? null) : null;
 
         // Permissions only mean something for a Sub Admin.
         $data['permissions'] = $data['role'] === Role::SubAdmin->value

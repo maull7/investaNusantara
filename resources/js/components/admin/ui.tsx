@@ -11,6 +11,7 @@ export const roleLabel: Record<Role, string> = {
     journalist: 'Wartawan',
     contributor: 'Kontributor',
     customer: 'Pelanggan',
+    client: 'Klien Data',
 };
 
 export const roleTone: Record<Role, string> = {
@@ -20,6 +21,7 @@ export const roleTone: Record<Role, string> = {
     journalist: 'bg-sky-50 text-sky-700 ring-sky-200',
     contributor: 'bg-amber-50 text-amber-700 ring-amber-200',
     customer: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    client: 'bg-teal/10 text-teal-dark ring-teal/30',
 };
 
 export const statusMeta: Record<

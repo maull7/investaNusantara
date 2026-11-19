@@ -27,7 +27,7 @@ export default function Pagination({ data }: { data: Paginated<unknown> }) {
                             'rounded-full px-3.5 py-1.5 text-sm transition',
                             link.active
                                 ? 'bg-accent text-white shadow'
-                                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-accent-soft hover:text-accent',
+                                : 'bg-surface text-slate-600 ring-1 ring-slate-200 hover:bg-accent-soft hover:text-accent',
                         )}
                     >
                         {label(link.label)}

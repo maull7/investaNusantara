@@ -66,7 +66,11 @@ class GoogleAuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        return redirect()->intended(route($user->role->isStaff() ? 'admin.articles.index' : 'home'));
+        return redirect()->intended(route(match (true) {
+            $user->role === Role::Client => 'admin.insights',
+            $user->role->isStaff() => 'admin.articles.index',
+            default => 'home',
+        }));
     }
 
     private function fail(string $message): RedirectResponse

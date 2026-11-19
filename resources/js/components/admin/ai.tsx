@@ -218,11 +218,13 @@ export function ProvinceFilter({
     value,
     provinces,
     city,
+    extraQuery = {},
 }: {
     value: string;
     provinces: { code: string; name: string }[];
     /** Pass (even as '') to also show the kabupaten/kota filter. */
     city?: string;
+    extraQuery?: Record<string, string>;
 }) {
     const [cities, setCities] = useState<{ code: string; name: string }[]>([]);
     const hasCity = city !== undefined;
@@ -245,11 +247,15 @@ export function ProvinceFilter({
     }, [hasCity, real, value]);
 
     const go = (query: Record<string, string>) =>
-        router.get(window.location.pathname, query, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        });
+        router.get(
+            window.location.pathname,
+            { ...extraQuery, ...query },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            },
+        );
 
     return (
         <div className="flex flex-wrap gap-2">
@@ -353,7 +359,7 @@ function FilterSelect({
                 <ul
                     role="listbox"
                     aria-label={label}
-                    className="absolute left-0 z-20 mt-2 max-h-72 min-w-full w-max overflow-y-auto rounded-2xl border border-accent/10 bg-white p-1.5 shadow-lg shadow-accent/10"
+                    className="absolute left-0 z-20 mt-2 max-h-72 w-max min-w-full overflow-y-auto rounded-2xl border border-accent/10 bg-white p-1.5 shadow-lg shadow-accent/10"
                 >
                     {options.map((o) => (
                         <li

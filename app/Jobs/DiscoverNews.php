@@ -7,6 +7,7 @@ use App\Models\Article;
 use App\Models\ArticleReview;
 use App\Models\NewsFetch;
 use App\Models\NewsItem;
+use App\Models\RegionDraft;
 use App\Services\NewsFeedReader;
 use App\Services\NewsPipeline;
 use App\Services\NewsPrompts;
@@ -32,7 +33,7 @@ class DiscoverNews extends HermesTask
         return (int) config('hermes.discovery_timeout');
     }
 
-    protected function prompt(NewsFetch|NewsItem|ArticleReview $subject): ?string
+    protected function prompt(NewsFetch|NewsItem|ArticleReview|RegionDraft $subject): ?string
     {
         /** @var NewsFetch $subject */
         if (! $subject->source->active) {
@@ -47,7 +48,7 @@ class DiscoverNews extends HermesTask
     }
 
     /** Sites that publish a feed or news sitemap are listed for free, without Hermes. */
-    protected function shortcut(NewsFetch|NewsItem|ArticleReview $subject): ?array
+    protected function shortcut(NewsFetch|NewsItem|ArticleReview|RegionDraft $subject): ?array
     {
         /** @var NewsFetch $subject */
         if (! config('hermes.feed_discovery') || ! $subject->source->active) {
@@ -63,7 +64,7 @@ class DiscoverNews extends HermesTask
     }
 
     /** @param  array<string, mixed>  $output */
-    protected function complete(NewsFetch|NewsItem|ArticleReview $subject, array $output): void
+    protected function complete(NewsFetch|NewsItem|ArticleReview|RegionDraft $subject, array $output): void
     {
         /** @var NewsFetch $subject */
         $articles = $output['articles'] ?? null;
@@ -157,7 +158,7 @@ class DiscoverNews extends HermesTask
         return $origin.$dir.$url;
     }
 
-    protected function gaveUp(NewsFetch|NewsItem|ArticleReview $subject, string $message): void
+    protected function gaveUp(NewsFetch|NewsItem|ArticleReview|RegionDraft $subject, string $message): void
     {
         /** @var NewsFetch $subject */
         $subject->update(['finished_at' => now()]);

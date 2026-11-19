@@ -9,11 +9,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Region;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -137,7 +139,7 @@ class ArticleController extends Controller
     private function form(Article $article): Response
     {
         return Inertia::render('admin/articles/form', [
-            'article' => $article->exists ? $article->load('region:code,name,parent_code') : null,
+            'article' => $article->exists ? $article->load('region:code,name,parent_code', 'tags:id,name') : null,
             'categories' => Category::orderBy('sort')->get(['id', 'name']),
             'provinces' => Region::provinces()->get(['code', 'name', 'slug']),
             'can' => [
@@ -165,6 +167,11 @@ class ArticleController extends Controller
             'cover' => ['nullable', 'image', 'max:2048'],
             'is_headline' => ['boolean'],
             'is_breaking' => ['boolean'],
+            'seo_title' => ['nullable', 'string', 'max:70'],
+            'meta_description' => ['nullable', 'string', 'max:160'],
+            'social_post' => ['nullable', 'string', 'max:1000'],
+            'tags' => ['nullable', 'string', 'max:500'],
+            'sentiment' => ['nullable', Rule::in(Article::SENTIMENTS)],
         ]);
 
         $user = $request->user();
@@ -184,11 +191,14 @@ class ArticleController extends Controller
             $data['cover_path'] = $request->file('cover')->store('covers', 'public');
         }
         unset($data['cover']);
+        $tags = explode(',', (string) ($data['tags'] ?? ''));
+        unset($data['tags']);
 
         if (! $article->exists) {
             $data['slug'] = Str::slug($data['title']).'-'.Str::lower(Str::random(5));
         }
 
         $article->fill($data)->save();
+        $article->tags()->sync(Tag::idsFor($tags, 10));
     }
 }

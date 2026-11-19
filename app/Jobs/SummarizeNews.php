@@ -10,6 +10,8 @@ use App\Models\Category;
 use App\Models\NewsFetch;
 use App\Models\NewsItem;
 use App\Models\Region;
+use App\Models\RegionDraft;
+use App\Models\Tag;
 use App\Services\NewsFeedReader;
 use App\Services\NewsPipeline;
 use App\Services\NewsPrompts;
@@ -47,18 +49,20 @@ class SummarizeNews extends HermesTask
         return (int) config('hermes.run_timeout');
     }
 
-    protected function prompt(NewsFetch|NewsItem|ArticleReview $subject): ?string
+    protected function prompt(NewsFetch|NewsItem|ArticleReview|RegionDraft $subject): ?string
     {
         /** @var NewsItem $subject */
         return NewsPrompts::summarize(
             $subject,
             Category::orderBy('sort')->get(['name'])->map(fn (Category $c) => $c->name)->values()->all(),
             $this->regions($subject)->map(fn (Region $r) => $r->name)->values()->all(),
+            // ponytail: 300 most used tags; pick tags by keyword match against the title when the list outgrows this.
+            Tag::withCount('articles')->orderByDesc('articles_count')->limit(300)->pluck('name')->all(),
         );
     }
 
     /** @param  array<string, mixed>  $output */
-    protected function complete(NewsFetch|NewsItem|ArticleReview $subject, array $output): void
+    protected function complete(NewsFetch|NewsItem|ArticleReview|RegionDraft $subject, array $output): void
     {
         /** @var NewsItem $subject */
         if (($output['status'] ?? 'ok') === 'not_article') {
@@ -125,7 +129,12 @@ class SummarizeNews extends HermesTask
                 'source_title' => Str::limit(trim(strip_tags((string) ($output['source_title'] ?? ''))), 250, '') ?: $subject->title,
                 'source_excerpt' => NewsPipeline::firstWords((string) ($output['source_opening'] ?? '') ?: (string) $subject->feed_excerpt),
                 'is_ai_generated' => true,
+                'seo_title' => $this->clean($output['seo_title'] ?? null, 70),
+                'meta_description' => $this->clean($output['meta_description'] ?? null, 160),
+                'social_post' => $this->clean($output['social_post'] ?? null, 1000),
+                'sentiment' => in_array($output['sentiment'] ?? null, Article::SENTIMENTS, true) ? $output['sentiment'] : null,
             ]);
+            $article->tags()->sync(Tag::idsFor(is_array($output['tags'] ?? null) ? $output['tags'] : []));
 
             $item->update([
                 'article_id' => $article->id,
@@ -135,6 +144,11 @@ class SummarizeNews extends HermesTask
                     ?? rescue(fn () => filled($output['source_published_at'] ?? null) ? now()->parse($output['source_published_at']) : null, null, false),
             ]);
         });
+    }
+
+    private function clean(mixed $text, int $max): ?string
+    {
+        return Str::limit(trim(strip_tags((string) $text)), $max, '') ?: null;
     }
 
     /** Normalise line breaks into blank-line separated paragraphs (how the article page renders the body). */

@@ -10,10 +10,16 @@ import { ease } from '@/components/motion';
 import type { Permission, PermissionOption, Role, User } from '@/types';
 
 type Props = {
-    user: Pick<
-        User,
-        'id' | 'name' | 'email' | 'role' | 'region_code' | 'permissions'
-    > | null;
+    user:
+        | (Pick<
+              User,
+              'id' | 'name' | 'email' | 'role' | 'region_code' | 'permissions'
+          > & {
+              organization?: string | null;
+              client_regions?: string[] | null;
+              subscription_ends_at?: string | null;
+          })
+        | null;
     roles: { value: Role; label: string }[];
     permissions: PermissionOption[];
     regions: { code: string; name: string; level: number }[];
@@ -26,6 +32,7 @@ const roleHint: Record<Role, string> = {
     journalist: 'Menulis dan mengajukan berita ke editor',
     contributor: 'Warga yang mengirim draft berita',
     customer: 'Pembaca: hanya mengakses situs publik, bukan ruang redaksi',
+    client: 'Pelanggan Media Intelligence (pemda, perusahaan, konsultan): hanya dashboard',
 };
 
 export default function UserForm({ user, roles, permissions, regions }: Props) {
@@ -218,6 +225,23 @@ export default function UserForm({ user, roles, permissions, regions }: Props) {
                             </fieldset>
 
                             <AnimatePresence initial={false}>
+                                {role === 'client' && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3, ease }}
+                                        className="-m-1 overflow-hidden p-1 sm:col-span-2"
+                                    >
+                                        <ClientFields
+                                            user={user}
+                                            provinces={regions.filter(
+                                                (r) => r.level === 1,
+                                            )}
+                                            errors={errors}
+                                        />
+                                    </motion.div>
+                                )}
                                 {role === 'sub_admin' && (
                                     <motion.div
                                         initial={{ opacity: 0, height: 0 }}
@@ -348,6 +372,108 @@ function PermissionPicker({
                 })}
             </div>
             {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+        </div>
+    );
+}
+
+/** Klien Data: organization, subscribed provinces (none = all of Indonesia), end date. */
+function ClientFields({
+    user,
+    provinces,
+    errors,
+}: {
+    user: Props['user'];
+    provinces: { code: string; name: string }[];
+    errors: Record<string, string>;
+}) {
+    const [picked, setPicked] = useState<string[]>(user?.client_regions ?? []);
+    const toggle = (code: string) =>
+        setPicked((v) =>
+            v.includes(code) ? v.filter((c) => c !== code) : [...v, code],
+        );
+
+    return (
+        <div className="space-y-4 rounded-2xl bg-teal/5 p-4 ring-1 ring-teal/20">
+            <p className="flex items-center gap-2 text-sm font-medium text-navy-900">
+                <Icon
+                    name="chart"
+                    width={16}
+                    height={16}
+                    className="text-teal-dark"
+                />
+                Langganan Media Intelligence
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Organisasi" error={errors.organization}>
+                    <input
+                        name="organization"
+                        defaultValue={user?.organization ?? ''}
+                        placeholder="Pemkab Bekasi / PT Contoh / Konsultan"
+                        className="input"
+                    />
+                </Field>
+                <Field
+                    label="Langganan sampai"
+                    hint="kosong = tanpa batas"
+                    error={errors.subscription_ends_at}
+                >
+                    <input
+                        type="date"
+                        name="subscription_ends_at"
+                        defaultValue={user?.subscription_ends_at ?? ''}
+                        className="input"
+                    />
+                </Field>
+            </div>
+            <div>
+                <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-navy-900">
+                        Provinsi yang dilanggan
+                    </p>
+                    <span className="text-xs text-slate-500">
+                        {picked.length
+                            ? `${picked.length} provinsi`
+                            : 'Seluruh Indonesia'}
+                    </span>
+                </div>
+                <p className="mt-0.5 text-xs text-slate-500">
+                    Kosongkan untuk akses seluruh Indonesia.
+                </p>
+                {picked.map((c) => (
+                    <input
+                        key={c}
+                        type="hidden"
+                        name="client_regions[]"
+                        value={c}
+                    />
+                ))}
+                <div className="mt-2 flex max-h-48 flex-wrap gap-1.5 overflow-y-auto">
+                    {provinces.map((p) => {
+                        const on = picked.includes(p.code);
+                        return (
+                            <button
+                                key={p.code}
+                                type="button"
+                                aria-pressed={on}
+                                onClick={() => toggle(p.code)}
+                                className={cn(
+                                    'rounded-full px-3 py-1 text-xs font-medium ring-1 transition-colors',
+                                    on
+                                        ? 'bg-teal-dark text-white ring-teal-dark'
+                                        : 'bg-white text-slate-600 ring-slate-200 hover:ring-teal/50',
+                                )}
+                            >
+                                {p.name}
+                            </button>
+                        );
+                    })}
+                </div>
+                {errors['client_regions.0'] && (
+                    <p className="mt-1 text-xs text-red-600">
+                        {errors['client_regions.0']}
+                    </p>
+                )}
+            </div>
         </div>
     );
 }

@@ -10,11 +10,13 @@ enum Role: string
     case Journalist = 'journalist';
     case Contributor = 'contributor';
     case Customer = 'customer';
+    // Subscriber of Media Intelligence (pemda, perusahaan, konsultan): dashboard only.
+    case Client = 'client';
 
-    /** Pelanggan only reads the public site; every other role works in the newsroom. */
+    /** Pelanggan and Klien Data are outside the newsroom; every other role works in it. */
     public function isStaff(): bool
     {
-        return $this !== self::Customer;
+        return ! in_array($this, [self::Customer, self::Client], true);
     }
 
     public function label(): string
@@ -26,6 +28,7 @@ enum Role: string
             self::Journalist => 'Wartawan',
             self::Contributor => 'Kontributor',
             self::Customer => 'Pelanggan',
+            self::Client => 'Klien Data',
         };
     }
 }

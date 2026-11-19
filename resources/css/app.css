@@ -23,6 +23,12 @@
     --color-accent: #a50e1e;
     --color-accent-dark: #6b0712;
     --color-accent-soft: rgb(165 14 30 / 0.08);
+    /* Card/bar background. White here; dark slate inside `.dark .theme-public`. */
+    --color-surface: #ffffff;
+    /* Share button text colours (brand hues, lightened in dark mode for contrast). */
+    --color-brand-wa: #128c7e;
+    --color-brand-ig: #c13584;
+    --color-brand-fb: #1877f2;
     --animate-marquee: marquee 40s linear infinite;
 
     @keyframes marquee {
@@ -83,15 +89,15 @@
 
 /* Frosted glass surface (bars, floating buttons). */
 @utility glass {
-    @apply border border-white/70 bg-white/75 shadow-[0_8px_30px_-12px_rgba(165,14,30,0.22)] backdrop-blur-2xl backdrop-saturate-150;
+    @apply border border-surface/70 bg-surface/75 shadow-[0_8px_30px_-12px_rgba(165,14,30,0.22)] backdrop-blur-2xl backdrop-saturate-150;
 }
 
 @utility card {
-    @apply rounded-3xl border border-accent/10 bg-white shadow-[0_6px_24px_-12px_rgba(107,7,18,0.2)];
+    @apply rounded-3xl border border-accent/10 bg-surface shadow-[0_6px_24px_-12px_rgba(107,7,18,0.2)];
 }
 
 @utility input {
-    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 transition placeholder:text-slate-400 focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none;
+    @apply w-full rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-navy-900 transition placeholder:text-slate-400 focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none;
 }
 
 @utility btn {
@@ -107,9 +113,48 @@
 }
 
 @utility btn-ghost {
-    @apply btn bg-white text-slate-600 ring-1 ring-slate-200 hover:text-accent hover:ring-accent/30;
+    @apply btn bg-surface text-slate-600 ring-1 ring-slate-200 hover:text-accent hover:ring-accent/30;
 }
 
 @utility btn-danger {
-    @apply btn bg-white text-red-700 ring-1 ring-red-200 hover:bg-red-600 hover:text-white hover:ring-red-600;
+    @apply btn bg-surface text-red-700 ring-1 ring-red-200 hover:bg-red-600 hover:text-white hover:ring-red-600;
+}
+
+/*
+ * Dark mode for the public site. The `dark` class on <html> comes from the
+ * inline script in app.blade.php. Only `.theme-public` (the public layout) is
+ * themed, so admin pages stay light. Neutral scales are mirrored, so existing
+ * classes like text-navy-900 or bg-slate-100 keep working without dark: variants.
+ */
+.dark .theme-public {
+    color-scheme: dark;
+    --color-surface: #141b2b;
+    --color-brand-wa: #4ade80;
+    --color-brand-ig: #f472b6;
+    --color-brand-fb: #7cb3ff;
+    --color-accent: #ef5a5f;
+    --color-merah: #ef5a5f;
+    --color-accent-soft: rgb(239 90 95 / 0.12);
+    --color-navy-50: #1a2438;
+    --color-navy-100: #24314a;
+    --color-navy-700: #c3d0e6;
+    --color-navy-800: #dce5f3;
+    --color-navy-900: #f1f5fb;
+    --color-slate-50: #111827;
+    --color-slate-100: #1c2536;
+    --color-slate-200: #2a3549;
+    --color-slate-300: #3d4a60;
+    --color-slate-400: #8492a8;
+    --color-slate-500: #9aa7bb;
+    --color-slate-600: #b8c2d2;
+    --color-slate-700: #d3dae5;
+    --color-slate-800: #e5e9f0;
+}
+.dark .theme-public.bg-nusantara {
+    background-color: #0b111d;
+    background-image: radial-gradient(
+        48rem 22rem at 12% -6rem,
+        rgb(239 90 95 / 0.1),
+        transparent 70%
+    );
 }

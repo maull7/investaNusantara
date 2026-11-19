@@ -3,14 +3,25 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import ArticleCard from '@/components/article-card';
 import Icon from '@/components/icons';
+import MembershipPromo from '@/components/membership-promo';
 import RegionAvatar from '@/components/region-avatar';
 import Ticker from '@/components/ticker';
 import { Reveal, Stagger, ease } from '@/components/motion';
 import PublicLayout, { SectionTitle } from '@/layouts/public';
 import { regionHref } from '@/lib/news';
 import { cn } from '@/lib/utils';
-import { regions } from '@/routes';
-import type { ArticleCard as Card } from '@/types';
+import {
+    type Sentiment,
+    SentimentBar,
+    SENTIMENTS,
+} from '@/components/sentiment';
+import {
+    agenda as agendaRoute,
+    regions,
+    sentiment as sentimentRoute,
+} from '@/routes';
+import { show as eventShow } from '@/routes/agenda';
+import type { ArticleCard as Card, DirectoryEntry } from '@/types';
 
 type Props = {
     headlines: Card[];
@@ -18,6 +29,8 @@ type Props = {
     latest: Card[];
     national: Card[];
     popular: Card[];
+    agenda: DirectoryEntry[];
+    sentiment: Partial<Record<Sentiment, number>>;
     provinceCounts: Record<string, number>;
 };
 
@@ -34,6 +47,8 @@ export default function Home({
     latest,
     national,
     popular,
+    agenda,
+    sentiment,
     provinceCounts,
 }: Props) {
     const { auth } = usePage().props;
@@ -43,12 +58,7 @@ export default function Home({
 
     return (
         <PublicLayout variant="home">
-            <Head title="Berita Nasional & Daerah">
-                <meta
-                    name="description"
-                    content="NusantaraNews: berita nasional dan daerah dari 38 provinsi dan 514 kabupaten/kota di Indonesia."
-                />
-            </Head>
+            <Head title="Berita Nasional & Daerah" />
 
             <Stagger className="space-y-7 md:space-y-9">
                 {/* Laptop greeting (phones show it in the header) */}
@@ -61,7 +71,7 @@ export default function Home({
                             Kabar harian dari 38 provinsi Indonesia
                         </p>
                     </div>
-                    <span className="rounded-full bg-white px-4 py-1.5 text-xs text-slate-500 ring-1 ring-accent/10">
+                    <span className="rounded-full bg-surface px-4 py-1.5 text-xs text-slate-500 ring-1 ring-accent/10">
                         {today}
                     </span>
                 </Reveal>
@@ -132,6 +142,97 @@ export default function Home({
                                 ))}
                             </div>
                         </Reveal>
+                        <Reveal>
+                            <MembershipPromo />
+                        </Reveal>
+                        {Object.values(sentiment).some(Boolean) && (
+                            <Reveal className="card p-5 md:p-6">
+                                <SectionTitle href={sentimentRoute.url()}>
+                                    Sentimen 30 hari
+                                </SectionTitle>
+                                <SentimentBar
+                                    counts={{
+                                        positif: sentiment.positif ?? 0,
+                                        netral: sentiment.netral ?? 0,
+                                        negatif: sentiment.negatif ?? 0,
+                                    }}
+                                />
+                                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                                    {SENTIMENTS.map((s) => (
+                                        <Link
+                                            key={s.key}
+                                            href={sentimentRoute.url({
+                                                query: { nada: s.key },
+                                            })}
+                                            className="inline-flex items-center gap-1.5 hover:text-accent"
+                                        >
+                                            <span
+                                                className="size-2 rounded-full"
+                                                style={{
+                                                    backgroundColor: s.color,
+                                                }}
+                                            />
+                                            {s.label}{' '}
+                                            <b className="text-navy-900">
+                                                {sentiment[s.key] ?? 0}
+                                            </b>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </Reveal>
+                        )}
+                        <Reveal className="card p-5 md:p-6">
+                            <SectionTitle href={agendaRoute.url()}>
+                                Agenda
+                            </SectionTitle>
+                            {agenda.length === 0 ? (
+                                <p className="text-sm text-slate-500">
+                                    Belum ada event mendatang.{' '}
+                                    <Link
+                                        href={agendaRoute.url()}
+                                        className="font-medium text-accent hover:underline"
+                                    >
+                                        Lihat kalender
+                                    </Link>
+                                </p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {agenda.map((e) => (
+                                        <Link
+                                            key={e.id}
+                                            href={eventShow.url(e.slug!)}
+                                            className="group flex items-center gap-3"
+                                        >
+                                            <span className="grid w-12 shrink-0 place-items-center rounded-xl bg-accent/10 py-1.5 text-accent">
+                                                <span className="text-lg leading-none font-bold">
+                                                    {new Date(
+                                                        e.starts_on!,
+                                                    ).getDate()}
+                                                </span>
+                                                <span className="text-[10px] font-medium uppercase">
+                                                    {new Intl.DateTimeFormat(
+                                                        'id-ID',
+                                                        { month: 'short' },
+                                                    ).format(
+                                                        new Date(e.starts_on!),
+                                                    )}
+                                                </span>
+                                            </span>
+                                            <span className="min-w-0">
+                                                <span className="line-clamp-2 text-sm font-medium text-navy-900 group-hover:text-accent">
+                                                    {e.name}
+                                                </span>
+                                                <span className="text-xs text-slate-500">
+                                                    {e.featured_at &&
+                                                        'Unggulan · '}
+                                                    {e.region?.name}
+                                                </span>
+                                            </span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </Reveal>
                     </div>
                 </div>
             </Stagger>
@@ -151,7 +252,7 @@ function Channels({ counts }: { counts: Record<string, number> }) {
         });
 
     const arrow =
-        'absolute top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-accent/15 bg-white text-accent shadow-sm transition-colors hover:bg-accent hover:text-white md:grid';
+        'absolute top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-accent/15 bg-surface text-accent shadow-sm transition-colors hover:bg-accent hover:text-white md:grid';
 
     return (
         <div>
@@ -193,7 +294,7 @@ function Channels({ counts }: { counts: Record<string, number> }) {
                             <Link
                                 href={regionHref(p)}
                                 viewTransition
-                                className="group flex items-center gap-2 rounded-full border border-accent/15 bg-white py-1 pr-1.5 pl-1 text-[13px] text-navy-900 transition-colors hover:border-accent/30 hover:bg-accent/5"
+                                className="group flex items-center gap-2 rounded-full border border-accent/15 bg-surface py-1 pr-1.5 pl-1 text-[13px] text-navy-900 transition-colors hover:border-accent/30 hover:bg-accent/5"
                             >
                                 <RegionAvatar region={p} className="size-7" />
                                 <span className="font-medium whitespace-nowrap">

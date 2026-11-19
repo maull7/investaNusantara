@@ -52,6 +52,11 @@ export default function ArticleForm({
         is_headline: article?.is_headline ?? false,
         is_breaking: article?.is_breaking ?? false,
         cover: null as File | null,
+        tags: article?.tags?.map((t) => t.name).join(', ') ?? '',
+        seo_title: article?.seo_title ?? '',
+        meta_description: article?.meta_description ?? '',
+        social_post: article?.social_post ?? '',
+        sentiment: article?.sentiment ?? '',
         _method: article ? 'put' : 'post',
     });
 
@@ -334,6 +339,74 @@ export default function ArticleForm({
                         <Error message={err.region_code} />
                     </Panel>
 
+                    <Panel title="Tag">
+                        <input
+                            value={form.data.tags}
+                            onChange={(e) =>
+                                form.setData('tags', e.target.value)
+                            }
+                            placeholder="Pemkot Bogor, Banjir, UMKM"
+                            aria-label="Tag, pisahkan dengan koma"
+                            className="input"
+                        />
+                        <p className="mt-1.5 text-xs text-slate-400">
+                            Pisahkan dengan koma. Tag yang sudah ada dipakai
+                            ulang.
+                        </p>
+                        <Error message={err.tags} />
+                    </Panel>
+
+                    <Panel title="Sentimen">
+                        <select
+                            value={form.data.sentiment}
+                            onChange={(e) =>
+                                form.setData('sentiment', e.target.value)
+                            }
+                            aria-label="Sentimen berita"
+                            className="input"
+                        >
+                            <option value="">Belum ditentukan</option>
+                            <option value="positif">Positif</option>
+                            <option value="netral">Netral</option>
+                            <option value="negatif">Negatif</option>
+                        </select>
+                        <p className="mt-1.5 text-xs text-slate-400">
+                            Dipakai di dashboard Media Intelligence. Berita AI
+                            terisi otomatis.
+                        </p>
+                        <Error message={err.sentiment} />
+                    </Panel>
+
+                    <Panel title="SEO & media sosial">
+                        <div className="space-y-3">
+                            <SeoField
+                                label="Judul SEO"
+                                max={70}
+                                value={form.data.seo_title}
+                                onChange={(v) => form.setData('seo_title', v)}
+                                error={err.seo_title}
+                            />
+                            <SeoField
+                                label="Meta description"
+                                max={160}
+                                rows={3}
+                                value={form.data.meta_description}
+                                onChange={(v) =>
+                                    form.setData('meta_description', v)
+                                }
+                                error={err.meta_description}
+                            />
+                            <SeoField
+                                label="Teks media sosial"
+                                max={1000}
+                                rows={4}
+                                value={form.data.social_post}
+                                onChange={(v) => form.setData('social_post', v)}
+                                error={err.social_post}
+                            />
+                        </div>
+                    </Panel>
+
                     {can.flag && (
                         <Panel title="Sorotan" flush>
                             <Switch
@@ -430,6 +503,44 @@ function Panel({
             </h3>
             {children}
         </section>
+    );
+}
+
+function SeoField({
+    label,
+    max,
+    rows,
+    value,
+    onChange,
+    error,
+}: {
+    label: string;
+    max: number;
+    rows?: number;
+    value: string;
+    onChange: (v: string) => void;
+    error?: string;
+}) {
+    const Tag = rows ? 'textarea' : 'input';
+
+    return (
+        <label className="block text-xs font-medium text-slate-500">
+            <span className="flex justify-between">
+                {label}
+                <span className="tabular-nums">
+                    {value.length}/{max}
+                </span>
+            </span>
+            <Tag
+                value={value}
+                rows={rows}
+                maxLength={max}
+                placeholder="Kosong = memakai judul/ringkasan"
+                onChange={(e) => onChange(e.target.value)}
+                className="mt-1 input"
+            />
+            <Error message={error} />
+        </label>
     );
 }
 

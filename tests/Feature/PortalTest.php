@@ -94,4 +94,16 @@ class PortalTest extends TestCase
 
         $this->actingAs($editorJabar)->get('/admin/users')->assertForbidden();
     }
+
+    public function test_reading_counts_a_view_without_changing_updated_at(): void
+    {
+        $article = Article::factory()->published()->create(['updated_at' => now()->subDay()]);
+        $before = $article->updated_at->toAtomString();
+
+        $this->get("/berita/{$article->slug}")->assertOk();
+
+        $article->refresh();
+        $this->assertSame(1, $article->views);
+        $this->assertSame($before, $article->updated_at->toAtomString());
+    }
 }
