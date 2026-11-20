@@ -126,6 +126,27 @@ class NewsPipeline
         return $text === '' ? null : Str::words($text, $words, '…');
     }
 
+    /**
+     * First paragraph, at most $words words, cut back to its last full sentence.
+     * shortcut: a "Kab." style abbreviation can end the cut early; fine for a 50-word lead.
+     */
+    public static function lead(string $text, int $words = 50): string
+    {
+        $paragraph = trim(strtok(trim($text), "\n") ?: '');
+        $parts = preg_split('/\s+/u', $paragraph, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (count($parts) <= $words) {
+            return $paragraph;
+        }
+
+        $cut = implode(' ', array_slice($parts, 0, $words));
+        // A cut that would leave only a few words is worse than an ellipsis.
+        if (preg_match('/^.*[.!?](?=\s|$)/us', $cut, $m) && self::wordCount($m[0]) >= 15) {
+            return $m[0];
+        }
+
+        return $cut.'…';
+    }
+
     public static function wordCount(string $text): int
     {
         return count(preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: []);

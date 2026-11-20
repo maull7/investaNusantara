@@ -26,10 +26,8 @@ use RuntimeException;
  */
 class SummarizeNews extends HermesTask
 {
-    /** Synopsis words for auto publish. Shorter fails, longer is likely a copy. */
-    public const MIN_WORDS = 120;
-
-    public const MAX_WORDS = 700;
+    /** Synopsis words for auto publish (the lead is capped at 50 words, see NewsPipeline::lead). Shorter waits for an editor. */
+    public const MIN_WORDS = 25;
 
     /** Share of 6-word phrases copied from the source above which an editor must look. */
     public const MAX_OVERLAP = 0.3;
@@ -72,9 +70,10 @@ class SummarizeNews extends HermesTask
         }
 
         $title = Str::limit(trim(strip_tags((string) ($output['title'] ?? ''))), 250, '');
-        $synopsis = $this->paragraphs((string) ($output['synopsis'] ?? ''));
+        // Only the opening paragraph is kept, even if Hermes wrote more.
+        $synopsis = NewsPipeline::lead($this->paragraphs((string) ($output['synopsis'] ?? '')));
         $words = NewsPipeline::wordCount($synopsis);
-        if ($title === '' || $words < 60) {
+        if ($title === '' || $words < 15) {
             throw new RuntimeException("Output Hermes tidak lengkap: judul/sinopsis kosong atau terlalu pendek ({$words} kata).");
         }
 
@@ -94,7 +93,6 @@ class SummarizeNews extends HermesTask
         $reasons = array_filter([
             ! $subject->source->auto_publish ? 'terbit otomatis dimatikan untuk sumber ini' : null,
             $words < self::MIN_WORDS ? "sinopsis pendek ({$words} kata)" : null,
-            $words > self::MAX_WORDS ? "sinopsis terlalu panjang ({$words} kata)" : null,
             $overlap > self::MAX_OVERLAP ? 'kemiripan dengan teks asli '.round($overlap * 100).'%' : null,
             ($output['read_from'] ?? null) === 'rss' ? 'ditulis dari ringkasan RSS karena halaman tidak bisa dibuka' : null,
         ]);

@@ -321,7 +321,9 @@ class AiNewsTest extends TestCase
         $this->assertSame('15.71', $article->region_code); // narrowed to the city Hermes named
         $this->assertSame('Ekonomi', $article->category->name);
         $this->assertSame('Redaksi AI', $article->author->name);
-        $this->assertStringContainsString("\n\n", $article->body);
+        $this->assertStringNotContainsString("\n", $article->body);
+        $this->assertStringContainsString('kata1x44 akhir.', $article->body);
+        $this->assertStringNotContainsString('kata2x1 ', $article->body);
         $this->assertSame('Harga karet naik', $article->source_title);
         $this->assertSame(NewsPipeline::firstWords('Harga karet di tingkat petani naik signifikan minggu ini menurut dinas perkebunan.'), $article->source_excerpt);
         $this->assertSame('satu dua tiga…', NewsPipeline::firstWords("satu  dua\ntiga <b>empat</b>", 3));
@@ -329,6 +331,19 @@ class AiNewsTest extends TestCase
         $this->get("/berita/{$article->slug}")->assertInertia(fn (Assert $page) => $page
             ->where('article.source_url', $item->url)
             ->where('article.is_ai_generated', true));
+    }
+
+    public function test_lead_keeps_first_paragraph_cut_at_last_full_sentence(): void
+    {
+        $text = "Realisasi penerimaan pajak dan retribusi daerah Kota Bontang mencapai Rp295,21 miliar hingga 30 September 2026. Jumlah itu setara 84,68 persen dari target penerimaan tahun 2026 yang ditetapkan sebesar Rp348,63 miliar. Capaian tersebut dicatat melalui pemantauan implementasi Elektronifikasi Transaksi Pemerintah Daerah bersama kanal digital, semi digital, dan nontunai lainnya di seluruh wilayah.\n\nParagraf kedua tidak ikut.";
+
+        $lead = NewsPipeline::lead($text);
+
+        $this->assertSame('Realisasi penerimaan pajak dan retribusi daerah Kota Bontang mencapai Rp295,21 miliar hingga 30 September 2026. Jumlah itu setara 84,68 persen dari target penerimaan tahun 2026 yang ditetapkan sebesar Rp348,63 miliar.', $lead);
+        $this->assertLessThanOrEqual(50, NewsPipeline::wordCount($lead));
+        $this->assertSame('Pendek saja.', NewsPipeline::lead("Pendek saja.\n\nLain."));
+        // No sentence end inside the window: hard cut with an ellipsis.
+        $this->assertSame(implode(' ', array_fill(0, 50, 'kata')).'…', NewsPipeline::lead(implode(' ', array_fill(0, 80, 'kata'))));
     }
 
     public function test_ai_review_needs_login_is_generated_once_and_shared(): void
@@ -486,12 +501,13 @@ class AiNewsTest extends TestCase
     /** @return array<string, mixed> */
     private function hermesOutput(): array
     {
-        $paragraph = fn (int $p) => implode(' ', array_map(fn ($w) => "kata{$p}x{$w}", range(1, 45)));
+        $paragraph = fn (int $p) => implode(' ', array_map(fn ($w) => "kata{$p}x{$w}", range(1, 44))).' akhir.';
 
         return [
             'status' => 'ok',
             'title' => 'Petani Jambi menikmati kenaikan harga karet',
             'excerpt' => 'Harga karet di Jambi naik pekan ini.',
+            // Hermes may ignore "one paragraph"; only the first is kept.
             'synopsis' => implode('\n\n', [$paragraph(1), $paragraph(2), $paragraph(3)]),
             'image_url' => 'https://jamberita.com/foto.jpg',
             'category' => 'ekonomi',

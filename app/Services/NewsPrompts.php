@@ -69,14 +69,14 @@ class NewsPrompts
 
         Tulis SINOPSIS berita dalam Bahasa Indonesia dengan kalimat Anda sendiri.
         Aturan:
-        - 3 sampai 5 paragraf, total 150-400 kata. Pisahkan paragraf dengan baris kosong.
+        - SATU paragraf saja, 40-50 kata, berisi inti berita (siapa, apa, di mana, kapan, angka kunci). Gaya lugas seperti lead berita. Akhiri dengan kalimat lengkap yang diakhiri titik; jangan tulis paragraf lain.
         - Parafrasekan: JANGAN menyalin kalimat dari artikel asli. Maksimal kutipan langsung satu kalimat narasumber dalam tanda kutip.
         - Hanya fakta yang ada di artikel. Jangan menambah fakta, angka, atau opini.
         - Judul baru yang akurat dan tidak clickbait (bukan salinan judul asli).
         - Teks biasa tanpa HTML/markdown, tanpa menyebut "menurut sinopsis ini".
 
         Jika bukan artikel berita, terkunci paywall, atau tidak ada jalur resmi yang terbuka dan bahan cadangan kurang dari 80 kata, balas {"status":"not_article","reason":"..."}.
-        Jika memakai bahan cadangan, tulis sinopsis hanya dari bahan itu (boleh lebih pendek, minimal 80 kata).
+        Jika memakai bahan cadangan, tulis sinopsis hanya dari bahan itu.
 
         Selain itu balas HANYA dengan JSON valid tanpa markdown:
         {
@@ -84,7 +84,7 @@ class NewsPrompts
           "read_from": "page | amp | rss",
           "title": "judul baru",
           "excerpt": "ringkasan 1-2 kalimat, maksimal 280 karakter",
-          "synopsis": "paragraf 1\\n\\nparagraf 2\\n\\nparagraf 3",
+          "synopsis": "satu paragraf, 40-50 kata, berakhir titik",
           "image_url": "URL gambar utama artikel (utamakan og:image), atau null. Jangan mengarang.",
           "category": "salah satu dari [{$categoryList}]",{$regionLine}
           "tags": ["3-6 tag: tokoh, lembaga, tempat, atau topik utama. Pakai tag yang sudah ada jika cocok, persis ejaannya: [{$tagList}]. Buat tag baru HANYA jika tidak ada yang cocok, 1-4 kata, huruf kapital di awal kata."],
@@ -94,7 +94,7 @@ class NewsPrompts
           "social_post": "teks siap bagikan ke WhatsApp/Instagram, 2-3 kalimat, maksimal 2 emoji, akhiri dengan 2-3 hashtag (termasuk nama daerah), tanpa tautan",
           "source_title": "judul asli artikel",
           "source_published_at": "ISO 8601 atau null",
-          "source_opening": "salin persis 2 paragraf pertama artikel asli (dipakai untuk mengecek kemiripan; 50 kata pertamanya ditampilkan sebagai kutipan dengan tautan ke sumber)"
+          "source_opening": "salin persis paragraf pertama artikel asli (dipakai untuk mengecek kemiripan; 50 kata pertamanya ditampilkan sebagai kutipan dengan tautan ke sumber)"
         }
         PROMPT;
     }
