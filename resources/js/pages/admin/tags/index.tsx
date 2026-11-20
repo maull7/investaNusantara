@@ -97,39 +97,44 @@ export default function TagsIndex({
                                         <span className="text-xs text-slate-500 tabular-nums">
                                             {t.articles_count} artikel
                                         </span>
-                                        <button
-                                            disabled={processing}
-                                            className="btn-ghost px-3 py-1.5 text-xs"
-                                        >
-                                            <Icon
-                                                name="check"
-                                                width={14}
-                                                height={14}
-                                            />
-                                            Simpan
-                                        </button>
-                                        <button
-                                            type="button"
-                                            aria-label={`Hapus ${t.name}`}
-                                            className="btn-danger px-2.5 py-1.5 text-xs"
-                                            onClick={() =>
-                                                confirm(
-                                                    `Hapus tag ${t.name}? Tag dilepas dari ${t.articles_count} artikel.`,
-                                                ) &&
-                                                router.delete(
-                                                    destroy.url(t.id),
-                                                    {
-                                                        preserveScroll: true,
-                                                    },
-                                                )
-                                            }
-                                        >
-                                            <Icon
-                                                name="trash"
-                                                width={14}
-                                                height={14}
-                                            />
-                                        </button>
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="submit"
+                                                disabled={processing}
+                                                aria-label="Simpan perubahan tag"
+                                                title="Simpan"
+                                                className="inline-flex size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-900 disabled:opacity-60"
+                                            >
+                                                <Icon
+                                                    name="check"
+                                                    width={15}
+                                                    height={15}
+                                                />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                aria-label={`Hapus ${t.name}`}
+                                                title={`Hapus tag ${t.name}`}
+                                                className="inline-flex size-8 items-center justify-center rounded-lg border border-red-200 bg-red-50/50 text-red-600 transition hover:bg-red-100 hover:text-red-700"
+                                                onClick={() =>
+                                                    confirm(
+                                                        `Hapus tag ${t.name}? Tag dilepas dari ${t.articles_count} artikel.`,
+                                                    ) &&
+                                                    router.delete(
+                                                        destroy.url(t.id),
+                                                        {
+                                                            preserveScroll: true,
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                <Icon
+                                                    name="trash"
+                                                    width={15}
+                                                    height={15}
+                                                />
+                                            </button>
+                                        </div>
                                     </>
                                 )}
                             </Form>

@@ -137,42 +137,60 @@ export default function CategoriesIndex({ categories }: { categories: Row[] }) {
                                                 className="input w-20 py-1.5"
                                             />
                                         </label>
-                                        <div className="flex gap-1.5">
+                                        <div className="flex items-center gap-1.5">
                                             <button
+                                                type="submit"
                                                 disabled={processing}
-                                                className="btn-ghost px-3 py-1.5 text-xs"
+                                                aria-label="Simpan perubahan"
+                                                title={recentlySuccessful ? 'Tersimpan' : 'Simpan perubahan'}
+                                                className="inline-flex size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-900 disabled:opacity-60"
                                             >
                                                 <Icon
                                                     name="check"
-                                                    width={14}
-                                                    height={14}
-                                                />
-                                                {recentlySuccessful
-                                                    ? 'Tersimpan'
-                                                    : 'Simpan'}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                aria-label={`Hapus ${c.name}`}
-                                                className="btn-danger px-2.5 py-1.5 text-xs"
-                                                onClick={() =>
-                                                    confirm(
-                                                        `Hapus kategori ${c.name}?`,
-                                                    ) &&
-                                                    router.delete(
-                                                        destroy.url(c.id),
-                                                        {
-                                                            preserveScroll: true,
-                                                        },
-                                                    )
-                                                }
-                                            >
-                                                <Icon
-                                                    name="trash"
-                                                    width={14}
-                                                    height={14}
+                                                    width={15}
+                                                    height={15}
+                                                    className={recentlySuccessful ? 'text-emerald-600' : ''}
                                                 />
                                             </button>
+                                            {c.articles_count === 0 ? (
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Hapus ${c.name}`}
+                                                    title={`Hapus kategori ${c.name}`}
+                                                    className="inline-flex size-8 items-center justify-center rounded-lg border border-red-200 bg-red-50/50 text-red-600 transition hover:bg-red-100 hover:text-red-700"
+                                                    onClick={() =>
+                                                        confirm(
+                                                            `Hapus kategori ${c.name}?`,
+                                                        ) &&
+                                                        router.delete(
+                                                            destroy.url(c.id),
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
+                                                    }
+                                                >
+                                                    <Icon
+                                                        name="trash"
+                                                        width={15}
+                                                        height={15}
+                                                    />
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    disabled
+                                                    aria-label="Tidak dapat dihapus"
+                                                    title={`Kategori memiliki ${c.articles_count} artikel, tidak dapat dihapus`}
+                                                    className="inline-flex size-8 cursor-not-allowed items-center justify-center rounded-lg border border-slate-100 bg-slate-50 text-slate-300 opacity-60"
+                                                >
+                                                    <Icon
+                                                        name="trash"
+                                                        width={15}
+                                                        height={15}
+                                                    />
+                                                </button>
+                                            )}
                                         </div>
                                     </>
                                 )}
