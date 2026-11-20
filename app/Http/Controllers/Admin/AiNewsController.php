@@ -67,8 +67,10 @@ class AiNewsController extends Controller
     {
         $province = $this->province($request);
         $city = $this->city($request, $province);
+        $search = trim((string) $request->input('search', ''));
         $sources = NewsSource::inProvince($province)
             ->when($city, fn ($q) => $q->where('region_code', $city))
+            ->when($search !== '', fn ($q) => $q->where(fn ($query) => $query->where('name', 'like', '%'.$search.'%')->orWhere('url', 'like', '%'.$search.'%')))
             ->with(['region:code,name', 'category:id,name'])
             ->withCount(['fetches as active_fetches' => fn ($q) => $q->whereIn('status', NewsTaskStatus::activeValues())])
             ->orderBy('name')->paginate(20)->withQueryString();
@@ -76,6 +78,7 @@ class AiNewsController extends Controller
         return Inertia::render('admin/ai/sources', [
             'province' => $province,
             'city' => $city,
+            'search' => $search,
             'hermesToken' => ['enabled' => $hermes->enabled(), 'configured' => (bool) config('hermes.token')],
             'sources' => $sources,
             'counts' => NewsItem::whereIn('news_source_id', $sources->pluck('id'))

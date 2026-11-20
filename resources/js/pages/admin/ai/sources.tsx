@@ -52,6 +52,7 @@ type Props = {
     provinces: Region[];
     province: string;
     city: string;
+    search: string;
 };
 
 const intervals = [
@@ -72,10 +73,14 @@ export default function AiSources({
     provinces,
     province,
     city,
+    search,
 }: Props) {
     // null = closed, 'new' = create, otherwise the source being edited.
     const tokenForm = useForm({ enabled: hermesToken.enabled });
     const [editing, setEditing] = useState<Source | 'new' | null>(null);
+    const [query, setQuery] = useState(search);
+
+    useEffect(() => setQuery(search), [search]);
 
     return (
         <AdminLayout
@@ -101,23 +106,50 @@ export default function AiSources({
                 />
             </AiTabs>
 
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 card p-4">
-                <div>
-                    <p className="font-semibold text-navy-900">
-                        Token Hermes:{' '}
-                        {hermesToken.enabled ? 'Aktif' : 'Nonaktif'}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                        {hermesToken.configured
-                            ? 'Token tersimpan. '
-                            : 'HERMES_TOKEN belum diatur. '}
-                        Saat nonaktif, proses AI baru menunggu. Proses yang
-                        sudah terkirim tetap diselesaikan.
-                    </p>
-                </div>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <form
+                    className="relative min-w-0 flex-1"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        router.get(
+                            window.location.pathname,
+                            { province, city, search: query.trim() },
+                            { preserveState: true, preserveScroll: true },
+                        );
+                    }}
+                >
+                    <Icon
+                        name="search"
+                        width={18}
+                        height={18}
+                        className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                        type="search"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder="Cari nama atau alamat situs…"
+                        aria-label="Cari sumber berita"
+                        className="input w-full rounded-full pr-20 pl-10"
+                    />
+                    <button
+                        type="submit"
+                        className="btn-primary absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full px-4 py-1.5 text-xs"
+                    >
+                        Cari
+                    </button>
+                </form>
+
                 <button
                     type="button"
+                    role="switch"
+                    aria-checked={hermesToken.enabled}
                     disabled={tokenForm.processing}
+                    title={
+                        hermesToken.configured
+                            ? 'Saat nonaktif, proses AI baru menunggu.'
+                            : 'HERMES_TOKEN belum diatur di .env'
+                    }
                     onClick={() => {
                         tokenForm.transform(() => ({
                             enabled: !hermesToken.enabled,
@@ -126,15 +158,54 @@ export default function AiSources({
                             preserveScroll: true,
                         });
                     }}
-                    className="btn-ghost px-3 py-2 text-sm"
+                    className={cn(
+                        'flex shrink-0 items-center gap-2.5 self-start rounded-full py-1.5 pr-2 pl-4 text-sm ring-1 transition disabled:opacity-60 sm:self-auto',
+                        hermesToken.configured
+                            ? 'bg-surface text-slate-600 ring-accent/15 hover:ring-accent/40'
+                            : 'bg-red-50 text-red-700 ring-red-200',
+                    )}
                 >
-                    {hermesToken.enabled
-                        ? 'Nonaktifkan token'
-                        : 'Aktifkan token'}
+                    <span className="font-medium text-navy-900">
+                        Token Hermes
+                    </span>
+                    {!hermesToken.configured && (
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700 ring-1 ring-red-200">
+                            Belum diatur
+                        </span>
+                    )}
+                    <span
+                        className={cn(
+                            'text-xs font-semibold',
+                            hermesToken.enabled
+                                ? 'text-accent'
+                                : 'text-slate-400',
+                        )}
+                    >
+                        {hermesToken.enabled ? 'Aktif' : 'Nonaktif'}
+                    </span>
+                    <span
+                        className={cn(
+                            'flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors',
+                            hermesToken.enabled ? 'bg-accent' : 'bg-slate-200',
+                        )}
+                    >
+                        <span
+                            className={cn(
+                                'size-4 rounded-full bg-white shadow transition-transform',
+                                hermesToken.enabled && 'translate-x-4',
+                            )}
+                        />
+                    </span>
                 </button>
             </div>
 
-            {sources.data.length === 0 && province ? (
+            {sources.data.length === 0 && search ? (
+                <div className="card">
+                    <EmptyState icon="sliders" title="Sumber tidak ditemukan">
+                        Coba kata kunci atau wilayah lain.
+                    </EmptyState>
+                </div>
+            ) : sources.data.length === 0 && province ? (
                 <div className="card">
                     <EmptyState icon="sliders" title="Tidak ada sumber">
                         Belum ada sumber berita untuk wilayah ini.
