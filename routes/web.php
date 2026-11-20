@@ -80,6 +80,7 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(fun
         Route::prefix('ai')->name('ai.')->controller(Admin\AiNewsController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('sources', 'sources')->name('sources');
+            Route::get('sources/{source}/items', 'items')->name('sources.items');
             Route::patch('hermes-token', 'updateHermesToken')->name('hermes-token.update');
             Route::patch('sources/{source}/active', 'updateActive')->name('sources.active');
             Route::post('sources', 'store')->name('sources.store');

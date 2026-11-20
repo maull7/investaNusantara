@@ -87,6 +87,18 @@ class AiNewsController extends Controller
         ]);
     }
 
+    /** Every link taken from one source (newest first) plus its recent runs, to trace what was fetched. */
+    public function items(NewsSource $source): Response
+    {
+        return Inertia::render('admin/ai/source-items', [
+            'source' => $source->only('id', 'name', 'url'),
+            'fetches' => $source->fetches()->latest('id')->limit(10)->get(['id', 'status', 'trigger', 'via', 'found', 'error', 'created_at']),
+            'items' => NewsItem::where('news_source_id', $source->id)
+                ->with('article:id,slug,status')
+                ->latest('id')->paginate(20),
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         NewsSource::create($this->validated($request));

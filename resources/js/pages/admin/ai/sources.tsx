@@ -1,4 +1,4 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { AiTabs, ProvinceFilter, TaskPill } from '@/components/admin/ai';
@@ -13,6 +13,7 @@ import {
     active as updateActive,
     destroy,
     fetch as fetchSource,
+    items as sourceItems,
     store,
     update,
 } from '@/routes/admin/ai/sources';
@@ -285,6 +286,13 @@ function SourceCard({
                 >
                     {s.active ? 'Nonaktifkan' : 'Aktifkan'}
                 </button>
+                <Link
+                    href={sourceItems.url(s.id)}
+                    className="btn-ghost px-3 py-1.5 text-xs"
+                >
+                    <Icon name="file" width={14} height={14} />
+                    Lihat berita
+                </Link>
                 <button
                     type="button"
                     onClick={onEdit}

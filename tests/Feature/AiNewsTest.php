@@ -53,6 +53,23 @@ class AiNewsTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('admin/ai/sources')->has('sources.data', 1)->has('provinces', 1));
     }
 
+    public function test_source_items_page_lists_only_that_sources_items(): void
+    {
+        $other = NewsSource::create(['name' => 'Lain', 'url' => 'https://lain.test', 'max_articles' => 5]);
+        foreach ([$this->source, $other] as $source) {
+            $fetch = $source->fetches()->create(['trigger' => 'manual', 'status' => NewsTaskStatus::Completed]);
+            NewsItem::create(['news_fetch_id' => $fetch->id, 'news_source_id' => $source->id, 'url' => "https://{$source->host()}/a", 'url_hash' => NewsItem::hashUrl("https://{$source->host()}/a"), 'title' => "Berita {$source->name}", 'status' => NewsTaskStatus::Queued]);
+        }
+
+        $this->actingAs(User::factory()->create(['role' => Role::Editor]))->get("/admin/ai/sources/{$this->source->id}/items")->assertForbidden();
+        $this->actingAs(User::factory()->create(['role' => Role::SuperAdmin]))->get("/admin/ai/sources/{$this->source->id}/items")
+            ->assertInertia(fn (Assert $page) => $page->component('admin/ai/source-items')
+                ->where('source.id', $this->source->id)
+                ->has('fetches', 1)
+                ->has('items.data', 1)
+                ->where('items.data.0.title', 'Berita Jambi Berita'));
+    }
+
     public function test_source_can_be_disabled_and_enabled_without_editing_other_fields(): void
     {
         Queue::fake();

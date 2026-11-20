@@ -22,14 +22,14 @@ import { retry as retryItem } from '@/routes/admin/ai/items';
 import { fetch as fetchSource } from '@/routes/admin/ai/sources';
 import { edit as editArticle } from '@/routes/admin/articles';
 
-type Item = {
+export type Item = {
     id: number;
     title: string;
     url: string;
     status: TaskStatus;
     attempts: number;
     error: string | null;
-    updated_at: string;
+    created_at: string;
     article: { id: number; slug: string; status: string } | null;
 };
 
@@ -64,7 +64,7 @@ type Props = {
     provinces: { code: string; name: string }[];
 };
 
-const viaLabel = {
+export const viaLabel = {
     rss: 'RSS (tanpa token)',
     sitemap: 'sitemap (tanpa token)',
     hermes: 'Hermes',
@@ -487,7 +487,7 @@ function FetchCard({ fetch: f, index }: { fetch: Fetch; index: number }) {
     );
 }
 
-function ItemRow({ item }: { item: Item }) {
+export function ItemRow({ item }: { item: Item }) {
     return (
         <li className="flex flex-wrap items-start gap-3 px-4 py-3 sm:px-5 sm:pl-12">
             <div className="min-w-0 flex-1">
@@ -502,6 +502,9 @@ function ItemRow({ item }: { item: Item }) {
                 >
                     {item.url}
                 </a>
+                <p className="mt-0.5 text-xs text-slate-400">
+                    Diambil {timeAgo(item.created_at)}
+                </p>
                 {item.error && (
                     <p
                         className={cn(

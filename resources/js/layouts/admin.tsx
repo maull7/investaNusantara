@@ -381,29 +381,6 @@ export default function AdminLayout({
                         </div>
                     ))}
                 </nav>
-
-                <div className="mt-4 border-t border-slate-100 pt-4">
-                    <a
-                        href={home.url()}
-                        target="_blank"
-                        className="mb-2 flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:bg-accent/5 hover:text-accent"
-                    >
-                        <Icon name="external" width={18} height={18} />
-                        Lihat situs
-                    </a>
-                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-2 ring-1 ring-slate-100">
-                        <Avatar name={user.name} className="size-9 text-xs" />
-                        <div className="min-w-0 flex-1 leading-tight">
-                            <p className="truncate text-sm font-semibold text-navy-900">
-                                {user.name}
-                            </p>
-                            <p className="truncate text-xs text-slate-500">
-                                {roleLabel[user.role]}
-                            </p>
-                        </div>
-                        <LogoutButton iconOnly />
-                    </div>
-                </div>
             </aside>
 
             {/* Phones/tablets: top bar */}
@@ -616,21 +593,16 @@ function NavLink({
     );
 }
 
-function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
+function LogoutButton() {
     return (
         <Form action={logout.url()} method="post">
             <button
                 aria-label="Keluar"
                 title="Keluar"
-                className={cn(
-                    'flex items-center gap-3 text-sm font-medium transition-colors',
-                    iconOnly
-                        ? 'grid size-9 place-items-center rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600'
-                        : 'w-full rounded-2xl px-3 py-2.5 text-red-600 hover:bg-red-50',
-                )}
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
             >
                 <Icon name="logout" width={18} height={18} />
-                {!iconOnly && 'Keluar'}
+                Keluar
             </button>
         </Form>
     );
