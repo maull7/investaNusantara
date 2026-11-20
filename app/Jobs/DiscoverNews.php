@@ -85,17 +85,22 @@ class DiscoverNews extends HermesTask
 
         $pipeline = app(NewsPipeline::class);
         $created = collect();
+        $known = $foreign = 0;
         foreach (array_slice($articles, 0, $source->max_articles) as $article) {
             $url = NewsPipeline::validUrl(self::absolute((string) ($article['url'] ?? ''), $source->url));
             $title = Str::limit(trim(strip_tags((string) ($article['title'] ?? ''))), 250, '');
             $host = preg_replace('/^www\./', '', strtolower((string) parse_url((string) $url, PHP_URL_HOST)));
             // Only links on the source's own domain (or its subdomains).
             if (! $url || $title === '' || ! ($host === $source->host() || str_ends_with($host, '.'.$source->host()))) {
+                $foreign++;
+
                 continue;
             }
 
             $hash = NewsItem::hashUrl($url);
             if (NewsItem::where('url_hash', $hash)->exists() || Article::where('source_url', $url)->exists()) {
+                $known++;
+
                 continue; // already taken, stay quiet
             }
 
@@ -115,7 +120,7 @@ class DiscoverNews extends HermesTask
         // Say why nothing came in, so an empty run is never silent.
         $empty = $created->isEmpty() ? match (true) {
             $articles === [] => 'Hermes tidak menemukan artikel'.($note !== '' ? ": {$note}" : '.'),
-            default => 'Tidak ada berita baru: '.count($articles).' tautan ditemukan, semuanya sudah pernah diambil atau bukan dari domain '.$source->host().'.',
+            default => 'Tidak ada berita baru: '.count($articles)." tautan ditemukan, {$known} sudah pernah diambil (lihat \"Lihat berita\" sumber ini), {$foreign} bukan dari domain {$source->host()} atau tanpa judul.",
         } : null;
 
         DB::transaction(function () use ($subject, $source, $created, $empty, $articles, $output) {

@@ -58,7 +58,7 @@ class AiNewsTest extends TestCase
         $other = NewsSource::create(['name' => 'Lain', 'url' => 'https://lain.test', 'max_articles' => 5]);
         foreach ([$this->source, $other] as $source) {
             $fetch = $source->fetches()->create(['trigger' => 'manual', 'status' => NewsTaskStatus::Completed]);
-            NewsItem::create(['news_fetch_id' => $fetch->id, 'news_source_id' => $source->id, 'url' => "https://{$source->host()}/a", 'url_hash' => NewsItem::hashUrl("https://{$source->host()}/a"), 'title' => "Berita {$source->name}", 'status' => NewsTaskStatus::Queued]);
+            NewsItem::create(['news_fetch_id' => $fetch->id, 'news_source_id' => $source->id, 'url' => "https://{$source->host()}/a", 'url_hash' => NewsItem::hashUrl("https://{$source->host()}/a"), 'title' => "Berita {$source->name}", 'feed_excerpt' => 'Kalimat pertama. Kalimat kedua.', 'image_url' => 'https://cdn.test/foto.jpg', 'status' => NewsTaskStatus::Queued]);
         }
 
         $this->actingAs(User::factory()->create(['role' => Role::Editor]))->get("/admin/ai/sources/{$this->source->id}/items")->assertForbidden();
@@ -67,7 +67,10 @@ class AiNewsTest extends TestCase
                 ->where('source.id', $this->source->id)
                 ->has('fetches', 1)
                 ->has('items.data', 1)
-                ->where('items.data.0.title', 'Berita Jambi Berita'));
+                ->where('items.data.0.title', 'Berita Jambi Berita')
+                ->where('items.data.0.image', 'https://cdn.test/foto.jpg')
+                ->where('items.data.0.preview', 'Kalimat pertama. Kalimat kedua.')
+                ->where('items.data.0.article', null));
     }
 
     public function test_source_can_be_disabled_and_enabled_without_editing_other_fields(): void

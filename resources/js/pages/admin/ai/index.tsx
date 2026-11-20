@@ -31,6 +31,9 @@ export type Item = {
     error: string | null;
     created_at: string;
     article: { id: number; slug: string; status: string } | null;
+    // Only the per-source news list sends these.
+    image?: string | null;
+    preview?: string | null;
 };
 
 type Fetch = {
@@ -488,22 +491,52 @@ function FetchCard({ fetch: f, index }: { fetch: Fetch; index: number }) {
 }
 
 export function ItemRow({ item }: { item: Item }) {
+    const standalone = item.preview !== undefined;
+
     return (
-        <li className="flex flex-wrap items-start gap-3 px-4 py-3 sm:px-5 sm:pl-12">
+        <li
+            className={cn(
+                'flex flex-wrap items-start gap-3 px-4 py-3 sm:px-5',
+                !standalone && 'sm:pl-12',
+            )}
+        >
+            {item.image && (
+                <img
+                    src={item.image}
+                    alt=""
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                    className="h-20 w-28 shrink-0 rounded-xl bg-slate-100 object-cover ring-1 ring-slate-200"
+                />
+            )}
             <div className="min-w-0 flex-1">
                 <p className="line-clamp-2 text-sm font-medium text-navy-900">
                     {item.title}
                 </p>
+                {item.preview && (
+                    <p className="mt-1 line-clamp-3 text-sm text-slate-600">
+                        {item.preview}
+                    </p>
+                )}
                 <a
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-0.5 block truncate text-xs text-slate-400 hover:text-accent"
+                    className="mt-1 block truncate text-xs text-slate-400 hover:text-accent"
                 >
                     {item.url}
                 </a>
                 <p className="mt-0.5 text-xs text-slate-400">
                     Diambil {timeAgo(item.created_at)}
+                    {standalone &&
+                        ` · ${
+                            item.article?.status === 'published'
+                                ? 'tayang di portal'
+                                : item.article
+                                  ? 'belum tayang, menunggu review editor'
+                                  : 'belum menjadi artikel'
+                        }`}
                 </p>
                 {item.error && (
                     <p

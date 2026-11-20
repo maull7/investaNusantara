@@ -94,8 +94,15 @@ class AiNewsController extends Controller
             'source' => $source->only('id', 'name', 'url'),
             'fetches' => $source->fetches()->latest('id')->limit(10)->get(['id', 'status', 'trigger', 'via', 'found', 'error', 'created_at']),
             'items' => NewsItem::where('news_source_id', $source->id)
-                ->with('article:id,slug,status')
-                ->latest('id')->paginate(20),
+                ->with('article:id,slug,status,body,cover_path')
+                ->latest('id')->paginate(20)
+                ->through(fn (NewsItem $item) => [
+                    ...$item->only(['id', 'title', 'url', 'status', 'attempts', 'error', 'created_at']),
+                    'image' => $item->article?->cover_url ?? $item->image_url,
+                    // Our own opening if it became an article, else the feed's text.
+                    'preview' => NewsPipeline::lead((string) ($item->article?->body ?? $item->feed_excerpt)) ?: null,
+                    'article' => $item->article?->only(['id', 'slug', 'status']),
+                ]),
         ]);
     }
 
