@@ -210,7 +210,7 @@ export default function PublicLayout({
                             <Logo className={cn(isHome && 'hidden md:flex')} />
 
                             {/* Laptop links */}
-                            <nav className="ml-6 hidden h-full items-stretch gap-1 md:flex">
+                            <nav className="ml-2 hidden h-full shrink-0 items-stretch gap-1 md:flex lg:ml-6">
                                 {[
                                     ...menu.slice(0, 3),
                                     // Desktop only: the phone bottom bar has no room for a fifth tab.
@@ -227,6 +227,8 @@ export default function PublicLayout({
                                             key={i.href}
                                             href={i.href}
                                             viewTransition
+                                            aria-label={i.label}
+                                            title={i.label}
                                             className={cn(
                                                 'relative flex items-center gap-2 px-3 text-sm transition',
                                                 active
@@ -239,7 +241,10 @@ export default function PublicLayout({
                                                 width={18}
                                                 height={18}
                                             />
-                                            {i.label}
+                                            {/* Icon only below lg, so the bar never overflows on tablets. */}
+                                            <span className="hidden lg:inline">
+                                                {i.label}
+                                            </span>
                                             {active && (
                                                 <motion.span
                                                     layoutId="nav-line"
@@ -252,8 +257,17 @@ export default function PublicLayout({
                                 })}
                             </nav>
 
-                            <div className="ml-auto flex items-center gap-2.5">
-                                <SearchField className="hidden w-64 md:flex lg:w-72" />
+                            {/* Takes the space the links leave; the search field shrinks first. */}
+                            <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-2.5">
+                                <SearchField className="hidden max-w-72 min-w-0 flex-1 xl:flex" />
+                                <Link
+                                    href={search.url()}
+                                    viewTransition
+                                    aria-label="Cari berita"
+                                    className="hidden size-10 shrink-0 place-items-center rounded-full bg-accent/5 text-navy-900 ring-1 ring-accent/10 md:grid xl:hidden"
+                                >
+                                    <Icon name="search" width={18} height={18} />
+                                </Link>
                                 <ThemeToggle />
                                 {!isHome && (
                                     <Link
@@ -293,7 +307,7 @@ export default function PublicLayout({
                                 ) : (
                                     <Link
                                         href={redaksi}
-                                        className="hidden items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm shadow-accent/30 transition hover:bg-accent-dark md:flex"
+                                        className="hidden shrink-0 items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium whitespace-nowrap text-white shadow-sm shadow-accent/30 transition hover:bg-accent-dark md:flex"
                                     >
                                         <Icon
                                             name="user"
@@ -599,7 +613,7 @@ function ThemeToggle() {
             onClick={toggle}
             aria-label={dark ? 'Mode terang' : 'Mode gelap'}
             aria-pressed={dark}
-            className="grid size-10 place-items-center rounded-full bg-accent/5 text-navy-900 ring-1 ring-accent/10 transition active:scale-90"
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-accent/5 text-navy-900 ring-1 ring-accent/10 transition active:scale-90"
         >
             <Icon name={dark ? 'sun' : 'moon'} width={18} height={18} />
         </button>
