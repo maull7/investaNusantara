@@ -136,7 +136,7 @@ export default function UsersIndex({
         >
             <Head title="Pengguna" />
 
-            {/* List Container Card */}
+            {/* List Table Container Card */}
             <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80">
                 {/* Header Filter Bar */}
                 <div className="border-b border-slate-100 p-4 sm:p-5">
@@ -181,7 +181,7 @@ export default function UsersIndex({
                     </div>
 
                     {/* Filter Pills with Color Theme */}
-                    <div className="no-scrollbar mt-3.5 flex items-center gap-2 overflow-x-auto pt-1 text-xs">
+                    <div className="no-scrollbar mt-4 flex items-center gap-2 overflow-x-auto pt-1 pb-3 text-xs">
                         {roleTabs
                             .filter(
                                 (tab) => tab.id === 'all' || rolesSummary[tab.id],
@@ -235,11 +235,11 @@ export default function UsersIndex({
                         <table className="w-full text-left text-sm">
                             <thead>
                                 <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
-                                    <th className="px-6 py-3.5">Nama & Kontak</th>
-                                    <th className="px-6 py-3.5">Peran</th>
-                                    <th className="px-6 py-3.5">Wilayah Tugas</th>
-                                    <th className="px-6 py-3.5">Izin / Akses Khusus</th>
-                                    <th className="px-6 py-3.5 text-right">Tindakan</th>
+                                    <th className="px-6 py-4">Nama & Kontak</th>
+                                    <th className="px-6 py-4">Peran</th>
+                                    <th className="px-6 py-4">Wilayah Tugas</th>
+                                    <th className="px-6 py-4">Izin / Akses Khusus</th>
+                                    <th className="px-6 py-4 text-right">Tindakan</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">

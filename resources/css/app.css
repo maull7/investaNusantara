@@ -100,6 +100,20 @@
     @apply w-full rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-navy-900 transition placeholder:text-slate-400 focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none;
 }
 
+/* Custom styling for date inputs to match accent theme */
+input[type='date']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 2px;
+    filter: invert(15%) sepia(85%) saturate(5500%) hue-rotate(345deg) brightness(85%) contrast(98%);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator:hover {
+    transform: scale(1.1);
+    opacity: 0.85;
+}
+
 @utility btn {
     @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium whitespace-nowrap transition active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
 }

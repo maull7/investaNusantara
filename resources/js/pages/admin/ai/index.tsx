@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     AiTabs,
     HermesBadge,
@@ -21,6 +21,228 @@ import { retry as retryFetch } from '@/routes/admin/ai/fetches';
 import { retry as retryItem } from '@/routes/admin/ai/items';
 import { fetch as fetchSource } from '@/routes/admin/ai/sources';
 import { edit as editArticle } from '@/routes/admin/articles';
+
+function CustomDateRangePicker({
+    from,
+    to,
+    onChange,
+}: {
+    from: string;
+    to: string;
+    onChange: (from: string, to: string) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const [selFrom, setSelFrom] = useState(from);
+    const [selTo, setSelTo] = useState(to);
+    const [viewDate, setViewDate] = useState(() => new Date(from || Date.now()));
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setSelFrom(from);
+        setSelTo(to);
+    }, [from, to]);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (ref.current && !ref.current.contains(event.target as Node)) {
+                setOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+
+    const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Monday as first day
+
+    const formatDateStr = (d: number) => {
+        const mm = String(month + 1).padStart(2, '0');
+        const dd = String(d).padStart(2, '0');
+        return `${year}-${mm}-${dd}`;
+    };
+
+    const handleSelectDay = (dayStr: string) => {
+        if (!selFrom || (selFrom && selTo)) {
+            setSelFrom(dayStr);
+            setSelTo('');
+        } else {
+            if (dayStr < selFrom) {
+                setSelTo(selFrom);
+                setSelFrom(dayStr);
+            } else {
+                setSelTo(dayStr);
+            }
+        }
+    };
+
+    const handleApply = () => {
+        if (selFrom) {
+            const finalTo = selTo || selFrom;
+            onChange(selFrom, finalTo);
+            setOpen(false);
+        }
+    };
+
+    const handleQuickToday = () => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        setSelFrom(todayStr);
+        setSelTo(todayStr);
+        onChange(todayStr, todayStr);
+        setOpen(false);
+    };
+
+    const handleQuick7Days = () => {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(end.getDate() - 6);
+        const startStr = start.toISOString().split('T')[0];
+        const endStr = end.toISOString().split('T')[0];
+        setSelFrom(startStr);
+        setSelTo(endStr);
+        onChange(startStr, endStr);
+        setOpen(false);
+    };
+
+    return (
+        <div className="relative" ref={ref}>
+            {/* Clickable Trigger Button */}
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="inline-flex h-10 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-medium text-navy-900 shadow-2xs transition hover:border-accent/40 hover:bg-slate-50 focus:border-accent focus:ring-2 focus:ring-accent/20"
+            >
+                <Icon name="calendar" width={16} height={16} className="text-accent" />
+                <span>
+                    {from === to || !to ? (
+                        <strong className="font-semibold text-navy-900">{from}</strong>
+                    ) : (
+                        <>
+                            <strong className="font-semibold text-navy-900">{from}</strong>
+                            <span className="mx-1.5 text-slate-400">s/d</span>
+                            <strong className="font-semibold text-navy-900">{to}</strong>
+                        </>
+                    )}
+                </span>
+                <Icon name="chevron-down" width={14} height={14} className="text-slate-400" />
+            </button>
+
+            {/* Dropdown Calendar Popover */}
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 z-50 mt-2 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl ring-1 ring-black/5"
+                    >
+                        {/* Calendar Header */}
+                        <div className="mb-3 flex items-center justify-between">
+                            <span className="text-sm font-semibold text-navy-900">
+                                {monthNames[month]} {year}
+                            </span>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setViewDate(new Date(year, month - 1, 1))}
+                                    className="grid size-7 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-navy-900"
+                                >
+                                    <Icon name="chevron-left" width={14} height={14} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewDate(new Date(year, month + 1, 1))}
+                                    className="grid size-7 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-navy-900"
+                                >
+                                    <Icon name="chevron-right" width={14} height={14} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Days of Week */}
+                        <div className="mb-1.5 grid grid-cols-7 text-center text-[11px] font-semibold text-slate-400">
+                            <span>Sen</span>
+                            <span>Sel</span>
+                            <span>Rab</span>
+                            <span>Kam</span>
+                            <span>Jum</span>
+                            <span>Sab</span>
+                            <span>Min</span>
+                        </div>
+
+                        {/* Calendar Day Grid */}
+                        <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                            {Array.from({ length: firstDayIndex }).map((_, idx) => (
+                                <div key={`empty-${idx}`} />
+                            ))}
+                            {Array.from({ length: daysInMonth }).map((_, idx) => {
+                                const dayNum = idx + 1;
+                                const dateStr = formatDateStr(dayNum);
+                                const isStart = dateStr === selFrom;
+                                const isEnd = dateStr === selTo;
+                                const isInRange = selFrom && selTo && dateStr > selFrom && dateStr < selTo;
+                                const isSelected = isStart || isEnd;
+
+                                return (
+                                    <button
+                                        key={dateStr}
+                                        type="button"
+                                        onClick={() => handleSelectDay(dateStr)}
+                                        className={cn(
+                                            'grid size-8 place-items-center rounded-lg transition-all',
+                                            isSelected
+                                                ? 'bg-accent font-semibold text-white shadow-xs'
+                                                : isInRange
+                                                  ? 'bg-accent/10 font-medium text-accent'
+                                                  : 'text-navy-900 hover:bg-slate-100',
+                                        )}
+                                    >
+                                        {dayNum}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Quick Action Presets & Apply */}
+                        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={handleQuickToday}
+                                    className="rounded-md bg-slate-100 px-2 py-1 font-medium text-slate-600 hover:bg-slate-200"
+                                >
+                                    Hari ini
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleQuick7Days}
+                                    className="rounded-md bg-slate-100 px-2 py-1 font-medium text-slate-600 hover:bg-slate-200"
+                                >
+                                    7 Hari
+                                </button>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleApply}
+                                className="btn-primary h-7 rounded-lg px-3 text-xs font-semibold"
+                            >
+                                Pilih
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
 
 export type Item = {
     id: number;
@@ -180,81 +402,58 @@ export default function AiQueue({
 
             <HermesPanel hermes={hermes} sources={sources} />
 
-            <form
-                className="mt-5 card p-4 sm:p-5"
-                onSubmit={(event) => {
-                    event.preventDefault();
-                    dateForm.transform((data) => ({ ...data, province }));
-                    dateForm.get(aiIndex.url(), {
-                        preserveScroll: true,
-                        preserveState: true,
-                    });
-                }}
-            >
-                <h2 className="font-semibold text-navy-900">
-                    Periode penggunaan token
-                </h2>
-                <p className="mt-1 text-xs text-slate-500">
-                    Total token seluruh wilayah selama tanggal yang dipilih,
-                    termasuk tanggal akhir. Statistik antrean tetap menampilkan
-                    hari ini.
-                </p>
-                <div className="mt-4 flex flex-wrap items-end gap-3">
-                    <label className="text-sm font-medium text-navy-900">
-                        Dari tanggal
-                        <input
-                            aria-label="Token dari tanggal"
-                            type="date"
-                            required
-                            value={dateForm.data.token_from}
-                            onChange={(e) =>
-                                dateForm.setData('token_from', e.target.value)
-                            }
-                            className="mt-1 input"
-                        />
-                        {dateForm.errors.token_from && (
-                            <span className="block text-xs text-red-600">
-                                {dateForm.errors.token_from}
+            {/* Inline Full Single Box Period Token */}
+            <div className="mt-5 overflow-visible rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80 sm:p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    {/* Left: Info & Description */}
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                            <span className="grid size-7 place-items-center rounded-lg bg-accent/10 text-accent">
+                                <Icon name="flame" width={16} height={16} />
                             </span>
-                        )}
-                    </label>
-                    <label className="text-sm font-medium text-navy-900">
-                        Sampai tanggal
-                        <input
-                            aria-label="Token sampai tanggal"
-                            type="date"
-                            required
-                            min={dateForm.data.token_from}
-                            value={dateForm.data.token_to}
-                            onChange={(e) =>
-                                dateForm.setData('token_to', e.target.value)
-                            }
-                            className="mt-1 input"
+                            <h2 className="font-semibold text-navy-900">
+                                Periode penggunaan token
+                            </h2>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                            Total token seluruh wilayah selama rentang tanggal yang dipilih.
+                        </p>
+                    </div>
+
+                    {/* Right: Date Range Picker + Quick Actions in One Line */}
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        <CustomDateRangePicker
+                            from={dateForm.data.token_from}
+                            to={dateForm.data.token_to}
+                            onChange={(newFrom, newTo) => {
+                                dateForm.setData('token_from', newFrom);
+                                dateForm.setData('token_to', newTo);
+                                router.get(
+                                    aiIndex.url(),
+                                    {
+                                        province,
+                                        token_from: newFrom,
+                                        token_to: newTo,
+                                    },
+                                    {
+                                        preserveScroll: true,
+                                        preserveState: true,
+                                    },
+                                );
+                            }}
                         />
-                        {dateForm.errors.token_to && (
-                            <span className="block text-xs text-red-600">
-                                {dateForm.errors.token_to}
-                            </span>
-                        )}
-                    </label>
-                    <button
-                        disabled={dateForm.processing}
-                        className="btn-primary"
-                    >
-                        Terapkan
-                    </button>
-                    <Link
-                        href={aiIndex.url({ query: { province } })}
-                        preserveScroll
-                        className="btn-ghost"
-                    >
-                        Hari ini
-                    </Link>
+
+                        <Link
+                            href={aiIndex.url({ query: { province } })}
+                            preserveScroll
+                            className="btn-ghost h-10 rounded-xl px-3.5 text-xs font-semibold"
+                            title="Reset periode ke hari ini"
+                        >
+                            Hari ini
+                        </Link>
+                    </div>
                 </div>
-                <p className="mt-3 text-xs text-slate-500">
-                    Periode aktif: {tokenRange.from} sampai {tokenRange.to}
-                </p>
-            </form>
+            </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 {tiles.map((t, i) => (
