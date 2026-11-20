@@ -92,7 +92,7 @@ class AiNewsController extends Controller
     {
         return Inertia::render('admin/ai/source-items', [
             'source' => $source->only('id', 'name', 'url'),
-            'fetches' => $source->fetches()->latest('id')->limit(10)->get(['id', 'status', 'trigger', 'via', 'found', 'error', 'created_at']),
+            'fetches' => $source->fetches()->latest('id')->limit(10)->get(['id', 'status', 'trigger', 'via', 'found', 'error', 'inspected_links', 'created_at']),
             'items' => NewsItem::where('news_source_id', $source->id)
                 ->with('article:id,slug,status,body,cover_path')
                 ->latest('id')->paginate(20)

@@ -34,6 +34,7 @@ class NewsFetch extends Model
             'status' => NewsTaskStatus::class,
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
+            'inspected_links' => 'array',
         ];
     }
 

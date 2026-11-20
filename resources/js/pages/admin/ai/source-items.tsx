@@ -19,6 +19,7 @@ type Props = {
         via: keyof typeof viaLabel | null;
         found: number;
         error: string | null;
+        inspected_links: { url: string | null; title: string; reason: 'known' | 'invalid' | 'new' }[] | null;
         created_at: string;
     }[];
     items: Paginated<Item>;
@@ -76,6 +77,27 @@ export default function SourceItems({ source, fetches, items }: Props) {
                                 >
                                     {f.error}
                                 </p>
+                            )}
+                            {f.inspected_links && f.inspected_links.length > 0 && (
+                                <details className="w-full text-xs text-slate-600">
+                                    <summary className="cursor-pointer text-navy-700">
+                                        Lihat {f.inspected_links.length} tautan yang diperiksa
+                                    </summary>
+                                    <ul className="mt-2 space-y-2 pl-3">
+                                        {f.inspected_links.map((link, index) => (
+                                            <li key={`${link.url}-${index}`} className="break-all">
+                                                <span className="font-medium">
+                                                    {link.reason === 'known' ? 'Sudah pernah diambil' : link.reason === 'new' ? 'Berita baru' : 'Ditolak: domain lain, tautan tidak valid, atau tanpa judul'}
+                                                </span>{' '}
+                                                · {link.url ? (
+                                                    <a href={link.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-navy-900">
+                                                        {link.title || link.url}
+                                                    </a>
+                                                ) : (link.title || 'Tautan kosong')}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </details>
                             )}
                         </li>
                     ))}

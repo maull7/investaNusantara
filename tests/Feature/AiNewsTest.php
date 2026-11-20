@@ -177,6 +177,8 @@ class AiNewsTest extends TestCase
 
         $this->assertSame(NewsTaskStatus::Completed, $fetch->fresh()->status, (string) $fetch->fresh()->error);
         $this->assertSame(2, $fetch->fresh()->found);
+        $this->assertSame(['new', 'new', 'invalid', 'known'], array_column($fetch->fresh()->inspected_links, 'reason'));
+        $this->assertSame('https://jamberita.com/read/known?utm_source=fb', $fetch->fresh()->inspected_links[3]['url']);
         $this->assertSame(150, AiRun::first()->total_tokens);
         $this->assertNotNull($this->source->fresh()->last_success_at);
         Queue::assertPushed(SummarizeNews::class, 2);

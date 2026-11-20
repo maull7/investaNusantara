@@ -86,6 +86,7 @@ class DiscoverNews extends HermesTask
         $pipeline = app(NewsPipeline::class);
         $created = collect();
         $known = $foreign = 0;
+        $inspected = [];
         foreach (array_slice($articles, 0, $source->max_articles) as $article) {
             $url = NewsPipeline::validUrl(self::absolute((string) ($article['url'] ?? ''), $source->url));
             $title = Str::limit(trim(strip_tags((string) ($article['title'] ?? ''))), 250, '');
@@ -93,6 +94,7 @@ class DiscoverNews extends HermesTask
             // Only links on the source's own domain (or its subdomains).
             if (! $url || $title === '' || ! ($host === $source->host() || str_ends_with($host, '.'.$source->host()))) {
                 $foreign++;
+                $inspected[] = ['url' => $url, 'title' => $title, 'reason' => 'invalid'];
 
                 continue;
             }
@@ -100,6 +102,7 @@ class DiscoverNews extends HermesTask
             $hash = NewsItem::hashUrl($url);
             if (NewsItem::where('url_hash', $hash)->exists() || Article::where('source_url', $url)->exists()) {
                 $known++;
+                $inspected[] = ['url' => $url, 'title' => $title, 'reason' => 'known'];
 
                 continue; // already taken, stay quiet
             }
@@ -115,20 +118,22 @@ class DiscoverNews extends HermesTask
                 'source_published_at' => rescue(fn () => filled($article['published_at'] ?? null) ? now()->parse($article['published_at']) : null, null, false),
                 'status' => $pipeline->similarTitleExists($title) ? NewsTaskStatus::Duplicate : NewsTaskStatus::Queued,
             ]));
+            $inspected[] = ['url' => $url, 'title' => $title, 'reason' => 'new'];
         }
 
         // Say why nothing came in, so an empty run is never silent.
         $empty = $created->isEmpty() ? match (true) {
             $articles === [] => 'Hermes tidak menemukan artikel'.($note !== '' ? ": {$note}" : '.'),
-            default => 'Tidak ada berita baru: '.count($articles)." tautan ditemukan, {$known} sudah pernah diambil (lihat \"Lihat berita\" sumber ini), {$foreign} bukan dari domain {$source->host()} atau tanpa judul.",
+            default => 'Tidak ada berita baru: '.count($articles)." tautan diperiksa, {$known} sudah pernah diambil, {$foreign} bukan dari domain {$source->host()} atau tanpa judul. Lihat rincian tautan di bawah.",
         } : null;
 
-        DB::transaction(function () use ($subject, $source, $created, $empty, $articles, $output) {
+        DB::transaction(function () use ($subject, $source, $created, $empty, $articles, $output, $inspected) {
             $subject->update([
                 'status' => NewsTaskStatus::Completed,
                 'via' => in_array($output['via'] ?? null, ['rss', 'sitemap'], true) ? $output['via'] : 'hermes',
                 'found' => $created->count(),
                 'error' => $empty,
+                'inspected_links' => $inspected,
                 'finished_at' => now(),
             ]);
             // Only a run that brought news moves the time window forward.
