@@ -17,14 +17,14 @@ export default function Search({
     return (
         <PublicLayout tabs={false}>
             <Head title={q ? `Cari: ${q}` : 'Cari'} />
-            <Stagger className="space-y-6">
+            <Stagger className="space-y-4 sm:space-y-6">
                 <Reveal>
                     <Form
                         action={search.url()}
                         method="get"
-                        className="flex items-center gap-3 rounded-full bg-surface px-5 py-3 shadow-sm ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-accent/40"
+                        className="flex items-center gap-2 rounded-full bg-surface py-2 pr-2 pl-4 shadow-sm ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-accent/40 sm:gap-3 sm:py-3 sm:pr-3 sm:pl-5"
                     >
-                        <Icon name="search" className="text-slate-400" />
+                        <Icon name="search" className="shrink-0 text-slate-400" />
                         <input
                             name="q"
                             type="search"
@@ -32,16 +32,16 @@ export default function Search({
                             autoFocus={!q}
                             placeholder="Cari berita, daerah, topik…"
                             aria-label="Cari berita"
-                            className="flex-1 bg-transparent outline-none"
+                            className="min-w-0 flex-1 bg-transparent text-base outline-none"
                         />
-                        <button className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-white">
+                        <button className="shrink-0 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white sm:py-1.5">
                             Cari
                         </button>
                     </Form>
                 </Reveal>
                 {q && (
                     <Reveal>
-                        <h1 className="text-lg font-semibold text-navy-900">
+                        <h1 className="text-base font-semibold [overflow-wrap:anywhere] text-navy-900 sm:text-lg">
                             {articles?.total ?? 0} hasil untuk “{q}”
                         </h1>
                     </Reveal>
@@ -54,7 +54,7 @@ export default function Search({
                 {articles && (
                     <InfiniteList
                         data="articles"
-                        className="grid gap-5 md:grid-cols-2"
+                        className="grid gap-3 sm:gap-5 md:grid-cols-2 [&>*]:min-w-0"
                     >
                         {articles.data.map((a) => (
                             <Reveal key={a.id} className="card p-3">
