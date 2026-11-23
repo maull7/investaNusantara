@@ -49,6 +49,15 @@ return [
         'subject' => env('VAPID_SUBJECT', 'mailto:'.env('REDAKSI_EMAIL', 'redaksi@nusantaranewsonline.net')),
     ],
 
+    // Projects allowed to call /api/v1/integrations/*. Format: "name:secret,name2:secret2" (secret >= 32 chars).
+    'integrations' => [
+        'keys' => collect(explode(',', (string) env('INTEGRATION_API_KEYS', '')))
+            ->map(fn (string $pair) => explode(':', trim($pair), 2))
+            ->filter(fn (array $pair) => count($pair) === 2 && $pair[0] !== '' && strlen($pair[1]) >= 32)
+            ->mapWithKeys(fn (array $pair) => [$pair[0] => $pair[1]])
+            ->all(),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
