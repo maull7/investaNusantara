@@ -25,6 +25,7 @@ import {
     agenda as agendaRoute,
     bookmarks,
     category,
+    dashboard,
     home,
     info,
     login,
@@ -294,10 +295,10 @@ export default function PublicLayout({
                                 )}
                                 {isHome && (
                                     <Link
-                                        // Signed-in readers have no newsroom: their avatar opens "Tersimpan".
+                                        // Signed-in readers have no newsroom: their avatar opens "Dashboard saya".
                                         href={
                                             auth.user && !staff
-                                                ? bookmarks.url()
+                                                ? dashboard.url()
                                                 : redaksi
                                         }
                                         aria-label="Akun"
@@ -552,6 +553,14 @@ function UserMenu({ name }: { name: string }) {
                     <p className="truncate px-3 py-1.5 text-xs text-slate-400">
                         {name}
                     </p>
+                    <Link
+                        href={dashboard.url()}
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-accent/5 hover:text-accent"
+                    >
+                        <Icon name="home" width={16} height={16} />
+                        Dashboard saya
+                    </Link>
                     <Link
                         href={membership.url()}
                         role="menuitem"

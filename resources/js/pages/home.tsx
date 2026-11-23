@@ -74,10 +74,10 @@ export default function Home({
             <Stagger className="space-y-7 md:space-y-9">
                 {/* Laptop greeting: Editorial Hero Card */}
                 <Reveal className="hidden md:block">
-                    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-r from-white via-surface to-accent/[0.04] p-5 shadow-xs transition-all duration-300 hover:border-accent/25 hover:shadow-sm">
-                        {/* Subtle decorative background pattern */}
-                        <div className="pointer-events-none absolute -right-6 -bottom-8 size-36 rounded-full bg-accent/5 blur-2xl" />
-                        <div className="pointer-events-none absolute top-0 left-0 h-full w-1.5 bg-gradient-to-b from-accent to-accent/60" />
+                    <div className="relative overflow-hidden rounded-2xl border border-accent/15 bg-surface p-5 shadow-xs transition-all duration-300 hover:border-accent/30 hover:shadow-sm">
+                        {/* Subtle decorative background glow */}
+                        <div className="pointer-events-none absolute -right-6 -bottom-8 size-36 rounded-full bg-accent/10 blur-2xl" />
+                        <div className="pointer-events-none absolute top-0 left-0 h-full w-1.5 bg-accent" />
 
                         <div className="flex items-center justify-between pl-2">
                             <div>
@@ -95,7 +95,7 @@ export default function Home({
                             </div>
 
                             {/* Date Badge */}
-                            <div className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-4 py-2 text-xs font-medium text-slate-600 shadow-2xs backdrop-blur-sm">
+                            <div className="flex shrink-0 items-center gap-2 rounded-xl border border-accent/15 bg-surface px-4 py-2 text-xs font-medium text-navy-800 shadow-2xs backdrop-blur-sm">
                                 <Icon name="calendar" className="size-4 text-accent" />
                                 <span>{today}</span>
                             </div>
@@ -324,7 +324,7 @@ function Channels({ counts }: { counts: Record<string, number> }) {
                                 <Link
                                     href={regionHref(p)}
                                     viewTransition
-                                    className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xs transition-all duration-300 hover:border-accent/40 hover:shadow-md hover:bg-gradient-to-b hover:from-white hover:to-accent/[0.02]"
+                                    className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-accent/15 bg-surface p-3 shadow-xs transition-all duration-300 hover:border-accent/40 hover:shadow-md hover:bg-accent/[0.03]"
                                 >
                                     <div className="flex items-center gap-2.5">
                                         <div className="relative shrink-0">
