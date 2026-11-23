@@ -158,7 +158,12 @@
     "name": "Perak Koto Gadang",
     "category": "Kerajinan",
     "description": "Kerajinan perak halus dengan teknik filigri dari Agam.",
-    "image": null
+    "image": {
+     "url": "/umkm/13-4.jpg",
+     "credit": "Sentra Koto Gadang Agam / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -176,7 +181,12 @@
     "name": "Tenun Siak",
     "category": "Tenun",
     "description": "Songket Melayu Siak bermotif pucuk rebung dan awan larat.",
-    "image": null
+    "image": {
+     "url": "/umkm/14-1.jpg",
+     "credit": "Ernawati Siak / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Bolu Kemojo",
@@ -204,7 +214,12 @@
     "name": "Sagu Meranti",
     "category": "Agro",
     "description": "Sagu dari Kepulauan Meranti, bahan dasar mi sagu dan kue tradisional.",
-    "image": null
+    "image": {
+     "url": "/umkm/14-4.jpg",
+     "credit": "Investa Sagu Meranti / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -222,13 +237,23 @@
     "name": "Batik Jambi",
     "category": "Batik",
     "description": "Batik dengan motif kapal sanggat dan angso duo khas Jambi.",
-    "image": null
+    "image": {
+     "url": "/umkm/15-1.jpg",
+     "credit": "Batik Jambi / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Kopi Kerinci",
     "category": "Kopi",
     "description": "Kopi dataran tinggi Kerinci dengan rasa fruity yang khas.",
-    "image": null
+    "image": {
+     "url": "/umkm/15-2.jpg",
+     "credit": "Investa Kopi Kerinci / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Teh Kayu Aro",
@@ -290,7 +315,12 @@
     "name": "Kopi Semende",
     "category": "Kopi",
     "description": "Kopi robusta Semende dari dataran tinggi Muara Enim.",
-    "image": null
+    "image": {
+     "url": "/umkm/16-3.jpg",
+     "credit": "Investa Kopi Semende / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Ukiran Palembang",
@@ -347,6 +377,17 @@
      "license": "CC BY-SA 4.0",
      "page": "https://commons.wikimedia.org/wiki/File:Pendap_from_Bengkulu_-_IMG_20220210_181317_298.jpg"
     }
+   },
+   {
+    "name": "Kerajinan Kulit Lantung",
+    "category": "Kerajinan",
+    "description": "Produk tas dan kerajinan tangan dari kulit kayu lantung khas Bengkulu.",
+    "image": {
+     "url": "/umkm/17-4.jpg",
+     "credit": "Kerajinan Lantung Bengkulu / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -364,13 +405,23 @@
     "name": "Kain Tapis",
     "category": "Tenun",
     "description": "Kain sulam benang emas bermotif kapal dan pucuk rebung.",
-    "image": null
+    "image": {
+     "url": "/umkm/18-1.jpg",
+     "credit": "Tapis Lampung / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Kopi Robusta Lampung",
     "category": "Kopi",
     "description": "Salah satu penghasil robusta terbesar di Indonesia.",
-    "image": null
+    "image": {
+     "url": "/umkm/18-2.jpg",
+     "credit": "Investa Kopi Lampung / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Keripik Pisang",
@@ -432,7 +483,12 @@
     "name": "Kerajinan Timah",
     "category": "Kerajinan",
     "description": "Cenderamata dari timah olahan perajin Bangka Belitung.",
-    "image": null
+    "image": {
+     "url": "/umkm/19-3.jpg",
+     "credit": "Erik Pewter Bangka / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Kerupuk Kemplang",
@@ -496,7 +552,12 @@
     "name": "Batik Betawi",
     "category": "Batik",
     "description": "Batik bermotif ondel-ondel, Monas, dan flora Jakarta.",
-    "image": null
+    "image": {
+     "url": "/umkm/31-1.jpg",
+     "credit": "Batik Betawi / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Kerak Telor",
@@ -569,7 +630,12 @@
     "name": "Sepatu Cibaduyut",
     "category": "Kriya",
     "description": "Sentra sepatu kulit buatan tangan dari Bandung.",
-    "image": null
+    "image": {
+     "url": "/umkm/32-3.jpg",
+     "credit": "Sentra Cibaduyut Bandung / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Tahu Sumedang",
@@ -631,7 +697,12 @@
     "name": "Kopi Temanggung",
     "category": "Kopi",
     "description": "Kopi robusta dan arabika dari lereng Sindoro-Sumbing.",
-    "image": null
+    "image": {
+     "url": "/umkm/33-4.jpg",
+     "credit": "Investa Kopi / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -716,19 +787,34 @@
     "name": "Keripik Apel Batu",
     "category": "Kuliner",
     "description": "Camilan dari apel Malang yang renyah dan manis.",
-    "image": null
+    "image": {
+     "url": "/umkm/35-2.jpg",
+     "credit": "Batu Snackey / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Tas Tanggulangin",
     "category": "Kriya",
     "description": "Tas dan produk kulit dari sentra Tanggulangin, Sidoarjo.",
-    "image": null
+    "image": {
+     "url": "/umkm/35-3.jpg",
+     "credit": "Sentra Tanggulangin / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Kerupuk Udang",
     "category": "Kuliner",
     "description": "Kerupuk udang Sidoarjo yang gurih dan renyah.",
-    "image": null
+    "image": {
+     "url": "/umkm/35-4.jpg",
+     "credit": "Finna Sidoarjo / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -747,10 +833,10 @@
     "category": "Batik",
     "description": "Batik bermotif Surosowan dan Pamarayan dari Banten Lama.",
     "image": {
-     "url": "/umkm/36-1.jpg",
-     "credit": "National Archaeologist of Indonesia",
-     "license": "CC BY-SA 3.0",
-     "page": "https://commons.wikimedia.org/wiki/File:75_Ragam_Hias_Khas_Banten,_Rekonstruksi_Arkeolog_Nasional.jpg"
+     "url": "/umkm/36-1-v2.jpg",
+     "credit": "Batik Banten / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
     }
    },
    {
@@ -779,7 +865,12 @@
     "name": "Golok Ciomas",
     "category": "Kerajinan",
     "description": "Golok tempa tradisional dari Ciomas yang tersohor.",
-    "image": null
+    "image": {
+     "url": "/umkm/36-4.jpg",
+     "credit": "Golok Ciomas Banten / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -808,19 +899,34 @@
     "name": "Ukiran Mas",
     "category": "Kerajinan",
     "description": "Patung dan ukiran kayu dari desa Mas, Ubud.",
-    "image": null
+    "image": {
+     "url": "/umkm/51-2.jpg",
+     "credit": "Desa Mas Ubud / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Perak Celuk",
     "category": "Kerajinan",
     "description": "Perhiasan perak berornamen dari desa Celuk.",
-    "image": null
+    "image": {
+     "url": "/umkm/51-3.jpg",
+     "credit": "Desa Celuk Gianyar / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Kopi Kintamani",
     "category": "Kopi",
     "description": "Kopi arabika Kintamani yang ditanam bersama jeruk di kebun subak abian.",
-    "image": null
+    "image": {
+     "url": "/umkm/51-4.jpg",
+     "credit": "Investa Kopi Bali / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -849,7 +955,12 @@
     "name": "Mutiara Lombok",
     "category": "Perhiasan",
     "description": "Mutiara laut Lombok yang dibudidayakan di Teluk Sekotong.",
-    "image": null
+    "image": {
+     "url": "/umkm/52-2.jpg",
+     "credit": "Lombok Pearl Sekotong / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Gerabah Banyumulek",
@@ -866,7 +977,12 @@
     "name": "Madu Sumbawa",
     "category": "Agro",
     "description": "Madu hutan liar yang dipanen secara tradisional.",
-    "image": null
+    "image": {
+     "url": "/umkm/52-4.jpg",
+     "credit": "Investa Madu Sumbawa / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -917,7 +1033,12 @@
     "name": "Madu Hutan Timor",
     "category": "Agro",
     "description": "Madu dari hutan Timor yang dipanen oleh kelompok tani.",
-    "image": null
+    "image": {
+     "url": "/umkm/53-4.jpg",
+     "credit": "Investa Madu Timor Amfoang / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -957,7 +1078,23 @@
     "name": "Lidah Buaya Pontianak",
     "category": "Agro",
     "description": "Olahan lidah buaya yang menjadi oleh-oleh khas Pontianak.",
-    "image": null
+    "image": {
+     "url": "/umkm/61-3.jpg",
+     "credit": "Investa Lidah Buaya Pontianak / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
+   },
+   {
+    "name": "Tenun Corak Insang Pontianak",
+    "category": "Tenun",
+    "description": "Kain tenun tradisional khas Pontianak bermotif corak insang ikan.",
+    "image": {
+     "url": "/umkm/61-4.jpg",
+     "credit": "Tenun Corak Insang Pontianak / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -975,7 +1112,12 @@
     "name": "Batik Benang Bintik",
     "category": "Batik",
     "description": "Batik Kalimantan Tengah bermotif Dayak dengan teknik benang bintik.",
-    "image": null
+    "image": {
+     "url": "/umkm/62-1.jpg",
+     "credit": "Batik Benang Bintik Warisan Dayak / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Anyaman Rotan",
@@ -997,6 +1139,17 @@
      "credit": "Martini Rahman",
      "license": "CC BY-SA 4.0",
      "page": "https://commons.wikimedia.org/wiki/File:Manik_Manik_Dayak.jpg"
+    }
+   },
+   {
+    "name": "Lawung Dayak",
+    "category": "Kerajinan",
+    "description": "Penutup kepala tradisional khas pria Dayak Kalimantan Tengah.",
+    "image": {
+     "url": "/umkm/62-4.jpg",
+     "credit": "Lawung Tradisional Dayak Kalteng / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
     }
    }
   ]
@@ -1099,6 +1252,17 @@
      "license": "CC BY-SA 4.0",
      "page": "https://commons.wikimedia.org/wiki/File:Amplang_Kuku_Macan_Khas_Samarinda.jpg"
     }
+   },
+   {
+    "name": "Kerajinan Anyaman Eceng Gondok",
+    "category": "Kerajinan",
+    "description": "Kerajinan anyaman tas dan dekorasi dari eceng gondok Sungai Mahakam.",
+    "image": {
+     "url": "/umkm/64-4.jpg",
+     "credit": "Kerajinan Eceng Gondok Kaltim / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -1116,7 +1280,12 @@
     "name": "Rumput Laut Nunukan",
     "category": "Laut",
     "description": "Budidaya rumput laut Nunukan untuk ekspor.",
-    "image": null
+    "image": {
+     "url": "/umkm/65-1.jpg",
+     "credit": "Budidaya Rumput Laut Nunukan / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Kepiting Soka",
@@ -1138,6 +1307,17 @@
      "credit": "Ezagren (bicara / talk)",
      "license": "CC BY-SA 4.0",
      "page": "https://commons.wikimedia.org/wiki/File:Bening_Aban_150503.jpg"
+    }
+   },
+   {
+    "name": "Amplang Bulungan",
+    "category": "Kuliner",
+    "description": "Camilan kerupuk ikan khas Bulungan, Kalimantan Utara.",
+    "image": {
+     "url": "/umkm/65-4.jpg",
+     "credit": "Investa Amplang Bulungan / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
     }
    }
   ]
@@ -1178,7 +1358,23 @@
     "name": "Kain Bentenan",
     "category": "Tenun",
     "description": "Tenun tradisional Minahasa yang kembali dihidupkan.",
-    "image": null
+    "image": {
+     "url": "/umkm/71-3.jpg",
+     "credit": "Tenun Kain Bentenan Minahasa / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
+   },
+   {
+    "name": "Vanilla Sulawesi Utara",
+    "category": "Agro",
+    "description": "Ekstrak dan polong vanila berkualitas tinggi khas Sulawesi Utara.",
+    "image": {
+     "url": "/umkm/71-4.jpg",
+     "credit": "Investa Vanilla Sulawesi Utara / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -1196,13 +1392,23 @@
     "name": "Bawang Goreng Palu",
     "category": "Kuliner",
     "description": "Bawang merah goreng renyah, oleh-oleh khas Palu.",
-    "image": null
+    "image": {
+     "url": "/umkm/72-1.jpg",
+     "credit": "Bawang Goreng Khas Palu / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Sarung Donggala",
     "category": "Tenun",
     "description": "Sarung tenun dengan motif buya bomba dan subi kumbaja.",
-    "image": null
+    "image": {
+     "url": "/umkm/72-2.jpg",
+     "credit": "Sarung Donggala Sulteng / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Abon Ikan",
@@ -1213,6 +1419,17 @@
      "credit": "Syakirah2020",
      "license": "CC BY 4.0",
      "page": "https://commons.wikimedia.org/wiki/File:ABON_IKAN_BANDENG.jpg"
+    }
+   },
+   {
+    "name": "Sambal Roa Palu",
+    "category": "Kuliner",
+    "description": "Sambal ikan roa asap pedas dan gurih khas Sulawesi Tengah.",
+    "image": {
+     "url": "/umkm/72-4.jpg",
+     "credit": "Sambal Roa Sulawesi Tengah / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
     }
    }
   ]
@@ -1302,10 +1519,10 @@
     "category": "Kerajinan",
     "description": "Sulaman benang pada kain yang dipotong dan ditarik, ikon Gorontalo.",
     "image": {
-     "url": "/umkm/75-1.jpg",
-     "credit": "Rosydi A Azhar",
-     "license": "CC BY-SA 4.0",
-     "page": "https://commons.wikimedia.org/wiki/File:Sulaman_Karawo.jpg"
+     "url": "/umkm/75-1-v2.jpg",
+     "credit": "Rumah Karawo by Agus Lahinta / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
     }
    },
    {
@@ -1323,7 +1540,23 @@
     "name": "Kopi Pinogu",
     "category": "Kopi",
     "description": "Kopi dari dataran tinggi Pinogu di Bone Bolango.",
-    "image": null
+    "image": {
+     "url": "/umkm/75-3.jpg",
+     "credit": "Kopi Pinogu Bonebol / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
+   },
+   {
+    "name": "Pia Saronde",
+    "category": "Kuliner",
+    "description": "Kue pia khas Gorontalo dengan aneka varian rasa yang lezat.",
+    "image": {
+     "url": "/umkm/75-4.jpg",
+     "credit": "Pia Saronde Gorontalo / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -1341,19 +1574,45 @@
     "name": "Sutra Mandar",
     "category": "Tenun",
     "description": "Tenun sutra Mandar bermotif sure' dengan warna lembut.",
-    "image": null
+    "image": {
+     "url": "/umkm/76-1.jpg",
+     "credit": "Sutra Mandar Asli Sulbar / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Kopi Mamasa",
     "category": "Kopi",
     "description": "Kopi arabika Mamasa yang tumbuh di pegunungan.",
-    "image": null
+    "image": {
+     "url": "/umkm/76-2.jpg",
+     "credit": "Investa Kopi Mamasa Sulbar / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Kakao Mamuju",
     "category": "Agro",
     "description": "Biji kakao dari kebun rakyat Sulawesi Barat.",
-    "image": null
+    "image": {
+     "url": "/umkm/76-3.jpg",
+     "credit": "Kebun Kakao Mamuju / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
+   },
+   {
+    "name": "Tenun Sekomandi",
+    "category": "Tenun",
+    "description": "Kain tenun ikat tradisional tertua khas Sekomandi, Mamasa, Sulawesi Barat.",
+    "image": {
+     "url": "/umkm/76-4.jpg",
+     "credit": "Tenun Sekomandi Mamasa Sulbar / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -1382,7 +1641,12 @@
     "name": "Minyak Kayu Putih Buru",
     "category": "Agro",
     "description": "Minyak kayu putih dari Pulau Buru.",
-    "image": null
+    "image": {
+     "url": "/umkm/81-2.jpg",
+     "credit": "Investa Kayu Putih Pulau Buru / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Tenun Tanimbar",
@@ -1422,7 +1686,12 @@
     "name": "Cengkih Ternate",
     "category": "Rempah",
     "description": "Cengkih dari kebun rakyat Ternate dan Tidore.",
-    "image": null
+    "image": {
+     "url": "/umkm/82-1.jpg",
+     "credit": "Antara Foto / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Pala Tidore",
@@ -1444,6 +1713,17 @@
      "credit": "Malesung",
      "license": "CC BY-SA 4.0",
      "page": "https://commons.wikimedia.org/wiki/File:Bagea_Kenari_Manado.jpg"
+    }
+   },
+   {
+    "name": "Kacang Kenari",
+    "category": "Agro",
+    "description": "Kacang kenari khas Maluku Utara yang gurih dan bernutrisi tinggi.",
+    "image": {
+     "url": "/umkm/82-4.jpg",
+     "credit": "Kacang Kenari Maluku Utara / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
     }
    }
   ]
@@ -1473,7 +1753,12 @@
     "name": "Kopi Wamena",
     "category": "Kopi",
     "description": "Kopi arabika Wamena dari Lembah Baliem.",
-    "image": null
+    "image": {
+     "url": "/umkm/91-2.jpg",
+     "credit": "Hamz Coffe / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Buah Merah",
@@ -1524,7 +1809,12 @@
     "name": "Noken Arfak",
     "category": "Kerajinan",
     "description": "Noken rajut dari serat anggrek khas suku Arfak.",
-    "image": null
+    "image": {
+     "url": "/umkm/92-2.jpg",
+     "credit": "Noken Rajut Tradisional Papua / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Sagu Papua",
@@ -1535,6 +1825,17 @@
      "credit": "Radio Republik Indonesia",
      "license": "Public domain",
      "page": "https://commons.wikimedia.org/wiki/File:Sagu_Sorong.jpg"
+    }
+   },
+   {
+    "name": "Rok Rumbai Papua Barat",
+    "category": "Kerajinan",
+    "description": "Pakaian adat tradisional Papua Barat yang terbuat dari susunan daun sagu atau rumput rawa kering.",
+    "image": {
+     "url": "/umkm/92-4.jpg",
+     "credit": "Pakaian Adat Rok Rumbai Papua / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
     }
    }
   ]
@@ -1564,7 +1865,12 @@
     "name": "Beras Merauke",
     "category": "Agro",
     "description": "Beras dari lumbung pangan Merauke.",
-    "image": null
+    "image": {
+     "url": "/umkm/93-2.jpg",
+     "credit": "Beras Super Premium Nona Merauke / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Gaharu",
@@ -1575,6 +1881,17 @@
      "credit": "Hafizmuar at English Wikipedia",
      "license": "CC BY-SA 3.0",
      "page": "https://commons.wikimedia.org/wiki/File:Agarwood_top_grade.jpg"
+    }
+   },
+   {
+    "name": "Kepiting Bakau Merauke",
+    "category": "Kuliner",
+    "description": "Olahan kepiting bakau segar berdaging tebal khas pesisir Papua Selatan.",
+    "image": {
+     "url": "/umkm/93-4.jpg",
+     "credit": "Kepiting Bakau Merauke Papua Selatan / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
     }
    }
   ]
@@ -1604,13 +1921,34 @@
     "name": "Kopi Moanemani",
     "category": "Kopi",
     "description": "Kopi arabika Dogiyai yang dikelola petani setempat.",
-    "image": null
+    "image": {
+     "url": "/umkm/94-2.jpg",
+     "credit": "Kopi Moanemani Dogiyai Papua Tengah / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Noken",
     "category": "Kerajinan",
     "description": "Tas rajut tradisional masyarakat Papua.",
-    "image": null
+    "image": {
+     "url": "/umkm/94-3.jpg",
+     "credit": "Noken Rajut Tradisional Papua / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
+   },
+   {
+    "name": "Minyak Buah Merah Nabire",
+    "category": "Herbal",
+    "description": "Minyak ekstrak buah merah alami khas Nabire, Papua Tengah untuk kesehatan.",
+    "image": {
+     "url": "/umkm/94-4.jpg",
+     "credit": "Minyak Buah Merah Nabire / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  },
@@ -1628,7 +1966,12 @@
     "name": "Kopi Wamena",
     "category": "Kopi",
     "description": "Kopi arabika organik dari Lembah Baliem.",
-    "image": null
+    "image": {
+     "url": "/umkm/95-1.jpg",
+     "credit": "Hamz Coffe / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Ubi Jalar Wamena",
@@ -1645,7 +1988,23 @@
     "name": "Noken Dani",
     "category": "Kerajinan",
     "description": "Noken rajut khas suku Dani.",
-    "image": null
+    "image": {
+     "url": "/umkm/95-3.jpg",
+     "credit": "Noken Rajut Suku Dani Wamena / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
+   },
+   {
+    "name": "Batik Papua",
+    "category": "Batik",
+    "description": "Batik bermotif cenderawasih, honai, dan ukiran Asmat khas Papua.",
+    "image": {
+     "url": "/umkm/91-4.jpg",
+     "credit": "Post of Indonesia",
+     "license": "Public domain",
+     "page": "https://commons.wikimedia.org/wiki/File:Stamp_of_Indonesia_-_2011_-_Colnect_691618_-_Batik_Papua_Papua.jpeg"
+    }
    }
   ]
  },
@@ -1663,7 +2022,12 @@
     "name": "Sagu Sorong",
     "category": "Kuliner",
     "description": "Olahan sagu masyarakat pesisir Sorong.",
-    "image": null
+    "image": {
+     "url": "/umkm/96-1.jpg",
+     "credit": "Sapadua Pati Sagu Sorong / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    },
    {
     "name": "Noken Sorong",
@@ -1680,7 +2044,23 @@
     "name": "Cenderamata Raja Ampat",
     "category": "Kerajinan",
     "description": "Kerajinan kerang dan kayu dari Raja Ampat.",
-    "image": null
+    "image": {
+     "url": "/umkm/96-3.jpg",
+     "credit": "Cenderamata Raja Ampat / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
+   },
+   {
+    "name": "Kerupuk Sagu Papua",
+    "category": "Kuliner",
+    "description": "Kerupuk olahan sagu renyah dan gurih khas Papua.",
+    "image": {
+     "url": "/umkm/96-4.jpg",
+     "credit": "Sinagi Papua / Dok. Istimewa",
+     "license": "Dokumentasi Produk",
+     "page": null
+    }
    }
   ]
  }
