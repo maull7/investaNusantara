@@ -3,7 +3,7 @@
 Satu VPS, berdampingan dengan Hermes, MySQL dan Nginx yang sudah ada di server.
 
 ```
-Pengunjung ──► Nginx host (IP:port) ──► 127.0.0.1:8080  app (FrankenPHP)
+Pengunjung ──► Nginx host (domain) ──► ./socket/app.sock  app (FrankenPHP)
                                             │
           horizon (antrean)  scheduler ─────┤ network host
                                             ├─► /var/run/mysqld  MySQL host (socket)
@@ -28,6 +28,7 @@ hanya mendengar di `127.0.0.1`. MySQL dihubungi lewat socket
 ```bash
 git clone <repo> /var/www/investanusantara && cd /var/www/investanusantara
 cp .env.production.example .env
+install -d -m 0777 socket   # folder unix socket web, dibaca Nginx host
 ```
 
 Isi `.env`: `APP_URL`, `DB_*`, `HERMES_TOKEN`. Lalu buat `APP_KEY`:
@@ -57,35 +58,22 @@ Seeder membuat satu akun Super Admin `admin@nusantaranews.test` dan **mencetak p
 acaknya sekali** di terminal. Catat, login, lalu ganti email/password-nya. Di production
 seeder tidak membuat akun demo dan tidak membuat berita dummy.
 
-## 2. Nginx host
+## 2. Nginx host (sites-enabled)
 
-Tambahkan server block (port publik bebas, contoh 8081):
-
-```nginx
-server {
-    listen 8081;
-    server_name _;
-    client_max_body_size 10m;
-
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Port $server_port;
-    }
-}
-```
+App tidak membuka port TCP. Nginx host mem-proxy domain ke unix socket
+`socket/app.sock`. Template siap pakai: `docker/nginx.conf`.
 
 ```bash
+sudo cp docker/nginx.conf /etc/nginx/sites-available/investanusantara
+sudo sed -i 's/DOMAIN/domain-anda.com/g; s#PROJECT#/var/www/investanusantara#g' /etc/nginx/sites-available/investanusantara
+sudo ln -sf /etc/nginx/sites-available/investanusantara /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d domain-anda.com -d www.domain-anda.com   # HTTPS, sekali
 ```
 
-`APP_URL` harus sama dengan alamat yang dibuka pengunjung (mis. `http://76.13.22.54:8081`).
-Jika nanti pakai domain + HTTPS di Nginx, cukup ubah `APP_URL` ke `https://...` lalu
-`docker compose up -d`; Laravel sudah mempercayai header `X-Forwarded-*` dari 127.0.0.1.
+`APP_URL` di `.env` harus `https://domain-anda.com`. Hapus site Nginx lama yang
+`listen` di port khusus (mis. 8081) atau yang menunjuk ke PHP-FPM, lalu tutup port
+itu di firewall (`sudo ufw delete allow 8081`).
 
 ## 3. Update / redeploy
 
@@ -112,9 +100,8 @@ konfigurasi baru dibaca dan cache konfigurasi dibangun ulang.
 
 ## Catatan
 
-- Port `APP_PORT` (8080) dan `DOCKER_REDIS_PORT` (6380) hanya di 127.0.0.1, tidak
-  terbuka ke internet. Pastikan tidak bentrok dengan aplikasi lain di server
-  (mis. investaNews); ubah di `.env` bila perlu.
+- Web app tidak membuka port TCP sama sekali (hanya `socket/app.sock`). Redis tetap di
+  `127.0.0.1:${DOCKER_REDIS_PORT}` (6380), tidak terbuka ke internet.
 - Backup: database lewat `mysqldump` seperti biasa; file upload ada di volume
   `investanusantara_storage` (`docker run --rm -v investanusantara_storage:/s -v $PWD:/b alpine tar czf /b/storage.tgz -C /s .`).
 - Hermes dihubungi lewat `127.0.0.1:8642` langsung, jadi tidak ada SSH tunnel yang bisa putus.
