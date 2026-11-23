@@ -63,6 +63,12 @@ class User extends Authenticatable
         return $this->belongsToMany(Article::class, 'bookmarks')->withTimestamps();
     }
 
+    /** Provinces and kab/kota the reader follows ("Ikuti wilayah"). @return BelongsToMany<Region, $this> */
+    public function followedRegions(): BelongsToMany
+    {
+        return $this->belongsToMany(Region::class, 'region_follows', 'user_id', 'region_code')->withTimestamps();
+    }
+
     /** @return BelongsTo<Region, $this> */
     public function region(): BelongsTo
     {

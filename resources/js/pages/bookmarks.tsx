@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import AccountTabs from '@/components/account-tabs';
 import ArticleCard from '@/components/article-card';
 import Icon from '@/components/icons';
 import { Reveal, Stagger } from '@/components/motion';
@@ -12,6 +13,7 @@ export default function Bookmarks({ articles }: { articles: Paginated<Card> }) {
         <PublicLayout tabs={false}>
             <Head title="Berita Tersimpan" />
             <Stagger className="space-y-4 sm:space-y-6">
+                <AccountTabs />
                 <Reveal>
                     <h1 className="flex items-center gap-2 text-xl font-semibold text-navy-900 sm:text-2xl">
                         <Icon

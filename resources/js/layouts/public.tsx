@@ -23,7 +23,6 @@ import { regionHref } from '@/lib/news';
 import { cn } from '@/lib/utils';
 import {
     agenda as agendaRoute,
-    bookmarks,
     category,
     dashboard,
     home,
@@ -560,22 +559,6 @@ function UserMenu({ name }: { name: string }) {
                     >
                         <Icon name="home" width={16} height={16} />
                         Dashboard saya
-                    </Link>
-                    <Link
-                        href={membership.url()}
-                        role="menuitem"
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-accent/5 hover:text-accent"
-                    >
-                        <Icon name="star" width={16} height={16} />
-                        Langganan data
-                    </Link>
-                    <Link
-                        href={bookmarks.url()}
-                        role="menuitem"
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-accent/5 hover:text-accent"
-                    >
-                        <Icon name="bookmark" width={16} height={16} />
-                        Berita tersimpan
                     </Link>
                     <Link
                         href={logout.url()}

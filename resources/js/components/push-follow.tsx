@@ -78,10 +78,10 @@ export default function PushFollow({
             ? 'Notifikasi diblokir di browser'
             : on
               ? province
-                  ? `Mengikuti ${provinceName ?? 'provinsi ini'}`
+                  ? `Notifikasi ${provinceName ?? 'provinsi ini'} aktif`
                   : 'Notifikasi aktif'
               : province
-                ? `Ikuti ${provinceName ?? 'provinsi ini'}`
+                ? `Notifikasi ${provinceName ?? 'provinsi ini'}`
                 : 'Aktifkan notifikasi breaking news';
 
     return (

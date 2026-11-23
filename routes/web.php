@@ -9,6 +9,7 @@ use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\RegionFollowController;
 use App\Models\RegionProfile;
 use App\Support\InfoPages;
 use Illuminate\Support\Facades\Route;
@@ -107,6 +108,10 @@ Route::controller(PushSubscriptionController::class)->prefix('api/push')->name('
 Route::view('/offline', 'offline')->name('offline');
 
 Route::get('/akun', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+Route::middleware(['auth', 'throttle:60,1'])->controller(RegionFollowController::class)->group(function () {
+    Route::post('/wilayah-ikuti/{region:code}', 'store')->name('regions.follow');
+    Route::delete('/wilayah-ikuti/{region:code}', 'destroy')->name('regions.unfollow');
+});
 
 Route::middleware('auth')->controller(BookmarkController::class)->group(function () {
     Route::get('/tersimpan', 'index')->name('bookmarks');

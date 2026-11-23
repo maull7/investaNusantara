@@ -6,6 +6,7 @@ import Icon from '@/components/icons';
 import { Reveal, Stagger } from '@/components/motion';
 import InfiniteList from '@/components/infinite-list';
 import PushFollow from '@/components/push-follow';
+import RegionFollow from '@/components/region-follow';
 import PublicLayout, { SectionTitle } from '@/layouts/public';
 import RegionAvatar from '@/components/region-avatar';
 import {
@@ -57,6 +58,7 @@ type Props = {
         }[];
         rank: number | null;
     };
+    following: boolean;
 };
 
 export default function RegionShow({
@@ -67,6 +69,7 @@ export default function RegionShow({
     directory,
     popular,
     stats,
+    following,
 }: Props) {
     const [tab, setTab] = useState<DirectoryTab>('berita');
     const byType = (type: DirectoryEntry['type']) =>
@@ -192,12 +195,18 @@ export default function RegionShow({
                             {isCity && ` · ${province.name}`} · kode{' '}
                             {region.code}
                         </p>
-                        {/* Notifications are per province: a city page follows its province. */}
-                        <PushFollow
-                            province={province.code}
-                            provinceName={province.name}
-                            className="mt-3"
-                        />
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <RegionFollow
+                                key={region.code}
+                                code={region.code}
+                                following={following}
+                            />
+                            {/* Notifications are per province: a city page follows its province. */}
+                            <PushFollow
+                                province={province.code}
+                                provinceName={province.name}
+                            />
+                        </div>
                         <div className="mt-4 flex gap-6 text-sm">
                             <Stat value={articles.total} label="Berita" />
                             {!isCity && (

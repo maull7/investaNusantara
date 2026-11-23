@@ -150,6 +150,7 @@ class PortalController extends Controller
             ],
             'popular' => Article::published()->card()->inRegion($region)->trending()->limit(5)->get(),
             'stats' => $this->regionStats($province, $region),
+            'following' => fn () => (bool) request()->user()?->followedRegions()->whereKey($region->code)->exists(),
         ]);
         $place = $child ? "{$child->name}, {$province->name}" : $province->name;
 
