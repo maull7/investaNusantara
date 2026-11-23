@@ -5,8 +5,9 @@
 	frankenphp
 }
 
-:{$APP_PORT:8080} {
-	bind {$APP_BIND:127.0.0.1}
+:80 {
+	# No TCP port: the host's Nginx proxies to this unix socket (dir bind-mounted from the host).
+	bind unix//run/app/app.sock|0666
 	root * /app/public
 	encode zstd br gzip
 
@@ -18,5 +19,9 @@
 	@pwa path /sw.js /site.webmanifest
 	header @pwa Cache-Control "no-cache"
 
-	php_server
+	# Unix-socket peers have REMOTE_ADDR "@"; only the host's Nginx can reach the socket, so
+	# present it as 127.0.0.1 and trustProxies (bootstrap/app.php) keeps reading X-Forwarded-*.
+	php_server {
+		env REMOTE_ADDR 127.0.0.1
+	}
 }

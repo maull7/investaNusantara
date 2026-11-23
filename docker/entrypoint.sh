@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+# A socket left by a crashed run blocks Caddy from listening again.
+rm -f /run/app/app.sock
+
 # Caches are built from the real environment of this container, at start.
 php artisan storage:link --force >/dev/null 2>&1 || true
 php artisan optimize
