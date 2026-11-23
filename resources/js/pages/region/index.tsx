@@ -287,6 +287,16 @@ export default function RegionIndex({
             .catch(() => undefined); // the province link and the picker still work
     }
 
+    /** Step zoom in or zoom out incrementally (buttons & wheel). */
+    function zoomBy(factor: number) {
+        stopSpin();
+        const minScale = GLOBE.r * 0.8;
+        const maxScale = 14000;
+        const next = Math.max(minScale, Math.min(maxScale, scale * factor));
+        setScale(next);
+        setReady(true);
+    }
+
     /** Toggle between the whole globe and the province filling the frame. */
     function toggleZoom() {
         stopSpin();
@@ -391,43 +401,47 @@ export default function RegionIndex({
                         className="min-w-0 card p-3 sm:p-5"
                         aria-label="Peta interaktif Indonesia"
                     >
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <p className="text-sm font-semibold text-navy-900">
+                        <div className="flex items-center justify-between gap-3 min-h-[40px]">
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-navy-900">
                                     {selected ? selected.name : 'Indonesia'}
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="truncate text-xs text-slate-500">
                                     {selected
                                         ? 'Seret untuk memutar globe, klik kabupaten/kota untuk membuka beritanya'
                                         : 'Klik provinsi pada peta'}
                                 </p>
                             </div>
-                            {selected && (
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={toggleZoom}
-                                        disabled={!ready}
-                                        className="btn-ghost px-3 py-1.5 text-xs"
-                                    >
-                                        {scale > GLOBE.r * 1.5
-                                            ? 'Lihat globe'
-                                            : 'Zoom wilayah'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={reset}
-                                        className="btn-ghost px-3 py-1.5 text-xs"
-                                    >
-                                        <Icon
-                                            name="back"
-                                            width={14}
-                                            height={14}
-                                        />
-                                        Seluruh Indonesia
-                                    </button>
-                                </div>
-                            )}
+                            <div className="flex shrink-0 items-center gap-2">
+                                {selected ? (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={toggleZoom}
+                                            disabled={!ready}
+                                            className="btn-ghost px-3 py-1.5 text-xs whitespace-nowrap"
+                                        >
+                                            {scale > GLOBE.r * 1.5
+                                                ? 'Lihat globe'
+                                                : 'Zoom wilayah'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={reset}
+                                            className="btn-ghost px-3 py-1.5 text-xs whitespace-nowrap"
+                                        >
+                                            <Icon
+                                                name="back"
+                                                width={14}
+                                                height={14}
+                                            />
+                                            Seluruh Indonesia
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="h-7" aria-hidden="true" />
+                                )}
+                            </div>
                         </div>
 
                         <div className="relative mt-3 overflow-hidden rounded-2xl bg-[#f1f7fa]">
@@ -448,6 +462,12 @@ export default function RegionIndex({
                                 onPointerMove={onPointerMove}
                                 onPointerUp={onPointerUp}
                                 onPointerCancel={onPointerUp}
+                                onWheel={(e) => {
+                                    if (selected) {
+                                        e.preventDefault();
+                                        zoomBy(e.deltaY < 0 ? 1.15 : 0.85);
+                                    }
+                                }}
                                 onClickCapture={swallowClickAfterDrag}
                             >
                                 <defs>
@@ -602,6 +622,53 @@ export default function RegionIndex({
                                     Memuat peta…
                                 </div>
                             )}
+
+                            {/* Floating Zoom In & Zoom Out Controls */}
+                            {selected && (
+                                <div className="absolute right-3 bottom-3 z-10 flex flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white/95 shadow-md backdrop-blur-sm">
+                                    <button
+                                        type="button"
+                                        aria-label="Perbesar peta"
+                                        title="Perbesar (Zoom In)"
+                                        onClick={() => zoomBy(1.3)}
+                                        className="grid size-8 place-items-center text-navy-800 transition-colors hover:bg-slate-100 hover:text-accent active:bg-slate-200"
+                                    >
+                                        <svg
+                                            className="size-4"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <line x1="12" y1="5" x2="12" y2="19" />
+                                            <line x1="5" y1="12" x2="19" y2="12" />
+                                        </svg>
+                                    </button>
+                                    <div className="h-px w-full bg-slate-200" />
+                                    <button
+                                        type="button"
+                                        aria-label="Perkecil peta"
+                                        title="Perkecil (Zoom Out)"
+                                        onClick={() => zoomBy(1 / 1.3)}
+                                        className="grid size-8 place-items-center text-navy-800 transition-colors hover:bg-slate-100 hover:text-accent active:bg-slate-200"
+                                    >
+                                        <svg
+                                            className="size-4"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <line x1="5" y1="12" x2="19" y2="12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+
                             {hoveredName && (
                                 <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg bg-white/95 px-3 py-2 text-xs font-semibold text-navy-900 shadow">
                                     {hoveredName}
