@@ -15,7 +15,7 @@ import { regionHref, timeAgo } from '@/lib/news';
 import { cn } from '@/lib/utils';
 import { cities as citiesRoute } from '@/routes/region';
 import { article as articleRoute, agenda as agendaRoute } from '@/routes';
-import { show as agendaShow } from '@/routes/agenda';
+import { create as agendaCreate, show as agendaShow } from '@/routes/agenda';
 import type { ArticleCard, Region } from '@/types';
 
 type MapData = GeoJSON.FeatureCollection<
@@ -822,7 +822,8 @@ export default function RegionIndex({
                                     )}
                                 </div>
                             </article>
-                            <article className="card p-5 sm:p-6">
+                            {/* Full row: a lone half-width agenda card left the other half empty. */}
+                            <article className="card p-5 sm:p-6 md:col-span-2">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
                                         <h3 className="text-lg font-bold text-navy-900">
@@ -858,14 +859,14 @@ export default function RegionIndex({
                                         agenda untuk melihat jadwal.
                                     </p>
                                 ) : agenda.length ? (
-                                    <ul className="mt-4 divide-y divide-slate-100">
+                                    <ul className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                                         {agenda.map((event) => (
                                             <li key={event.id}>
                                                 <Link
                                                     href={agendaShow.url(
                                                         event.slug,
                                                     )}
-                                                    className="group flex items-start gap-4 rounded-xl py-4 transition hover:bg-accent/5"
+                                                    className="group flex h-full items-start gap-4 rounded-2xl p-3 ring-1 ring-slate-200 transition hover:bg-accent/5 hover:ring-accent/30"
                                                 >
                                                     <div className="min-w-14 rounded-xl bg-accent/10 p-2 text-center text-accent">
                                                         <span className="block text-xl font-bold">
@@ -917,10 +918,37 @@ export default function RegionIndex({
                                         ))}
                                     </ul>
                                 ) : (
-                                    <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-                                        Belum ada agenda mendatang yang
-                                        dipublikasikan di {selected.name}.
-                                    </p>
+                                    <div className="mt-4 flex flex-col items-start gap-3 rounded-2xl border border-dashed border-slate-200 p-4 sm:flex-row sm:items-center">
+                                        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+                                            <Icon
+                                                name="calendar"
+                                                width={20}
+                                                height={20}
+                                            />
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-navy-900">
+                                                Belum ada agenda mendatang di{' '}
+                                                {selected.name}
+                                            </p>
+                                            <p className="mt-0.5 text-sm text-slate-500">
+                                                Punya event di daerah ini?
+                                                Ajukan agar tampil di kalender
+                                                nasional.
+                                            </p>
+                                        </div>
+                                        <Link
+                                            href={agendaCreate.url()}
+                                            className="btn-ghost shrink-0"
+                                        >
+                                            <Icon
+                                                name="plus"
+                                                width={16}
+                                                height={16}
+                                            />
+                                            Ajukan event
+                                        </Link>
+                                    </div>
                                 )}
                             </article>
                             <article className="card p-5 md:col-span-2">

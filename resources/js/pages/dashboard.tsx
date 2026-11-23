@@ -123,13 +123,13 @@ export default function Dashboard({
                             cta="Pilih wilayah"
                         />
                     ) : (
-                        <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-4">
+                        <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-1 pb-2">
                             {regions.map((r) => (
                                 <RegionCard key={r.code} region={r} />
                             ))}
                             <Link
                                 href={regionsRoute.url()}
-                                className="flex min-h-36 w-36 shrink-0 snap-start flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 text-sm font-medium text-slate-500 transition hover:border-accent/40 hover:text-accent sm:w-auto"
+                                className="flex min-h-36 w-40 shrink-0 sm:w-48 snap-start flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 text-sm font-medium text-slate-500 transition hover:border-accent/40 hover:text-accent"
                             >
                                 <Icon name="plus" width={20} height={20} />
                                 Tambah wilayah
@@ -363,7 +363,7 @@ function RegionCard({ region: r }: { region: Followed }) {
     }
 
     return (
-        <div className="group relative w-36 shrink-0 snap-start overflow-hidden rounded-2xl ring-1 ring-accent/10 sm:w-auto">
+        <div className="group relative w-40 shrink-0 sm:w-48 snap-start overflow-hidden rounded-2xl ring-1 ring-accent/10">
             <Link
                 href={feedRoute.url({ query: { wilayah: r.code } })}
                 className="block"

@@ -14,25 +14,50 @@ export default function Bookmarks({ articles }: { articles: Paginated<Card> }) {
             <Head title="Berita Tersimpan" />
             <Stagger className="space-y-4 sm:space-y-6">
                 <AccountTabs />
-                <Reveal>
-                    <h1 className="flex items-center gap-2 text-xl font-semibold text-navy-900 sm:text-2xl">
-                        <Icon
-                            name="bookmark"
-                            className="text-accent"
-                            fill="currentColor"
-                        />
-                        Berita Tersimpan
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-500">
-                        {articles.total > 0
-                            ? `${articles.total} berita untuk dibaca nanti.`
-                            : 'Simpan berita dengan ikon penanda di halaman artikel.'}
-                    </p>
-                </Reveal>
+                {articles.data.length > 0 && (
+                    <Reveal className="card flex items-center gap-3 p-4 sm:p-5">
+                        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-accent/5 text-accent">
+                            <Icon
+                                name="bookmark"
+                                width={20}
+                                height={20}
+                                fill="currentColor"
+                            />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <h1 className="truncate text-lg font-semibold text-navy-900 sm:text-xl">
+                                Berita Tersimpan
+                            </h1>
+                            <p className="truncate text-sm text-slate-500">
+                                {articles.total} berita untuk dibaca nanti
+                            </p>
+                        </div>
+                        <Link
+                            href={home.url()}
+                            className="btn-ghost shrink-0"
+                            aria-label="Jelajahi berita"
+                        >
+                            <Icon name="search" width={16} height={16} />
+                            <span className="hidden sm:inline">
+                                Jelajahi berita
+                            </span>
+                        </Link>
+                    </Reveal>
+                )}
                 {articles.data.length === 0 ? (
                     <Reveal className="card p-10 text-center">
-                        <p className="text-slate-500">
-                            Belum ada berita yang disimpan.
+                        <Icon
+                            name="bookmark"
+                            width={28}
+                            height={28}
+                            className="mx-auto text-slate-300"
+                        />
+                        <h1 className="mt-3 text-lg font-semibold text-navy-900">
+                            Berita Tersimpan
+                        </h1>
+                        <p className="mt-1 text-sm text-slate-500">
+                            Simpan berita dengan ikon penanda di halaman
+                            artikel untuk dibaca nanti.
                         </p>
                         <Link
                             href={home.url()}

@@ -12,7 +12,7 @@ import { regions as feedRoute } from '@/routes/dashboard';
 import type { ArticleCard as Card, Paginated, Region } from '@/types';
 
 const chip =
-    'flex shrink-0 items-center gap-2 rounded-full py-1 text-sm font-medium whitespace-nowrap ring-1 transition';
+    'flex shrink-0 snap-start items-center gap-2 rounded-full py-1 text-sm font-medium whitespace-nowrap ring-1 transition';
 const tone = (on: boolean) =>
     on
         ? 'bg-accent text-white ring-accent'
@@ -27,31 +27,27 @@ export default function DashboardRegions({
     active: string | null;
     articles: Paginated<Card>;
 }) {
-    const scope = active
-        ? 'wilayah ini'
-        : `${regions.length} wilayah yang Anda ikuti`;
+    const current = regions.find((r) => r.code === active);
 
     return (
         <PublicLayout tabs={false}>
             <Head title="Berita Wilayah Saya" />
             <Stagger className="space-y-4 sm:space-y-6">
                 <AccountTabs />
-                <Reveal>
-                    <h1 className="flex items-center gap-2 text-xl font-semibold text-navy-900 sm:text-2xl">
-                        <Icon name="map" className="text-accent" />
-                        Berita Wilayah Saya
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-500">
-                        {regions.length === 0
-                            ? 'Ikuti provinsi atau kabupaten/kota untuk melihat beritanya di sini.'
-                            : `${articles.total} berita dari ${scope}.`}
-                    </p>
-                </Reveal>
-
                 {regions.length === 0 ? (
                     <Reveal className="card p-10 text-center">
-                        <p className="text-slate-500">
-                            Belum ada wilayah yang diikuti.
+                        <Icon
+                            name="map"
+                            width={28}
+                            height={28}
+                            className="mx-auto text-slate-300"
+                        />
+                        <h1 className="mt-3 text-lg font-semibold text-navy-900">
+                            Berita Wilayah Saya
+                        </h1>
+                        <p className="mt-1 text-sm text-slate-500">
+                            Ikuti provinsi atau kabupaten/kota untuk melihat
+                            beritanya di sini.
                         </p>
                         <Link
                             href={regionsRoute.url()}
@@ -62,34 +58,73 @@ export default function DashboardRegions({
                     </Reveal>
                 ) : (
                     <>
-                        <Reveal className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
-                            <Link
-                                href={feedRoute.url()}
-                                preserveScroll
-                                className={cn(chip, 'px-3.5', tone(!active))}
-                            >
-                                Semua
-                            </Link>
-                            {regions.map((r) => (
-                                <Link
-                                    key={r.code}
-                                    href={feedRoute.url({
-                                        query: { wilayah: r.code },
-                                    })}
-                                    preserveScroll
-                                    className={cn(
-                                        chip,
-                                        'pr-3.5 pl-1',
-                                        tone(active === r.code),
-                                    )}
-                                >
+                        <Reveal className="card overflow-hidden">
+                            <div className="flex items-center gap-3 p-4 sm:p-5">
+                                {current ? (
                                     <RegionAvatar
-                                        region={r}
-                                        className="size-6"
+                                        region={current}
+                                        className="size-11 shrink-0"
                                     />
-                                    {r.name}
+                                ) : (
+                                    <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-accent/5 text-accent">
+                                        <Icon name="map" width={20} height={20} />
+                                    </span>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                    <h1 className="truncate text-lg font-semibold text-navy-900 sm:text-xl">
+                                        {current
+                                            ? `Berita ${current.name}`
+                                            : 'Berita Wilayah Saya'}
+                                    </h1>
+                                    <p className="truncate text-sm text-slate-500">
+                                        {articles.total} berita
+                                        {current
+                                            ? current.parent
+                                                ? ` · ${current.parent.name}`
+                                                : ' · termasuk kab/kota'
+                                            : ` dari ${regions.length} wilayah`}
+                                    </p>
+                                </div>
+                                <Link
+                                    href={regionsRoute.url()}
+                                    className="btn-ghost shrink-0"
+                                    aria-label="Tambah wilayah"
+                                >
+                                    <Icon name="plus" width={16} height={16} />
+                                    <span className="hidden sm:inline">
+                                        Tambah wilayah
+                                    </span>
                                 </Link>
-                            ))}
+                            </div>
+                            <div className="flex snap-x gap-2 overflow-x-auto border-t border-slate-100 px-4 py-3 sm:px-5">
+                                <Link
+                                    href={feedRoute.url()}
+                                    preserveScroll
+                                    className={cn(chip, 'px-3.5', tone(!active))}
+                                >
+                                    Semua
+                                </Link>
+                                {regions.map((r) => (
+                                    <Link
+                                        key={r.code}
+                                        href={feedRoute.url({
+                                            query: { wilayah: r.code },
+                                        })}
+                                        preserveScroll
+                                        className={cn(
+                                            chip,
+                                            'pr-3.5 pl-1',
+                                            tone(active === r.code),
+                                        )}
+                                    >
+                                        <RegionAvatar
+                                            region={r}
+                                            className="size-6"
+                                        />
+                                        {r.name}
+                                    </Link>
+                                ))}
+                            </div>
                         </Reveal>
 
                         {articles.data.length === 0 ? (
