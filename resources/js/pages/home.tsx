@@ -56,24 +56,51 @@ export default function Home({
         dateStyle: 'full',
     }).format(new Date());
 
+    // Time-based greeting
+    const hour = new Date().getHours();
+    const timeGreeting =
+        hour >= 4 && hour < 11
+            ? 'Selamat Pagi'
+            : hour >= 11 && hour < 15
+              ? 'Selamat Siang'
+              : hour >= 15 && hour < 18
+                ? 'Selamat Sore'
+                : 'Selamat Malam';
+
     return (
         <PublicLayout variant="home">
             <Head title="Berita Nasional & Daerah" />
 
             <Stagger className="space-y-7 md:space-y-9">
-                {/* Laptop greeting (phones show it in the header) */}
-                <Reveal className="hidden items-end justify-between md:flex">
-                    <div>
-                        <h1 className="text-2xl font-semibold text-navy-900">
-                            Halo, {auth.user?.name.split(' ')[0] ?? 'Pembaca'}
-                        </h1>
-                        <p className="text-sm text-slate-500">
-                            Kabar harian dari 38 provinsi Indonesia
-                        </p>
+                {/* Laptop greeting: Editorial Hero Card */}
+                <Reveal className="hidden md:block">
+                    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-r from-white via-surface to-accent/[0.04] p-5 shadow-xs transition-all duration-300 hover:border-accent/25 hover:shadow-sm">
+                        {/* Subtle decorative background pattern */}
+                        <div className="pointer-events-none absolute -right-6 -bottom-8 size-36 rounded-full bg-accent/5 blur-2xl" />
+                        <div className="pointer-events-none absolute top-0 left-0 h-full w-1.5 bg-gradient-to-b from-accent to-accent/60" />
+
+                        <div className="flex items-center justify-between pl-2">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h1 className="text-xl font-bold tracking-tight text-navy-900 sm:text-2xl">
+                                        {timeGreeting},{' '}
+                                        <span className="text-accent">
+                                            {auth.user?.name.split(' ')[0] ?? 'Pembaca'}
+                                        </span>
+                                    </h1>
+                                </div>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Kabar harian, analisis investasi, dan perkembangan dari 38 provinsi Indonesia
+                                </p>
+                            </div>
+
+                            {/* Date Badge */}
+                            <div className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-4 py-2 text-xs font-medium text-slate-600 shadow-2xs backdrop-blur-sm">
+                                <Icon name="calendar" className="size-4 text-accent" />
+                                <span>{today}</span>
+                            </div>
+                        </div>
                     </div>
-                    <span className="rounded-full bg-surface px-4 py-1.5 text-xs text-slate-500 ring-1 ring-accent/10">
-                        {today}
-                    </span>
                 </Reveal>
 
                 {breaking.length > 0 && (
@@ -240,29 +267,29 @@ export default function Home({
     );
 }
 
-/** Province "channels": compact photo chips, two rows, swipeable. */
+/** Province "channels": modern interactive mini-cards with smooth carousel and rich details. */
 function Channels({ counts }: { counts: Record<string, number> }) {
     const { provinces } = usePage().props.nav;
     const ref = useRef<HTMLDivElement>(null);
 
     const scroll = (dir: -1 | 1) =>
         ref.current?.scrollBy({
-            left: dir * ref.current.clientWidth * 0.8,
+            left: dir * (ref.current.clientWidth * 0.75),
             behavior: 'smooth',
         });
 
     const arrow =
-        'absolute top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-accent/15 bg-surface text-accent shadow-sm transition-colors hover:bg-accent hover:text-white md:grid';
+        'absolute top-1/2 z-10 hidden size-9 -translate-y-1/2 place-items-center rounded-full border border-slate-200/80 bg-white/95 text-navy-800 shadow-md backdrop-blur-sm transition-all hover:bg-accent hover:border-accent hover:text-white hover:scale-105 active:scale-95 md:grid';
 
     return (
-        <div>
+        <div className="relative">
             <SectionTitle href={regions.url()}>Kanal Provinsi</SectionTitle>
-            <div className="relative">
+            <div className="relative group/channels">
                 <button
                     type="button"
                     aria-label="Geser ke kiri"
                     onClick={() => scroll(-1)}
-                    className={cn(arrow, '-left-3')}
+                    className={cn(arrow, '-left-4')}
                 >
                     <Icon name="chevron" className="size-4 rotate-180" />
                 </button>
@@ -270,42 +297,64 @@ function Channels({ counts }: { counts: Record<string, number> }) {
                     type="button"
                     aria-label="Geser ke kanan"
                     onClick={() => scroll(1)}
-                    className={cn(arrow, '-right-3')}
+                    className={cn(arrow, '-right-4')}
                 >
                     <Icon name="chevron" className="size-4" />
                 </button>
                 <div
                     ref={ref}
-                    className="-mx-4 no-scrollbar grid auto-cols-max grid-flow-col grid-rows-2 gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0 [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] md:[mask-image:none]"
+                    className="-mx-4 no-scrollbar grid auto-cols-[165px] sm:auto-cols-[185px] grid-flow-col grid-rows-2 gap-2.5 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0 scroll-smooth [mask-image:linear-gradient(to_right,black_calc(100%-32px),transparent)] md:[mask-image:none]"
                 >
-                    {provinces.map((p, i) => (
-                        <motion.div
-                            key={p.code}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                delay: 0.05 + Math.min(i, 16) * 0.025,
-                                duration: 0.4,
-                                ease,
-                            }}
-                            whileHover={{ y: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <Link
-                                href={regionHref(p)}
-                                viewTransition
-                                className="group flex items-center gap-2 rounded-full border border-accent/15 bg-surface py-1 pr-1.5 pl-1 text-[13px] text-navy-900 transition-colors hover:border-accent/30 hover:bg-accent/5"
+                    {provinces.map((p, i) => {
+                        const count = counts[p.code] ?? 0;
+                        return (
+                            <motion.div
+                                key={p.code}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                    delay: 0.04 + Math.min(i, 16) * 0.02,
+                                    duration: 0.35,
+                                    ease,
+                                }}
+                                whileHover={{ y: -3 }}
+                                whileTap={{ scale: 0.97 }}
+                                className="h-full"
                             >
-                                <RegionAvatar region={p} className="size-7" />
-                                <span className="font-medium whitespace-nowrap">
-                                    {p.name}
-                                </span>
-                                <span className="min-w-6 rounded-full bg-accent/10 px-1.5 py-0.5 text-center text-[11px] font-medium text-accent transition-colors group-hover:bg-accent group-hover:text-white">
-                                    {counts[p.code] ?? 0}
-                                </span>
-                            </Link>
-                        </motion.div>
-                    ))}
+                                <Link
+                                    href={regionHref(p)}
+                                    viewTransition
+                                    className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xs transition-all duration-300 hover:border-accent/40 hover:shadow-md hover:bg-gradient-to-b hover:from-white hover:to-accent/[0.02]"
+                                >
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="relative shrink-0">
+                                            <RegionAvatar
+                                                region={p}
+                                                className="size-9 rounded-xl shadow-xs ring-1 ring-black/5 object-cover transition-transform duration-300 group-hover:scale-105"
+                                            />
+                                            {count > 0 && (
+                                                <span className="absolute -top-1 -right-1 size-2 rounded-full bg-accent ring-2 ring-white" />
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-xs font-semibold text-navy-900 group-hover:text-accent transition-colors">
+                                                {p.name}
+                                            </p>
+                                            <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+                                                <span className="font-bold text-accent">
+                                                    {count}
+                                                </span>{' '}
+                                                berita
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Subtle bottom indicator on hover */}
+                                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                                </Link>
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
