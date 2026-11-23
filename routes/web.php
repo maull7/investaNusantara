@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PortalController;
@@ -104,6 +105,8 @@ Route::controller(PushSubscriptionController::class)->prefix('api/push')->name('
     Route::delete('/', 'destroy')->name('destroy');
 });
 Route::view('/offline', 'offline')->name('offline');
+
+Route::get('/akun', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 
 Route::middleware('auth')->controller(BookmarkController::class)->group(function () {
     Route::get('/tersimpan', 'index')->name('bookmarks');
