@@ -21,6 +21,7 @@ export type ArticleCard = {
     cover_url: string | null;
     published_at: string | null;
     is_breaking: boolean;
+    is_ai_generated?: boolean;
     sentiment?: 'positif' | 'netral' | 'negatif' | null;
     category: Category;
     region: Region | null;
@@ -38,6 +39,7 @@ export type Article = ArticleCard & {
     source_title: string | null;
     source_excerpt: string | null;
     is_ai_generated: boolean;
+    editor?: { id: number; name: string } | null;
     seo_title: string | null;
     meta_description: string | null;
     social_post: string | null;
@@ -100,7 +102,11 @@ export type DirectoryEntry = {
     verified_at?: string | null;
 };
 
-export type Fact = { value: string; source: string | null; as_of: string | null };
+export type Fact = {
+    value: string;
+    source: string | null;
+    as_of: string | null;
+};
 
 export type FactField = { key: string; label: string; unit: string | null };
 

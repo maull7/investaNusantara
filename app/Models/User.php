@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -54,6 +55,12 @@ class User extends Authenticatable
             'client_regions' => 'array',
             'subscription_ends_at' => 'date',
         ];
+    }
+
+    /** "Berita tersimpan", newest save first. @return BelongsToMany<Article, $this> */
+    public function bookmarks(): BelongsToMany
+    {
+        return $this->belongsToMany(Article::class, 'bookmarks')->withTimestamps();
     }
 
     /** @return BelongsTo<Region, $this> */

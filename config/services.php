@@ -35,6 +35,20 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', rtrim((string) env('APP_URL'), '/').'/auth/google/callback'),
     ],
 
+    // Cloudflare Turnstile (dash.cloudflare.com > Turnstile). Leave the secret empty to turn the captcha off.
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
+    // Web push (breaking news). Generate the pair once with `php artisan push:vapid`; never change it
+    // afterwards, or every existing browser subscription stops working.
+    'webpush' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', 'mailto:'.env('REDAKSI_EMAIL', 'redaksi@nusantaranewsonline.net')),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

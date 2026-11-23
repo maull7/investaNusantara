@@ -32,5 +32,11 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Captcha off in tests, even when the local .env has real keys; AuthTest turns it on itself. -->
+        <env name="TURNSTILE_SITE_KEY" value="" force="true"/>
+        <env name="TURNSTILE_SECRET_KEY" value="" force="true"/>
+        <!-- Web push off in tests; PushTest sets its own keys. -->
+        <env name="VAPID_PUBLIC_KEY" value="" force="true"/>
+        <env name="VAPID_PRIVATE_KEY" value="" force="true"/>
     </php>
 </phpunit>

@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\ArticleStatus;
+use App\Jobs\SendBreakingPush;
 use App\Models\Article;
 use App\Models\NewsItem;
 use App\Models\NewsSource;
@@ -9,6 +11,7 @@ use App\Services\NewsFeedReader;
 use App\Services\NewsPipeline;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use Minishlink\WebPush\VAPID;
 
 Artisan::command('news:dispatch', function (NewsPipeline $pipeline) {
     $queued = NewsSource::where('active', true)->whereNotNull('fetch_interval_minutes')->get()
@@ -22,6 +25,29 @@ Artisan::command('news:dispatch', function (NewsPipeline $pipeline) {
 
 Schedule::command('news:dispatch')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
+
+// Breaking articles scheduled for later have no save at publish time; catch them here.
+Artisan::command('news:push-breaking', function () {
+    $queued = Article::where('is_breaking', true)->whereNull('pushed_at')
+        ->where('status', ArticleStatus::Published)
+        ->whereBetween('published_at', [now()->subHours(6), now()])
+        ->get()
+        ->filter(fn (Article $article) => SendBreakingPush::shouldSend($article))
+        ->each(fn (Article $article) => SendBreakingPush::dispatch($article->id))
+        ->count();
+
+    $this->info("{$queued} berita breaking dikirim sebagai notifikasi.");
+})->purpose('Kirim notifikasi push untuk berita breaking terjadwal yang baru tayang');
+
+Schedule::command('news:push-breaking')->everyFiveMinutes()->withoutOverlapping();
+
+Artisan::command('push:vapid', function () {
+    $keys = VAPID::createVapidKeys();
+    $this->line('Tambahkan ke .env (sekali saja; jangan diganti setelah ada pelanggan):');
+    $this->newLine();
+    $this->line("VAPID_PUBLIC_KEY={$keys['publicKey']}");
+    $this->line("VAPID_PRIVATE_KEY={$keys['privateKey']}");
+})->purpose('Buat pasangan kunci VAPID untuk notifikasi push');
 
 Artisan::command('news:backfill-images', function (NewsFeedReader $reader) {
     $fixed = 0;

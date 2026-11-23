@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Models\Article;
 use App\Models\Region;
 use App\Models\User;
+use App\Rules\Turnstile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -24,6 +25,7 @@ class AuthController extends Controller
 
         return Inertia::render('auth/login', [
             'mode' => $request->routeIs('register') ? 'register' : 'login',
+            'turnstileSiteKey' => Turnstile::enabled() ? config('services.turnstile.site_key') : null,
             // Ticker: breaking news, or the latest stories when nothing is flagged.
             'breaking' => $breaking->isNotEmpty() ? $breaking : Article::published()->card()->limit(6)->get(),
             'stats' => [
@@ -41,7 +43,9 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'type' => ['nullable', 'in:customer,contributor'],
+            ...Turnstile::rules(),
         ]);
+        unset($data[Turnstile::FIELD]);
 
         $role = ($data['type'] ?? 'customer') === 'contributor' ? Role::Contributor : Role::Customer;
         $user = User::create([...Arr::except($data, 'type'), 'role' => $role]);
@@ -58,7 +62,9 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
+            ...Turnstile::rules(),
         ]);
+        unset($credentials[Turnstile::FIELD]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages(['email' => 'Email atau password salah.']);

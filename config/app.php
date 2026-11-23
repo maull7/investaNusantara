@@ -15,6 +15,9 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Shown on /redaksi, /kebijakan-privasi and the other info pages.
+    'contact_email' => env('REDAKSI_EMAIL', 'redaksi@nusantaranewsonline.net'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

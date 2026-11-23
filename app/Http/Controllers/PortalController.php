@@ -14,6 +14,7 @@ use App\Models\Region;
 use App\Models\RegionProfile;
 use App\Models\Tag;
 use App\Services\NewsPipeline;
+use App\Support\InfoPages;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -261,7 +262,7 @@ class PortalController extends Controller
                 $article->recordView();
             }
         }
-        $article->load(['category:id,name,slug', 'region:code,name,slug,parent_code,level,image_url', 'region.parent:code,name,slug,image_url', 'author:id,name', 'tags:id,name,slug']);
+        $article->load(['category:id,name,slug', 'region:code,name,slug,parent_code,level,image_url', 'region.parent:code,name,slug,image_url', 'author:id,name', 'editor:id,name', 'tags:id,name,slug']);
         // Read before the guest swap so search engines get the real description and keywords.
         $seo = $this->articleSeo($article);
         // Guests get only the "Ringkasan": the full body never leaves the server. Login brings them back here.
@@ -286,6 +287,7 @@ class PortalController extends Controller
                     ->where('region_code', 'not like', $article->region_code.'%')
                     ->limit(4)->get()
                 : [],
+            'bookmarked' => fn () => (bool) $request->user()?->bookmarks()->whereKey($article->id)->exists(),
             // "Review AI" is for signed-in readers only.
             'review' => fn () => $request->user() ? $article->review()->first(['status', 'points', 'body', 'error']) : null,
         ]);
@@ -345,6 +347,14 @@ class PortalController extends Controller
         return $this->seo($page, 'Sentimen Berita Daerah Hari Ini', 'Peta nada berita (positif, netral, negatif) dari seluruh provinsi di Indonesia selama 30 hari terakhir.');
     }
 
+    /** Footer pages: Tentang, Redaksi, Pedoman Media Siber, Kebijakan Privasi, Syarat Layanan. */
+    public function info(string $page): Response
+    {
+        $content = InfoPages::find($page) ?? abort(404);
+
+        return $this->seo(Inertia::render('info', ['slug' => $page, ...$content]), $content['title'], $content['description']);
+    }
+
     public function search(Request $request): Response
     {
         $q = trim((string) $request->query('q', ''));
@@ -395,6 +405,7 @@ class PortalController extends Controller
                 ])))))
             ->merge(collect(RegionProfile::COMPARABLE)->map(fn ($fact) => route('data.compare', $fact)))
             ->push(route('agenda'))
+            ->merge(collect(InfoPages::SLUGS)->map(fn ($s) => route('info', $s)))
             ->merge(DirectoryEntry::where('type', 'event')->whereNotNull('verified_at')->whereNotNull('slug')
                 ->where('starts_on', '>=', now()->subMonths(6))->limit(5000)->pluck('slug')->map(fn ($s) => route('agenda.show', $s)))
             ->merge(Tag::has('articles', '>=', 3)->limit(5000)->pluck('slug')->map(fn ($s) => route('tag', $s)))
@@ -455,7 +466,10 @@ class PortalController extends Controller
                 'articleSection' => $article->category->name,
                 'keywords' => $article->tags->pluck('name')->implode(', ') ?: null,
                 'contentLocation' => $article->region ? ['@type' => 'Place', 'name' => $article->region->name] : null,
-            ]),
+                // Guests only see the summary: mark the full text as paywalled so it isn't read as cloaking.
+                'isAccessibleForFree' => false,
+                'hasPart' => ['@type' => 'WebPageElement', 'isAccessibleForFree' => false, 'cssSelector' => '.paywalled-content'],
+            ], fn ($v) => $v !== null),
         ];
     }
 }

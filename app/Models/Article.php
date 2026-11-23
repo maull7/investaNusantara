@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ArticleStatus;
+use App\Jobs\SendBreakingPush;
 use App\Models\Concerns\LogsActivity;
 use Database\Factories\ArticleFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,6 +42,7 @@ use Illuminate\Support\Facades\Storage;
  * @property bool $is_headline
  * @property bool $is_breaking
  * @property Carbon|null $published_at
+ * @property Carbon|null $pushed_at when the breaking-news push went out
  * @property int $views
  */
 class Article extends Model
@@ -97,7 +99,19 @@ class Article extends Model
             'is_breaking' => 'boolean',
             'is_ai_generated' => 'boolean',
             'published_at' => 'datetime',
+            'pushed_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Every publish path (editor, super admin, AI pipeline) ends in a save. Scheduled articles
+        // are picked up later by `news:push-breaking`.
+        static::saved(function (Article $article) {
+            if (SendBreakingPush::shouldSend($article)) {
+                SendBreakingPush::dispatch($article->id);
+            }
+        });
     }
 
     public function getCoverUrlAttribute(): ?string
@@ -137,6 +151,12 @@ class Article extends Model
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function editor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'editor_id');
     }
 
     /** @return BelongsTo<User, $this> */
@@ -196,7 +216,7 @@ class Article extends Model
      */
     public function scopeCard(Builder $query): void
     {
-        $query->select(['id', 'title', 'slug', 'excerpt', 'cover_path', 'category_id', 'region_code', 'published_at', 'is_breaking', 'sentiment'])
+        $query->select(['id', 'title', 'slug', 'excerpt', 'cover_path', 'category_id', 'region_code', 'published_at', 'is_breaking', 'is_ai_generated', 'sentiment'])
             ->with(['category:id,name,slug', 'region:code,name,slug,parent_code,level,image_url', 'region.parent:code,name,slug,image_url']);
     }
 }

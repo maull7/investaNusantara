@@ -40,6 +40,8 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            // Null while web push is not configured: the "Ikuti" buttons stay hidden.
+            'vapidPublicKey' => config('services.webpush.private_key') ? config('services.webpush.public_key') : null,
             'auth' => [
                 'user' => $request->user() ? [
                     ...$request->user()->only('id', 'name', 'organization', 'email', 'role', 'region_code'),

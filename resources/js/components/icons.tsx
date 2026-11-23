@@ -48,6 +48,9 @@ const paths = {
     hash: 'M5 9h14M5 15h14M10 4 8 20M16 4l-2 16',
     menu: 'M4 7h16M4 12h16M4 17h16',
     lock: 'M6 11h12v9H6zm2 0V8a4 4 0 0 1 8 0v3',
+    bookmark: 'M6 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17l-6-4-6 4z',
+    bell: 'M6 16V11a6 6 0 1 1 12 0v5l2 2H4zm4 4a2 2 0 0 0 4 0',
+    download: 'M12 4v12m-5-5 5 5 5-5M4 20h16',
     calendar:
         'M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM16 2v4M8 2v4M3 10h18',
     'chevron-down': 'M6 9l6 6 6-6',

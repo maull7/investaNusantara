@@ -14,14 +14,19 @@ import {
 } from 'react';
 import CategoryTabs from '@/components/category-tabs';
 import Icon, { type IconName } from '@/components/icons';
+import InstallPrompt from '@/components/install-prompt';
 import Logo from '@/components/logo';
+import PushFollow from '@/components/push-follow';
 import { ease } from '@/components/motion';
+import { INFO_LINKS } from '@/lib/info-links';
 import { regionHref } from '@/lib/news';
 import { cn } from '@/lib/utils';
 import {
     agenda as agendaRoute,
+    bookmarks,
     category,
     home,
+    info,
     login,
     logout,
     membership,
@@ -266,7 +271,11 @@ export default function PublicLayout({
                                     aria-label="Cari berita"
                                     className="hidden size-10 shrink-0 place-items-center rounded-full bg-accent/5 text-navy-900 ring-1 ring-accent/10 md:grid xl:hidden"
                                 >
-                                    <Icon name="search" width={18} height={18} />
+                                    <Icon
+                                        name="search"
+                                        width={18}
+                                        height={18}
+                                    />
                                 </Link>
                                 <ThemeToggle />
                                 {!isHome && (
@@ -285,7 +294,12 @@ export default function PublicLayout({
                                 )}
                                 {isHome && (
                                     <Link
-                                        href={redaksi}
+                                        // Signed-in readers have no newsroom: their avatar opens "Tersimpan".
+                                        href={
+                                            auth.user && !staff
+                                                ? bookmarks.url()
+                                                : redaksi
+                                        }
                                         aria-label="Akun"
                                         className="grid size-10 place-items-center rounded-full bg-accent/5 text-accent ring-1 ring-accent/10 md:hidden"
                                     >
@@ -367,6 +381,7 @@ export default function PublicLayout({
                                 </p>
                             </div>
                             <div className="flex flex-wrap items-center gap-4">
+                                <PushFollow className="py-1.5" />
                                 <Link
                                     href={membership.url()}
                                     className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1.5 font-medium text-accent transition hover:bg-accent hover:text-white"
@@ -400,12 +415,26 @@ export default function PublicLayout({
                                 </Link>
                             ))}
                         </div>
-                        <p className="mt-8 border-t border-accent/10 pt-6 text-xs text-slate-400">
-                            © {new Date().getFullYear()} NusantaraNews · Peta
-                            wilayah: geoBoundaries (CC BY 3.0 IGO)
-                        </p>
+                        <div className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-accent/10 pt-6 text-xs text-slate-400">
+                            <p>
+                                © {new Date().getFullYear()} NusantaraNews ·
+                                Peta wilayah: geoBoundaries (CC BY 3.0 IGO)
+                            </p>
+                            <InfoLinks />
+                        </div>
                     </div>
                 </footer>
+
+                {/* Phones: the full footer is hidden, but the info pages stay reachable. */}
+                <InstallPrompt />
+
+                <div className="px-4 pt-6 pb-4 text-xs text-slate-400 md:hidden">
+                    <PushFollow className="mb-4 text-xs" />
+                    <InfoLinks />
+                    <p className="mt-3">
+                        © {new Date().getFullYear()} NusantaraNews
+                    </p>
+                </div>
 
                 {/* App-style bottom navigation on phones */}
                 <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-accent/10 bg-surface/90 px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
@@ -532,6 +561,14 @@ function UserMenu({ name }: { name: string }) {
                         Langganan data
                     </Link>
                     <Link
+                        href={bookmarks.url()}
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-accent/5 hover:text-accent"
+                    >
+                        <Icon name="bookmark" width={16} height={16} />
+                        Berita tersimpan
+                    </Link>
+                    <Link
                         href={logout.url()}
                         method="post"
                         as="button"
@@ -617,6 +654,22 @@ function ThemeToggle() {
         >
             <Icon name={dark ? 'sun' : 'moon'} width={18} height={18} />
         </button>
+    );
+}
+
+function InfoLinks() {
+    return (
+        <nav aria-label="Informasi" className="flex flex-wrap gap-x-4 gap-y-2">
+            {INFO_LINKS.map((l) => (
+                <Link
+                    key={l.slug}
+                    href={info.url(l.slug)}
+                    className="transition hover:text-accent"
+                >
+                    {l.label}
+                </Link>
+            ))}
+        </nav>
     );
 }
 

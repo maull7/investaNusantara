@@ -90,4 +90,41 @@ class AuthTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_captcha_guards_login_and_register_when_enabled(): void
+    {
+        config(['services.turnstile.site_key' => 'site', 'services.turnstile.secret_key' => 'secret']);
+        Http::fake(['challenges.cloudflare.com/*' => Http::sequence()
+            ->push(['success' => false])
+            ->push(['success' => true])]);
+        $user = User::factory()->create(['password' => 'rahasia-panjang']);
+        $login = ['email' => $user->email, 'password' => 'rahasia-panjang'];
+
+        $this->get('/login')->assertInertia(fn (Assert $page) => $page->where('turnstileSiteKey', 'site'));
+
+        // No token at all, then a token Cloudflare rejects.
+        $this->post('/login', $login)->assertSessionHasErrors('cf-turnstile-response');
+        $this->post('/login', [...$login, 'cf-turnstile-response' => 'bad'])->assertSessionHasErrors('cf-turnstile-response');
+        $this->assertGuest();
+
+        $this->post('/login', [...$login, 'cf-turnstile-response' => 'good'])->assertRedirect();
+        $this->assertAuthenticatedAs($user);
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'siteverify')
+            && str_contains($request->body(), 'secret=secret')
+            && str_contains($request->body(), 'response=good'));
+    }
+
+    public function test_captcha_is_off_without_keys(): void
+    {
+        config(['services.turnstile.secret_key' => null]);
+
+        $this->get('/login')->assertInertia(fn (Assert $page) => $page->where('turnstileSiteKey', null));
+        $this->post('/register', [
+            'name' => 'Warga',
+            'email' => 'baru@example.com',
+            'password' => 'rahasia-panjang',
+            'password_confirmation' => 'rahasia-panjang',
+        ])->assertRedirect();
+        $this->assertAuthenticated();
+    }
 }

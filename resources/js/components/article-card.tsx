@@ -132,6 +132,15 @@ export default function ArticleCard({
                                     · Breaking
                                 </span>
                             )}
+                            {article.is_ai_generated && (
+                                <span
+                                    className="text-slate-400"
+                                    title="Disusun dengan bantuan AI, dikurasi redaksi"
+                                >
+                                    {' '}
+                                    · AI
+                                </span>
+                            )}
                         </p>
                     </div>
                 </div>,
@@ -366,6 +375,14 @@ function Chips({ article }: { article: Card }) {
             <span className="rounded-full bg-surface/90 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-navy-900 uppercase backdrop-blur">
                 {article.category.name}
             </span>
+            {article.is_ai_generated && (
+                <span
+                    className="rounded-full bg-navy-900/70 px-2.5 py-1 text-[10px] font-medium tracking-wide text-white uppercase backdrop-blur-md"
+                    title="Disusun dengan bantuan AI, dikurasi redaksi"
+                >
+                    AI
+                </span>
+            )}
         </div>
     );
 }

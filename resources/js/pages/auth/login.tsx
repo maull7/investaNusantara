@@ -9,6 +9,7 @@ import Icon, { type IconName } from '@/components/icons';
 import { LogoMark } from '@/components/logo';
 import { ease } from '@/components/motion';
 import Ticker from '@/components/ticker';
+import Turnstile from '@/components/turnstile';
 import ZoneClock from '@/components/zone-clock';
 import { cn } from '@/lib/utils';
 import { home, login, register } from '@/routes';
@@ -33,6 +34,8 @@ type Props = {
     mode: Mode;
     breaking: ArticleCard[];
     stats: { cities: number; weekly: number };
+    /** Cloudflare Turnstile site key; null while the captcha is turned off. */
+    turnstileSiteKey: string | null;
 };
 
 /** Thin-thick-thin rule, like the lines under a newspaper masthead. */
@@ -46,7 +49,12 @@ function Rule({ className }: { className?: string }) {
 }
 
 /** Login styled as a newspaper front page: masthead, lead story, and the form as its own column. */
-export default function Login({ mode: initialMode, breaking, stats }: Props) {
+export default function Login({
+    mode: initialMode,
+    breaking,
+    stats,
+    turnstileSiteKey,
+}: Props) {
     const { provinces } = usePage().props.nav;
     const [mode, setMode] = useState<Mode>(initialMode);
     const copy = COPY[mode];
@@ -142,9 +150,9 @@ export default function Login({ mode: initialMode, breaking, stats }: Props) {
                                     {copy.lead}
                                 </p>
                                 {mode === 'login' ? (
-                                    <LoginForm />
+                                    <LoginForm siteKey={turnstileSiteKey} />
                                 ) : (
-                                    <RegisterForm />
+                                    <RegisterForm siteKey={turnstileSiteKey} />
                                 )}
                             </motion.div>
                         </AnimatePresence>
@@ -376,13 +384,17 @@ function Photo({ provinces }: { provinces: Region[] }) {
     );
 }
 
-function LoginForm() {
+function LoginForm({ siteKey }: { siteKey: string | null }) {
+    // Captcha tokens are single-use: remount the widget after each failed submit.
+    const [attempt, setAttempt] = useState(0);
+
     return (
         <Form
             action={store.url()}
             method="post"
             errorBag="login"
             resetOnError={['password']}
+            onError={() => setAttempt((n) => n + 1)}
             className="space-y-4"
         >
             {({ errors, processing }) => (
@@ -412,6 +424,13 @@ function LoginForm() {
                         />
                         Ingat saya
                     </label>
+                    {siteKey && (
+                        <Turnstile
+                            key={attempt}
+                            siteKey={siteKey}
+                            error={errors['cf-turnstile-response']}
+                        />
+                    )}
                     <Submit processing={processing}>Masuk</Submit>
                     <GoogleButton>Masuk dengan Google</GoogleButton>
                 </>
@@ -420,13 +439,16 @@ function LoginForm() {
     );
 }
 
-function RegisterForm() {
+function RegisterForm({ siteKey }: { siteKey: string | null }) {
+    const [attempt, setAttempt] = useState(0);
+
     return (
         <Form
             action={registerAction.url()}
             method="post"
             errorBag="register"
             resetOnError={['password', 'password_confirmation']}
+            onError={() => setAttempt((n) => n + 1)}
             className="space-y-4"
         >
             {({ errors, processing }) => (
@@ -496,6 +518,13 @@ function RegisterForm() {
                         label="Ulangi password"
                         autoComplete="new-password"
                     />
+                    {siteKey && (
+                        <Turnstile
+                            key={attempt}
+                            siteKey={siteKey}
+                            error={errors['cf-turnstile-response']}
+                        />
+                    )}
                     <Submit processing={processing}>Buat akun</Submit>
                     <GoogleButton>Daftar dengan Google</GoogleButton>
                 </>

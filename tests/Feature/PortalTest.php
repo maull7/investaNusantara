@@ -106,4 +106,19 @@ class PortalTest extends TestCase
         $this->assertSame(1, $article->views);
         $this->assertSame($before, $article->updated_at->toAtomString());
     }
+
+    public function test_article_marks_paywall_and_ai_curation(): void
+    {
+        $editor = User::factory()->create(['role' => Role::Editor, 'name' => 'Rina Editor']);
+        $article = Article::factory()->published()->create(['is_ai_generated' => true, 'editor_id' => $editor->id]);
+
+        $this->get("/berita/{$article->slug}")->assertOk()
+            ->assertSee('"isAccessibleForFree":false', false)
+            ->assertSee('"cssSelector":".paywalled-content"', false)
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('article.is_ai_generated', true)
+                ->where('article.editor.name', 'Rina Editor'));
+
+        $this->get('/')->assertInertia(fn (Assert $page) => $page->where('latest.0.is_ai_generated', true));
+    }
 }

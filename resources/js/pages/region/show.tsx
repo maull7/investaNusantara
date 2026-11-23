@@ -5,6 +5,7 @@ import ArticleCard from '@/components/article-card';
 import Icon from '@/components/icons';
 import { Reveal, Stagger } from '@/components/motion';
 import InfiniteList from '@/components/infinite-list';
+import PushFollow from '@/components/push-follow';
 import PublicLayout, { SectionTitle } from '@/layouts/public';
 import RegionAvatar from '@/components/region-avatar';
 import {
@@ -191,6 +192,12 @@ export default function RegionShow({
                             {isCity && ` · ${province.name}`} · kode{' '}
                             {region.code}
                         </p>
+                        {/* Notifications are per province: a city page follows its province. */}
+                        <PushFollow
+                            province={province.code}
+                            provinceName={province.name}
+                            className="mt-3"
+                        />
                         <div className="mt-4 flex gap-6 text-sm">
                             <Stat value={articles.total} label="Berita" />
                             {!isCity && (

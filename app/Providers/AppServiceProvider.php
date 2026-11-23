@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Minishlink\WebPush\WebPush;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,7 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Breaking-news notifications (see App\Jobs\SendBreakingPush).
+        $this->app->bind(WebPush::class, fn () => new WebPush(['VAPID' => [
+            'subject' => config('services.webpush.subject'),
+            'publicKey' => config('services.webpush.public_key'),
+            'privateKey' => config('services.webpush.private_key'),
+        ]]));
     }
 
     /**

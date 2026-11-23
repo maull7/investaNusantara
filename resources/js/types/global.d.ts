@@ -14,6 +14,7 @@ declare module '@inertiajs/core' {
             auth: Auth;
             nav: { categories: Category[]; provinces: Region[] };
             flash: { success: string | null; error: string | null };
+            vapidPublicKey: string | null;
             [key: string]: unknown;
         };
     }

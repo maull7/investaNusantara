@@ -1,12 +1,25 @@
 {
-    "name": "NusantaraNews",
+    "id": "/",
+    "name": "NusantaraNews 360",
     "short_name": "NusantaraNews",
-    "icons": [
-        { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-        { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
-    ],
+    "description": "Berita nasional dan daerah dari 38 provinsi dan 514 kabupaten/kota di Indonesia.",
+    "lang": "id",
+    "dir": "ltr",
+    "start_url": "/?utm_source=pwa",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
     "theme_color": "#A50E1E",
     "background_color": "#FFFCFC",
-    "display": "standalone",
-    "start_url": "/"
+    "categories": ["news"],
+    "icons": [
+        { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ],
+    "shortcuts": [
+        { "name": "Berita terbaru", "url": "/", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+        { "name": "Wilayah", "url": "/wilayah", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+        { "name": "Cari berita", "url": "/cari", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+    ]
 }

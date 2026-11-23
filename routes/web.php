@@ -3,10 +3,13 @@
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PortalController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Models\RegionProfile;
+use App\Support\InfoPages;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PortalController::class)->group(function () {
@@ -25,6 +28,7 @@ Route::controller(PortalController::class)->group(function () {
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
     Route::get('/sitemap-news.xml', 'newsSitemap')->name('sitemap.news');
     Route::get('/data/{fact}', 'compare')->name('data.compare')->whereIn('fact', RegionProfile::COMPARABLE);
+    Route::get('/{page}', 'info')->name('info')->whereIn('page', InfoPages::SLUGS);
 
 });
 
@@ -91,6 +95,20 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(fun
             Route::post('items/{item}/retry', 'retryItem')->name('items.retry');
         });
     });
+});
+
+// Breaking-news notifications; guests too (the browser's push endpoint identifies them).
+Route::controller(PushSubscriptionController::class)->prefix('api/push')->name('push.')->middleware('throttle:30,1')->group(function () {
+    Route::post('status', 'status')->name('status');
+    Route::post('/', 'store')->name('store');
+    Route::delete('/', 'destroy')->name('destroy');
+});
+Route::view('/offline', 'offline')->name('offline');
+
+Route::middleware('auth')->controller(BookmarkController::class)->group(function () {
+    Route::get('/tersimpan', 'index')->name('bookmarks');
+    Route::post('/berita/{article:slug}/simpan', 'store')->name('bookmarks.store')->middleware('throttle:60,1');
+    Route::delete('/berita/{article:slug}/simpan', 'destroy')->name('bookmarks.destroy')->middleware('throttle:60,1');
 });
 
 Route::get('/langganan', [MembershipController::class, 'index'])->name('membership');

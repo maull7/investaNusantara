@@ -28,6 +28,7 @@ import {
     tag as tagRoute,
 } from '@/routes';
 import { review as reviewRoute } from '@/routes/article';
+import { destroy as unsaveRoute, store as saveRoute } from '@/routes/bookmarks';
 import type { Article, ArticleCard as Card, ArticleReview } from '@/types';
 
 export default function ArticleShow({
@@ -36,8 +37,10 @@ export default function ArticleShow({
     nearby,
     review,
     membershipOffer,
+    bookmarked,
 }: {
     membershipOffer: OfferPlan | null;
+    bookmarked: boolean;
     article: Article;
     related: Card[];
     nearby: Card[];
@@ -202,7 +205,31 @@ export default function ArticleShow({
                         <p className="line-clamp-1 flex-1 text-sm font-medium text-navy-900">
                             {article.title}
                         </p>
+                        <BookmarkButton
+                            slug={article.slug}
+                            saved={bookmarked}
+                            signedIn={Boolean(auth.user)}
+                            className={roundBtn}
+                        />
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Phone: WhatsApp is how most news travels here, so keep it one tap away while reading. */}
+            <AnimatePresence>
+                {compact && (
+                    <motion.button
+                        type="button"
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.6, opacity: 0 }}
+                        transition={{ duration: 0.25, ease }}
+                        onClick={() => shareToWhatsApp(article)}
+                        aria-label="Bagikan ke WhatsApp"
+                        className="fixed right-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 grid size-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 active:scale-90 md:hidden"
+                    >
+                        <Icon name="whatsapp" width={26} height={26} />
+                    </motion.button>
                 )}
             </AnimatePresence>
 
@@ -239,13 +266,21 @@ export default function ArticleShow({
                             >
                                 <Icon name="back" />
                             </Link>
-                            <button
-                                onClick={() => void share()}
-                                aria-label="Bagikan"
-                                className={roundBtn}
-                            >
-                                <Icon name="share" width={18} height={18} />
-                            </button>
+                            <div className="flex gap-2">
+                                <BookmarkButton
+                                    slug={article.slug}
+                                    saved={bookmarked}
+                                    signedIn={Boolean(auth.user)}
+                                    className={roundBtn}
+                                />
+                                <button
+                                    onClick={() => void share()}
+                                    aria-label="Bagikan"
+                                    className={roundBtn}
+                                >
+                                    <Icon name="share" width={18} height={18} />
+                                </button>
+                            </div>
                         </motion.div>
                     </div>
 
@@ -311,6 +346,23 @@ export default function ArticleShow({
                                         className="mt-2"
                                     />
                                     <div className="mt-2.5 flex flex-wrap gap-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                shareToWhatsApp(article)
+                                            }
+                                            className={cn(
+                                                pill,
+                                                'bg-[#25D366] text-white ring-[#25D366] hover:bg-brand-wa hover:ring-brand-wa',
+                                            )}
+                                        >
+                                            <Icon
+                                                name="whatsapp"
+                                                width={13}
+                                                height={13}
+                                            />
+                                            Bagikan ke WA
+                                        </button>
                                         <button
                                             type="button"
                                             onClick={() =>
@@ -420,6 +472,29 @@ export default function ArticleShow({
                                 </h1>
                             </Reveal>
 
+                            {article.is_ai_generated && (
+                                <p className="mt-3 inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-xl bg-navy-50 px-3 py-2 text-xs text-navy-800 ring-1 ring-navy-100">
+                                    <Icon name="star" width={13} height={13} />
+                                    <span className="font-semibold">
+                                        Disusun dengan bantuan AI
+                                    </span>
+                                    <span>
+                                        · dikurasi redaksi
+                                        {article.editor
+                                            ? ` (${article.editor.name})`
+                                            : ''}
+                                    </span>
+                                    {article.source_name && (
+                                        <span>
+                                            · berdasarkan{' '}
+                                            <span className="font-medium">
+                                                {article.source_name}
+                                            </span>
+                                        </span>
+                                    )}
+                                </p>
+                            )}
+
                             {original ? (
                                 <div className="mt-5 rounded-2xl bg-accent/[0.04] p-4 text-[15px] leading-[1.85] text-slate-600 ring-1 ring-accent/10 md:p-5 md:text-[17px]">
                                     <p className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-accent uppercase">
@@ -475,7 +550,7 @@ export default function ArticleShow({
                                     )}
 
                                     {/* Plain-text body (contributor input is never rendered as HTML). */}
-                                    <div className="mt-5 space-y-4 text-[15px] leading-[1.85] text-slate-600 md:text-[17px]">
+                                    <div className="paywalled-content mt-5 space-y-4 text-[15px] leading-[1.85] text-slate-600 md:text-[17px]">
                                         {article.body
                                             .split(/\n\s*\n/)
                                             .map((p, i) => (
@@ -826,6 +901,79 @@ function LoginGate({ onClose }: { onClose: () => void }) {
                 </div>
             </motion.div>
         </motion.div>
+    );
+}
+
+/** Opens WhatsApp with the post text and link. Reads the URL on click, so it is safe to render on the server. */
+function shareToWhatsApp(article: Article) {
+    const text = article.social_post ?? article.title;
+    window.open(
+        `https://wa.me/?text=${encodeURIComponent(`${text}\n\n${window.location.href}`)}`,
+        '_blank',
+        'noopener',
+    );
+}
+
+/** "Simpan berita": toggles at once, then syncs with the server. Guests are sent to log in. */
+function BookmarkButton({
+    slug,
+    saved,
+    signedIn,
+    className,
+}: {
+    slug: string;
+    saved: boolean;
+    signedIn: boolean;
+    className?: string;
+}) {
+    const [on, setOn] = useState(saved);
+    useEffect(() => setOn(saved), [saved]);
+    const label = on ? 'Hapus dari tersimpan' : 'Simpan berita';
+
+    if (!signedIn) {
+        return (
+            <Link
+                href={login.url()}
+                aria-label="Masuk untuk menyimpan berita"
+                title="Masuk untuk menyimpan berita"
+                className={className}
+            >
+                <Icon name="bookmark" width={18} height={18} />
+            </Link>
+        );
+    }
+
+    function toggle() {
+        const next = !on;
+        setOn(next);
+        const options = {
+            preserveScroll: true,
+            only: ['bookmarked'],
+            onError: () => setOn(!next),
+        };
+        if (next) {
+            router.post(saveRoute.url(slug), {}, options);
+        } else {
+            router.delete(unsaveRoute.url(slug), options);
+        }
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={toggle}
+            aria-label={label}
+            aria-pressed={on}
+            title={label}
+            className={cn(className, on && 'text-accent')}
+        >
+            <Icon
+                name="bookmark"
+                width={18}
+                height={18}
+                fill={on ? 'currentColor' : 'none'}
+            />
+        </button>
     );
 }
 
