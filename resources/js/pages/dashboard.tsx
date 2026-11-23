@@ -1,11 +1,10 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AccountTabs from '@/components/account-tabs';
 import ArticleCard from '@/components/article-card';
 import Icon, { type IconName } from '@/components/icons';
 import { Reveal, Stagger } from '@/components/motion';
-import RegionAvatar from '@/components/region-avatar';
 import PublicLayout from '@/layouts/public';
-import { formatDate, regionHref } from '@/lib/news';
+import { formatDate } from '@/lib/news';
 import { cn } from '@/lib/utils';
 import {
     agenda,
@@ -15,6 +14,8 @@ import {
     regions as regionsRoute,
 } from '@/routes';
 import { create, show } from '@/routes/agenda';
+import { regions as feedRoute } from '@/routes/dashboard';
+import { unfollow } from '@/routes/regions';
 import type { ArticleCard as Card, Region } from '@/types';
 
 type Event = {
@@ -26,6 +27,8 @@ type Event = {
     organizer?: string | null;
     verified_at?: string | null;
 };
+
+type Followed = Region & { recent: number };
 
 type Props = {
     member: {
@@ -39,7 +42,7 @@ type Props = {
         created_at: string;
         plan: { name: string } | null;
     } | null;
-    regions: Region[];
+    regions: Followed[];
     feed: Card[];
     bookmarks: Card[];
     bookmarkCount: number;
@@ -109,8 +112,8 @@ export default function Dashboard({
                     <SectionHead
                         icon="map"
                         title="Wilayah Saya"
-                        href={regionsRoute.url()}
-                        cta="Tambah wilayah"
+                        href={regions.length > 0 ? feedRoute.url() : undefined}
+                        cta="Lihat berita"
                     />
                     {regions.length === 0 ? (
                         <Empty
@@ -120,28 +123,17 @@ export default function Dashboard({
                             cta="Pilih wilayah"
                         />
                     ) : (
-                        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
+                        <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-4">
                             {regions.map((r) => (
-                                <Link
-                                    key={r.code}
-                                    href={regionHref(r)}
-                                    className="flex shrink-0 items-center gap-2 rounded-full bg-accent/5 py-1 pr-3.5 pl-1 text-sm font-medium text-navy-900 ring-1 ring-accent/10 transition hover:bg-accent/10 hover:text-accent"
-                                >
-                                    <RegionAvatar
-                                        region={r}
-                                        className="size-7"
-                                    />
-                                    <span className="whitespace-nowrap">
-                                        {r.name}
-                                        {r.parent && (
-                                            <span className="font-normal text-slate-400">
-                                                {' '}
-                                                · {r.parent.name}
-                                            </span>
-                                        )}
-                                    </span>
-                                </Link>
+                                <RegionCard key={r.code} region={r} />
                             ))}
+                            <Link
+                                href={regionsRoute.url()}
+                                className="flex min-h-36 w-36 shrink-0 snap-start flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 text-sm font-medium text-slate-500 transition hover:border-accent/40 hover:text-accent sm:w-auto"
+                            >
+                                <Icon name="plus" width={20} height={20} />
+                                Tambah wilayah
+                            </Link>
                         </div>
                     )}
                 </Reveal>
@@ -153,6 +145,7 @@ export default function Dashboard({
                                 <SectionHead
                                     icon="file"
                                     title="Berita dari Wilayah Anda"
+                                    href={feedRoute.url()}
                                 />
                                 {feed.length === 0 ? (
                                     <Empty
@@ -359,6 +352,59 @@ export default function Dashboard({
                 </div>
             </Stagger>
         </PublicLayout>
+    );
+}
+
+function RegionCard({ region: r }: { region: Followed }) {
+    const image = r.image_url ?? r.parent?.image_url;
+
+    function unfollowRegion() {
+        router.delete(unfollow.url(r.code), { preserveScroll: true });
+    }
+
+    return (
+        <div className="group relative w-36 shrink-0 snap-start overflow-hidden rounded-2xl ring-1 ring-accent/10 sm:w-auto">
+            <Link
+                href={feedRoute.url({ query: { wilayah: r.code } })}
+                className="block"
+            >
+                <div className="relative h-20 bg-accent/10">
+                    {image && (
+                        <img
+                            src={image}
+                            alt=""
+                            loading="lazy"
+                            className="size-full object-cover transition duration-300 group-hover:scale-105"
+                        />
+                    )}
+                    <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                        {r.level === 1 ? 'Provinsi' : (r.type ?? 'Kab/Kota')}
+                    </span>
+                </div>
+                <div className="bg-surface p-2.5">
+                    <p className="truncate text-sm font-semibold text-navy-900 group-hover:text-accent">
+                        {r.name}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                        {r.parent ? r.parent.name : 'Seluruh kab/kota'}
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-accent">
+                        {r.recent > 0
+                            ? `${r.recent} berita minggu ini`
+                            : 'Belum ada berita baru'}
+                    </p>
+                </div>
+            </Link>
+            <button
+                type="button"
+                onClick={unfollowRegion}
+                aria-label={`Berhenti mengikuti ${r.name}`}
+                title="Berhenti mengikuti"
+                className="absolute top-1.5 right-1.5 grid size-7 place-items-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-accent sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+            >
+                <Icon name="x" width={14} height={14} />
+            </button>
+        </div>
     );
 }
 

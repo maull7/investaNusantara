@@ -108,6 +108,7 @@ Route::controller(PushSubscriptionController::class)->prefix('api/push')->name('
 Route::view('/offline', 'offline')->name('offline');
 
 Route::get('/akun', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+Route::get('/akun/wilayah', [DashboardController::class, 'regions'])->name('dashboard.regions')->middleware('auth');
 Route::middleware(['auth', 'throttle:60,1'])->controller(RegionFollowController::class)->group(function () {
     Route::post('/wilayah-ikuti/{region:code}', 'store')->name('regions.follow');
     Route::delete('/wilayah-ikuti/{region:code}', 'destroy')->name('regions.unfollow');

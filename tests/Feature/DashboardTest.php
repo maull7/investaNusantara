@@ -63,4 +63,22 @@ class DashboardTest extends TestCase
         $code = Region::provinces()->value('code');
         $this->actingAs(User::factory()->create(['role' => Role::Editor]))->post("/wilayah-ikuti/{$code}")->assertForbidden();
     }
+
+    public function test_regions_feed_lists_followed_news_and_filters(): void
+    {
+        $this->seed(RegionSeeder::class);
+        [$a, $b] = Region::provinces()->limit(2)->get()->all();
+        $inA = Article::factory()->published()->create(['region_code' => $a->code]);
+        Article::factory()->published()->create(['region_code' => $b->code]);
+        $user = User::factory()->create(['role' => Role::Customer]);
+        $user->followedRegions()->attach([$a->code, $b->code]);
+
+        $this->actingAs($user)->get('/akun/wilayah')->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard/regions')->where('articles.total', 2));
+        $this->actingAs($user)->get("/akun/wilayah?wilayah={$a->code}")->assertInertia(fn (Assert $page) => $page
+            ->where('active', $a->code)->where('articles.total', 1)->where('articles.data.0.id', $inA->id));
+        // A code the reader does not follow is ignored.
+        $this->actingAs(User::factory()->create(['role' => Role::Customer]))->get("/akun/wilayah?wilayah={$a->code}")
+            ->assertInertia(fn (Assert $page) => $page->where('active', null)->where('articles.total', 0));
+    }
 }

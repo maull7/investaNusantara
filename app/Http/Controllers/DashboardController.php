@@ -22,6 +22,9 @@ class DashboardController extends Controller
         $regions = $user->followedRegions()->with('parent:code,name,slug,image_url')
             ->orderBy('region_follows.created_at')->get(['regions.code', 'name', 'slug', 'level', 'type', 'parent_code', 'image_url']);
         $codes = $regions->pluck('code');
+        // shortcut: one count query per followed region (max 20); group in SQL if it shows up as slow.
+        $regions->each(fn ($r) => $r->setAttribute('recent', Article::published()->inRegion($r->code)
+            ->where('published_at', '>=', now()->subDays(7))->count()));
         // A followed province also covers its kab/kota.
         $inFollowed = fn (Builder $q, string $column) => $q->where(function (Builder $w) use ($codes, $column) {
             foreach ($codes as $code) {
@@ -52,5 +55,31 @@ class DashboardController extends Controller
         ]);
 
         return $this->seo($page, 'Dashboard Saya', 'Ringkasan wilayah yang diikuti, langganan, berita tersimpan, dan agenda Anda.');
+    }
+
+    /** "Wilayah Saya": every published article from the followed regions, optionally one of them. */
+    public function regions(Request $request): Response
+    {
+        $user = $request->user();
+        abort_if($user->role->isStaff(), 404);
+
+        $regions = $user->followedRegions()->with('parent:code,name,slug,image_url')
+            ->orderBy('region_follows.created_at')->get(['regions.code', 'name', 'slug', 'level', 'type', 'parent_code', 'image_url']);
+        $active = $regions->firstWhere('code', $request->query('wilayah'))?->code;
+        $codes = $active ? [$active] : $regions->pluck('code')->all();
+
+        $page = Inertia::render('dashboard/regions', [
+            'regions' => $regions,
+            'active' => $active,
+            'articles' => Inertia::scroll(fn () => Article::published()->card()
+                ->where(function (Builder $w) use ($codes) {
+                    $w->whereRaw('1 = 0'); // nothing followed = no articles
+                    foreach ($codes as $code) {
+                        $w->orWhere('region_code', $code)->orWhere('region_code', 'like', $code.'.%');
+                    }
+                })->paginate(12)->withQueryString()),
+        ]);
+
+        return $this->seo($page, 'Berita Wilayah Saya', 'Berita terbaru dari provinsi dan kabupaten/kota yang Anda ikuti.');
     }
 }

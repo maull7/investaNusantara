@@ -938,7 +938,7 @@ export default function RegionIndex({
                                         {profile.umkm.map((u) => (
                                             <li
                                                 key={u.name}
-                                                className="group overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200"
+                                                className="group overflow-hidden rounded-2xl bg-surface ring-1 ring-slate-200"
                                             >
                                                 <div className="relative aspect-[4/3] bg-gradient-to-br from-merah-dark to-merah">
                                                     {u.image && (
@@ -949,7 +949,7 @@ export default function RegionIndex({
                                                             className="size-full object-cover transition duration-500 group-hover:scale-105"
                                                         />
                                                     )}
-                                                    <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                                                    <span className="absolute top-2 left-2 rounded-full bg-surface/90 px-2 py-0.5 text-[10px] font-semibold text-accent">
                                                         {u.category}
                                                     </span>
                                                 </div>
