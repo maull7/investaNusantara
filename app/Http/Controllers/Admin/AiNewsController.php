@@ -11,6 +11,7 @@ use App\Models\NewsFetch;
 use App\Models\NewsItem;
 use App\Models\NewsSource;
 use App\Models\Region;
+use App\Models\User;
 use App\Services\HermesClient;
 use App\Services\NewsPipeline;
 use Illuminate\Http\RedirectResponse;
@@ -68,10 +69,14 @@ class AiNewsController extends Controller
         $province = $this->province($request);
         $city = $this->city($request, $province);
         $search = trim((string) $request->input('search', ''));
+        // Audit filter: who added the source. Only users that actually added one are offered.
+        $creators = User::whereIn('id', NewsSource::whereNotNull('created_by')->select('created_by'))->orderBy('name')->get(['id', 'name']);
+        $user = (string) $creators->firstWhere('id', (int) $request->query('user'))?->id;
         $sources = NewsSource::inProvince($province)
             ->when($city, fn ($q) => $q->where('region_code', $city))
+            ->when($user !== '', fn ($q) => $q->where('created_by', (int) $user))
             ->when($search !== '', fn ($q) => $q->where(fn ($query) => $query->where('name', 'like', '%'.$search.'%')->orWhere('url', 'like', '%'.$search.'%')))
-            ->with(['region:code,name', 'category:id,name'])
+            ->with(['region:code,name', 'category:id,name', 'creator:id,name'])
             ->withCount(['fetches as active_fetches' => fn ($q) => $q->whereIn('status', NewsTaskStatus::activeValues())])
             ->orderBy('name')->paginate(20)->withQueryString();
 
@@ -79,6 +84,8 @@ class AiNewsController extends Controller
             'province' => $province,
             'city' => $city,
             'search' => $search,
+            'user' => $user,
+            'creators' => $creators,
             'hermesToken' => ['enabled' => $hermes->enabled(), 'configured' => (bool) config('hermes.token')],
             'sources' => $sources,
             'counts' => NewsItem::whereIn('news_source_id', $sources->pluck('id'))
@@ -111,7 +118,7 @@ class AiNewsController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        NewsSource::create($this->validated($request));
+        NewsSource::create([...$this->validated($request), 'created_by' => $request->user()->id]);
 
         return back()->with('success', 'Sumber berita ditambahkan.');
     }
