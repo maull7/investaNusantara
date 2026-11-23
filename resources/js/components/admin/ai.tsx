@@ -294,7 +294,7 @@ export function ProvinceFilter({
 }
 
 /** Pill dropdown matching the tabs; a custom list so the selected row is red, not the browser's blue. */
-function FilterSelect({
+export function FilterSelect({
     value,
     options,
     label,

@@ -1,7 +1,12 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
 import { type FormEvent, useEffect, useState } from 'react';
-import { AiTabs, ProvinceFilter, TaskPill } from '@/components/admin/ai';
+import {
+    AiTabs,
+    FilterSelect,
+    ProvinceFilter,
+    TaskPill,
+} from '@/components/admin/ai';
 import { EmptyState, Field, Switch } from '@/components/admin/ui';
 import Icon from '@/components/icons';
 import { ease } from '@/components/motion';
@@ -39,6 +44,7 @@ type Source = {
     active_fetches: number;
     region: { code: string; name: string } | null;
     category: { id: number; name: string } | null;
+    creator: { id: number; name: string } | null;
 };
 
 type Props = {
@@ -53,6 +59,8 @@ type Props = {
     province: string;
     city: string;
     search: string;
+    user: string;
+    creators: { id: number; name: string }[];
 };
 
 const intervals = [
@@ -74,6 +82,8 @@ export default function AiSources({
     province,
     city,
     search,
+    user,
+    creators,
 }: Props) {
     // null = closed, 'new' = create, otherwise the source being edited.
     const tokenForm = useForm({ enabled: hermesToken.enabled });
@@ -99,11 +109,44 @@ export default function AiSources({
         >
             <Head title="Sumber berita" />
             <AiTabs>
-                <ProvinceFilter
-                    value={province}
-                    provinces={provinces}
-                    city={city}
-                />
+                <div className="flex flex-wrap gap-2">
+                    <ProvinceFilter
+                        value={province}
+                        provinces={provinces}
+                        city={city}
+                        extraQuery={{
+                            ...(search && { search }),
+                            ...(user && { user }),
+                        }}
+                    />
+                    <FilterSelect
+                        value={user}
+                        label="Filter penambah sumber"
+                        onChange={(v) =>
+                            router.get(
+                                window.location.pathname,
+                                {
+                                    ...(province && { province }),
+                                    ...(city && { city }),
+                                    ...(search && { search }),
+                                    ...(v && { user: v }),
+                                },
+                                {
+                                    preserveState: true,
+                                    preserveScroll: true,
+                                    replace: true,
+                                },
+                            )
+                        }
+                        options={[
+                            { value: '', label: 'Semua penambah' },
+                            ...creators.map((c) => ({
+                                value: String(c.id),
+                                label: c.name,
+                            })),
+                        ]}
+                    />
+                </div>
             </AiTabs>
 
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -113,7 +156,7 @@ export default function AiSources({
                         event.preventDefault();
                         router.get(
                             window.location.pathname,
-                            { province, city, search: query.trim() },
+                            { province, city, user, search: query.trim() },
                             { preserveState: true, preserveScroll: true },
                         );
                     }}
@@ -199,10 +242,10 @@ export default function AiSources({
                 </button>
             </div>
 
-            {sources.data.length === 0 && search ? (
+            {sources.data.length === 0 && (search || user) ? (
                 <div className="card">
                     <EmptyState icon="sliders" title="Sumber tidak ditemukan">
-                        Coba kata kunci atau wilayah lain.
+                        Coba kata kunci, wilayah, atau penambah lain.
                     </EmptyState>
                 </div>
             ) : sources.data.length === 0 && province ? (
@@ -306,6 +349,7 @@ function SourceCard({
             <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-medium">
                 <Chip>{s.region?.name ?? 'Nasional'}</Chip>
                 <Chip>{s.category?.name ?? 'Kategori dipilih AI'}</Chip>
+                <Chip>Oleh {s.creator?.name ?? 'tidak diketahui'}</Chip>
                 <Chip>
                     {interval?.label ??
                         `Tiap ${s.fetch_interval_minutes} menit`}

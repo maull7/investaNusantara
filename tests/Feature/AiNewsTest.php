@@ -138,6 +138,21 @@ class AiNewsTest extends TestCase
         $this->get('/admin/ai?province=nasional')->assertInertia(fn (Assert $page) => $page->where('stats.published', 0)->has('fetches', 0));
     }
 
+    public function test_sources_record_and_filter_by_who_added_them(): void
+    {
+        $budi = User::factory()->create(['role' => Role::SuperAdmin, 'name' => 'Budi']);
+        $sari = User::factory()->create(['role' => Role::SuperAdmin, 'name' => 'Sari']);
+        $this->actingAs($budi)->post('/admin/ai/sources', ['name' => 'Budi Site', 'url' => 'https://budi.test', 'max_articles' => 5])->assertSessionHasNoErrors();
+        $this->actingAs($sari)->post('/admin/ai/sources', ['name' => 'Sari Site', 'url' => 'https://sari.test', 'max_articles' => 5]);
+
+        $this->assertSame($budi->id, NewsSource::where('name', 'Budi Site')->value('created_by'));
+        $this->get('/admin/ai/sources')->assertInertia(fn (Assert $page) => $page->has('sources.data', 3)->has('creators', 2)->where('user', ''));
+        $this->get("/admin/ai/sources?user={$budi->id}")->assertInertia(fn (Assert $page) => $page
+            ->has('sources.data', 1)->where('sources.data.0.creator.name', 'Budi')->where('user', (string) $budi->id));
+        // Unknown user ids are ignored rather than emptying the list.
+        $this->get('/admin/ai/sources?user=999999')->assertInertia(fn (Assert $page) => $page->has('sources.data', 3)->where('user', ''));
+    }
+
     public function test_fetch_now_queues_one_discovery_per_source(): void
     {
         Queue::fake();

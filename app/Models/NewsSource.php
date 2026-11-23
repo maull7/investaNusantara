@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $last_fetched_at
  * @property Carbon|null $last_success_at
  * @property string|null $last_error
+ * @property int|null $created_by
  */
 class NewsSource extends Model
 {
@@ -90,6 +91,16 @@ class NewsSource extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Who added this source (null for old sources the audit log didn't know).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /** @return HasMany<NewsFetch, $this> */
