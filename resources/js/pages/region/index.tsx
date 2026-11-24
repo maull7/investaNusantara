@@ -625,7 +625,7 @@ export default function RegionIndex({
 
                             {/* Floating Zoom In & Zoom Out Controls */}
                             {selected && (
-                                <div className="absolute right-3 bottom-3 z-10 flex flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white/95 shadow-md backdrop-blur-sm">
+                                <div className="absolute right-3 bottom-3 z-10 flex flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-surface/95 shadow-md backdrop-blur-sm">
                                     <button
                                         type="button"
                                         aria-label="Perbesar peta"
@@ -670,7 +670,7 @@ export default function RegionIndex({
                             )}
 
                             {hoveredName && (
-                                <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg bg-white/95 px-3 py-2 text-xs font-semibold text-navy-900 shadow">
+                                <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg bg-surface/95 px-3 py-2 text-xs font-semibold text-navy-900 shadow">
                                     {hoveredName}
                                     {!selected &&
                                         hovered &&

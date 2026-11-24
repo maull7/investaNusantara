@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ArticleCard from '@/components/article-card';
 import Icon from '@/components/icons';
 import { Reveal, Stagger } from '@/components/motion';
@@ -236,50 +236,11 @@ export default function RegionShow({
                     >
                         Filter kabupaten/kota
                     </label>
-                    <select
-                        id="city-filter"
-                        value={isCity ? region.slug : ''}
-                        onChange={(e) =>
-                            router.visit(
-                                regionRoute.url({
-                                    province: province.slug,
-                                    ...(e.target.value && {
-                                        child: e.target.value,
-                                    }),
-                                }),
-                                { preserveScroll: true, viewTransition: true },
-                            )
-                        }
-                        className="input w-full rounded-full bg-white py-2 pl-4 ring-1 ring-slate-200 sm:w-72"
-                    >
-                        <option value="">Semua {province.name}</option>
-                        {(['kabupaten', 'kota'] as const).map((type) => {
-                            const group = cities.filter((c) =>
-                                type === 'kota'
-                                    ? c.type === 'kota'
-                                    : c.type !== 'kota',
-                            );
-
-                            return (
-                                group.length > 0 && (
-                                    <optgroup
-                                        key={type}
-                                        label={
-                                            type === 'kota'
-                                                ? 'Kota'
-                                                : 'Kabupaten'
-                                        }
-                                    >
-                                        {group.map((c) => (
-                                            <option key={c.code} value={c.slug}>
-                                                {c.name}
-                                            </option>
-                                        ))}
-                                    </optgroup>
-                                )
-                            );
-                        })}
-                    </select>
+                    <CityFilterDropdown
+                        province={province}
+                        cities={cities}
+                        currentSlug={isCity ? region.slug : ''}
+                    />
                 </Reveal>
 
                 <Reveal className="card p-4">
@@ -515,6 +476,150 @@ function Stat({ value, label }: { value: number; label: string }) {
         <div>
             <p className="text-lg font-semibold text-navy-900">{value}</p>
             <p className="text-xs text-slate-500">{label}</p>
+        </div>
+    );
+}
+
+/** Theme-aware dropdown filter for regencies/cities in province page. */
+function CityFilterDropdown({
+    province,
+    cities,
+    currentSlug,
+}: {
+    province: Region;
+    cities: Region[];
+    currentSlug: string;
+}) {
+    const [open, setOpen] = useState(false);
+    const [query, setQuery] = useState('');
+    const root = useRef<HTMLDivElement>(null);
+    const search = useRef<HTMLInputElement>(null);
+
+    const currentCity = cities.find((c) => c.slug === currentSlug);
+    const label = currentCity ? currentCity.name : `Semua ${province.name}`;
+
+    useEffect(() => {
+        if (!open) return;
+        search.current?.focus();
+        function close(e: MouseEvent) {
+            if (!root.current?.contains(e.target as Node)) setOpen(false);
+        }
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [open]);
+
+    function choose(slug: string) {
+        setOpen(false);
+        setQuery('');
+        router.visit(
+            regionRoute.url({
+                province: province.slug,
+                ...(slug && { child: slug }),
+            }),
+            { preserveScroll: true, viewTransition: true },
+        );
+    }
+
+    const filtered = cities.filter((c) =>
+        c.name.toLowerCase().includes(query.toLowerCase()),
+    );
+
+    return (
+        <div ref={root} className="relative w-full sm:w-72">
+            <button
+                type="button"
+                id="city-filter"
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                onClick={() => setOpen((v) => !v)}
+                className={cn(
+                    'flex w-full items-center justify-between gap-3 rounded-full bg-surface px-4 py-2.5 text-left text-sm text-navy-900 ring-1 ring-slate-200 transition hover:ring-merah/50 focus:ring-2 focus:ring-merah/40 focus:outline-none',
+                    open && 'ring-2 ring-merah/40',
+                )}
+            >
+                <span className="truncate font-medium">{label}</span>
+                <span
+                    aria-hidden="true"
+                    className={cn(
+                        'shrink-0 text-merah transition-transform',
+                        open && 'rotate-180',
+                    )}
+                >
+                    ⌄
+                </span>
+            </button>
+
+            {open && (
+                <div className="absolute right-0 z-30 mt-2 w-full min-w-64 rounded-2xl border border-merah/15 bg-surface p-2 shadow-xl shadow-black/10">
+                    <input
+                        ref={search}
+                        type="search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Cari kabupaten/kota…"
+                        className="mb-2 w-full rounded-xl border border-slate-200 bg-surface px-3 py-2 text-sm text-navy-900 placeholder:text-slate-400 outline-none focus:border-merah focus:ring-2 focus:ring-merah/20"
+                    />
+                    <div
+                        role="listbox"
+                        className="max-h-[220px] overflow-y-auto overscroll-contain"
+                    >
+                        <button
+                            type="button"
+                            role="option"
+                            aria-selected={!currentSlug}
+                            onClick={() => choose('')}
+                            className={cn(
+                                'flex h-9 w-full items-center rounded-lg px-3 text-left text-sm text-navy-900 transition hover:bg-merah/10 hover:text-merah focus:bg-merah/10 focus:text-merah focus:outline-none',
+                                !currentSlug &&
+                                    'bg-merah text-white hover:bg-merah-dark hover:text-white',
+                            )}
+                        >
+                            <span className="truncate font-semibold">Semua {province.name}</span>
+                        </button>
+
+                        {(['kabupaten', 'kota'] as const).map((type) => {
+                            const group = filtered.filter((c) =>
+                                type === 'kota'
+                                    ? c.type === 'kota'
+                                    : c.type !== 'kota',
+                            );
+
+                            return (
+                                group.length > 0 && (
+                                    <div key={type} className="mt-1">
+                                        <p className="px-3 py-1 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                                            {type === 'kota' ? 'Kota' : 'Kabupaten'}
+                                        </p>
+                                        {group.map((c) => (
+                                            <button
+                                                key={c.code}
+                                                type="button"
+                                                role="option"
+                                                aria-selected={c.slug === currentSlug}
+                                                onClick={() => choose(c.slug)}
+                                                className={cn(
+                                                    'flex h-9 w-full items-center rounded-lg px-3 text-left text-sm text-navy-900 transition hover:bg-merah/10 hover:text-merah focus:bg-merah/10 focus:text-merah focus:outline-none',
+                                                    c.slug === currentSlug &&
+                                                        'bg-merah text-white hover:bg-merah-dark hover:text-white',
+                                                )}
+                                                title={c.name}
+                                            >
+                                                <span className="truncate">{c.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )
+                            );
+                        })}
+
+                        {filtered.length === 0 && (
+                            <p className="px-3 py-2 text-sm text-slate-400">
+                                Kabupaten/kota tidak ditemukan.
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

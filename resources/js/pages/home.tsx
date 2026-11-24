@@ -279,7 +279,7 @@ function Channels({ counts }: { counts: Record<string, number> }) {
         });
 
     const arrow =
-        'absolute top-1/2 z-10 hidden size-9 -translate-y-1/2 place-items-center rounded-full border border-slate-200/80 bg-white/95 text-navy-800 shadow-md backdrop-blur-sm transition-all hover:bg-accent hover:border-accent hover:text-white hover:scale-105 active:scale-95 md:grid';
+        'absolute top-1/2 z-10 hidden size-9 -translate-y-1/2 place-items-center rounded-full border-2 border-slate-300 bg-surface/95 text-navy-800 shadow-md backdrop-blur-sm transition-all hover:bg-accent hover:border-accent hover:text-white hover:scale-105 active:scale-95 md:grid ring-1 ring-black/5';
 
     return (
         <div className="relative">
@@ -333,7 +333,7 @@ function Channels({ counts }: { counts: Record<string, number> }) {
                                                 className="size-9 rounded-xl shadow-xs ring-1 ring-black/5 object-cover transition-transform duration-300 group-hover:scale-105"
                                             />
                                             {count > 0 && (
-                                                <span className="absolute -top-1 -right-1 size-2 rounded-full bg-accent ring-2 ring-white" />
+                                                <span className="absolute -top-1 -right-1 size-2 rounded-full bg-accent ring-2 ring-surface" />
                                             )}
                                         </div>
                                         <div className="min-w-0 flex-1">
