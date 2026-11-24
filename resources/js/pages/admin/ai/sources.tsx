@@ -108,138 +108,163 @@ export default function AiSources({
             }
         >
             <Head title="Sumber berita" />
-            <AiTabs>
-                <div className="flex flex-wrap gap-2">
-                    <ProvinceFilter
-                        value={province}
-                        provinces={provinces}
-                        city={city}
-                        extraQuery={{
-                            ...(search && { search }),
-                            ...(user && { user }),
-                        }}
-                    />
-                    <FilterSelect
-                        value={user}
-                        label="Filter penambah sumber"
-                        onChange={(v) =>
-                            router.get(
-                                window.location.pathname,
-                                {
-                                    ...(province && { province }),
-                                    ...(city && { city }),
-                                    ...(search && { search }),
-                                    ...(v && { user: v }),
-                                },
-                                {
-                                    preserveState: true,
-                                    preserveScroll: true,
-                                    replace: true,
-                                },
-                            )
-                        }
-                        options={[
-                            { value: '', label: 'Semua penambah' },
-                            ...creators.map((c) => ({
-                                value: String(c.id),
-                                label: c.name,
-                            })),
-                        ]}
-                    />
-                </div>
-            </AiTabs>
 
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <form
-                    className="relative min-w-0 flex-1"
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        router.get(
-                            window.location.pathname,
-                            { province, city, user, search: query.trim() },
-                            { preserveState: true, preserveScroll: true },
-                        );
-                    }}
-                >
-                    <Icon
-                        name="search"
-                        width={18}
-                        height={18}
-                        className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                        type="search"
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value)}
-                        placeholder="Cari nama atau alamat situs…"
-                        aria-label="Cari sumber berita"
-                        className="input w-full rounded-full pr-20 pl-10"
-                    />
+            {/* OPSI 1: Unified Control Bar (Satu Wadah Kontrol Terpadu & Rapi) */}
+            <div className="mb-6 space-y-3.5">
+                {/* Baris Utama: Tab Navigasi + Status Switch Token Hermes */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <AiTabs />
+
+                    {/* Switch Token Hermes Modern */}
                     <button
-                        type="submit"
-                        className="btn-primary absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full px-4 py-1.5 text-xs"
-                    >
-                        Cari
-                    </button>
-                </form>
-
-                <button
-                    type="button"
-                    role="switch"
-                    aria-checked={hermesToken.enabled}
-                    disabled={tokenForm.processing}
-                    title={
-                        hermesToken.configured
-                            ? 'Saat nonaktif, proses AI baru menunggu.'
-                            : 'HERMES_TOKEN belum diatur di .env'
-                    }
-                    onClick={() => {
-                        tokenForm.transform(() => ({
-                            enabled: !hermesToken.enabled,
-                        }));
-                        tokenForm.patch(updateHermesToken.url(), {
-                            preserveScroll: true,
-                        });
-                    }}
-                    className={cn(
-                        'flex shrink-0 items-center gap-2.5 self-start rounded-full py-1.5 pr-2 pl-4 text-sm ring-1 transition disabled:opacity-60 sm:self-auto',
-                        hermesToken.configured
-                            ? 'bg-surface text-slate-600 ring-accent/15 hover:ring-accent/40'
-                            : 'bg-red-50 text-red-700 ring-red-200',
-                    )}
-                >
-                    <span className="font-medium text-navy-900">
-                        Token Hermes
-                    </span>
-                    {!hermesToken.configured && (
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700 ring-1 ring-red-200">
-                            Belum diatur
-                        </span>
-                    )}
-                    <span
+                        type="button"
+                        role="switch"
+                        aria-checked={hermesToken.enabled}
+                        disabled={tokenForm.processing}
+                        title={
+                            hermesToken.configured
+                                ? 'Saat nonaktif, proses AI baru menunggu.'
+                                : 'HERMES_TOKEN belum diatur di .env'
+                        }
+                        onClick={() => {
+                            tokenForm.transform(() => ({
+                                enabled: !hermesToken.enabled,
+                            }));
+                            tokenForm.patch(updateHermesToken.url(), {
+                                preserveScroll: true,
+                            });
+                        }}
                         className={cn(
-                            'text-xs font-semibold',
-                            hermesToken.enabled
-                                ? 'text-accent'
-                                : 'text-slate-400',
+                            'group flex shrink-0 items-center gap-2.5 rounded-2xl bg-white px-3.5 py-2 text-xs shadow-2xs ring-1 transition disabled:opacity-60',
+                            hermesToken.configured
+                                ? 'ring-slate-200/90 hover:ring-accent/40'
+                                : 'bg-red-50 ring-red-200',
                         )}
                     >
-                        {hermesToken.enabled ? 'Aktif' : 'Nonaktif'}
-                    </span>
-                    <span
-                        className={cn(
-                            'flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors',
-                            hermesToken.enabled ? 'bg-accent' : 'bg-slate-200',
+                        <div className="flex items-center gap-1.5">
+                            <span
+                                className={cn(
+                                    'size-2 rounded-full',
+                                    hermesToken.enabled
+                                        ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
+                                        : 'bg-slate-300',
+                                )}
+                            />
+                            <span className="font-semibold text-navy-900">
+                                Token Hermes:
+                            </span>
+                        </div>
+                        {!hermesToken.configured ? (
+                            <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                                Belum diatur
+                            </span>
+                        ) : (
+                            <span
+                                className={cn(
+                                    'font-medium',
+                                    hermesToken.enabled
+                                        ? 'text-emerald-700'
+                                        : 'text-slate-400',
+                                )}
+                            >
+                                {hermesToken.enabled ? 'Aktif' : 'Nonaktif'}
+                            </span>
                         )}
-                    >
                         <span
                             className={cn(
-                                'size-4 rounded-full bg-white shadow transition-transform',
-                                hermesToken.enabled && 'translate-x-4',
+                                'flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition-colors',
+                                hermesToken.enabled ? 'bg-emerald-600' : 'bg-slate-200',
                             )}
+                        >
+                            <span
+                                className={cn(
+                                    'size-3 rounded-full bg-white shadow-xs transition-transform',
+                                    hermesToken.enabled && 'translate-x-3',
+                                )}
+                            />
+                        </span>
+                    </button>
+                </div>
+
+                {/* Baris Kontrol Terpadu: Form Pencarian + Dropdown Filter (Provinsi, Kota, Penambah) */}
+                <div className="flex flex-col gap-2.5 rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-2xs sm:flex-row sm:items-center sm:p-2">
+                    {/* Form Pencarian */}
+                    <form
+                        className="relative min-w-0 flex-1"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            router.get(
+                                window.location.pathname,
+                                { province, city, user, search: query.trim() },
+                                { preserveState: true, preserveScroll: true },
+                            );
+                        }}
+                    >
+                        <Icon
+                            name="search"
+                            width={16}
+                            height={16}
+                            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400"
                         />
-                    </span>
-                </button>
+                        <input
+                            type="search"
+                            value={query}
+                            onChange={(event) => setQuery(event.target.value)}
+                            placeholder="Cari nama atau alamat situs…"
+                            aria-label="Cari sumber berita"
+                            className="w-full rounded-xl bg-slate-50/80 py-2 pr-16 pl-10 text-xs text-navy-900 placeholder:text-slate-400 transition focus:bg-white focus:ring-1 focus:ring-accent focus:outline-none"
+                        />
+                        <button
+                            type="submit"
+                            className="btn-primary absolute top-1/2 right-1.5 -translate-y-1/2 rounded-lg px-3 py-1 text-[11px]"
+                        >
+                            Cari
+                        </button>
+                    </form>
+
+                    {/* Pembatas halus di desktop */}
+                    <div className="hidden h-5 w-px bg-slate-200 sm:block" />
+
+                    {/* Filter Wilayah & Penambah */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <ProvinceFilter
+                            value={province}
+                            provinces={provinces}
+                            city={city}
+                            extraQuery={{
+                                ...(search && { search }),
+                                ...(user && { user }),
+                            }}
+                        />
+                        <FilterSelect
+                            value={user}
+                            label="Filter penambah sumber"
+                            onChange={(v) =>
+                                router.get(
+                                    window.location.pathname,
+                                    {
+                                        ...(province && { province }),
+                                        ...(city && { city }),
+                                        ...(search && { search }),
+                                        ...(v && { user: v }),
+                                    },
+                                    {
+                                        preserveState: true,
+                                        preserveScroll: true,
+                                        replace: true,
+                                    },
+                                )
+                            }
+                            options={[
+                                { value: '', label: 'Semua penambah' },
+                                ...creators.map((c) => ({
+                                    value: String(c.id),
+                                    label: c.name,
+                                })),
+                            ]}
+                        />
+                    </div>
+                </div>
             </div>
 
             {sources.data.length === 0 && (search || user) ? (

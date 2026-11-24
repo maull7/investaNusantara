@@ -305,7 +305,7 @@ export default function ArticleForm({
                     </Panel>
 
                     {/* 3. Kategori Berita */}
-                    <Panel title="Kategori" icon="tag" overflow>
+                    <Panel title="Kategori" icon="tag" overflow className="relative z-30">
                         <CustomSelect
                             label="Kategori"
                             placeholder="Pilih kategori..."
@@ -337,9 +337,9 @@ export default function ArticleForm({
                     </Panel>
 
                     {/* 4. Wilayah Liputan */}
-                    <Panel title="Wilayah Liputan" icon="map" overflow>
+                    <Panel title="Wilayah Liputan" icon="map" overflow className="relative z-20">
                         <div className="space-y-3">
-                            <div>
+                            <div className="relative z-20">
                                 <label className="mb-1.5 flex items-center justify-between text-xs font-semibold text-slate-700">
                                     <span>Provinsi</span>
                                     {province && (
@@ -377,7 +377,7 @@ export default function ArticleForm({
                                 />
                             </div>
                             {province && (
-                                <div className="rounded-xl border border-accent/20 bg-accent/[0.02] p-3">
+                                <div className="relative z-10 rounded-xl border border-accent/20 bg-accent/[0.02] p-3">
                                     <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                                         Kabupaten / Kota
                                     </label>
@@ -407,7 +407,7 @@ export default function ArticleForm({
                     </Panel>
 
                     {/* 5. Tag & Sentimen Media Intelligence */}
-                    <Panel title="Tag & Sentimen" icon="sliders">
+                    <Panel title="Tag & Sentimen" icon="sliders" className="relative z-10">
                         <div className="space-y-3.5">
                             <div>
                                 <label className="mb-1.5 block text-xs font-semibold text-slate-700">
@@ -642,12 +642,14 @@ function Panel({
     icon,
     flush = false,
     overflow = false,
+    className,
     children,
 }: {
     title: string;
     icon?: string;
     flush?: boolean;
     overflow?: boolean;
+    className?: string;
     children: ReactNode;
 }) {
     return (
@@ -656,6 +658,7 @@ function Panel({
                 'card',
                 !overflow && 'overflow-hidden',
                 flush ? 'p-0' : 'p-4',
+                className,
             )}
         >
             <div
@@ -962,7 +965,7 @@ function CustomSelect({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -4, scale: 0.98 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute z-30 mt-1 max-h-64 w-full overflow-hidden rounded-xl border border-accent/15 bg-white shadow-xl shadow-accent/10"
+                        className="absolute z-50 mt-1 max-h-64 w-full overflow-hidden rounded-xl border border-accent/15 bg-white shadow-xl shadow-accent/10"
                     >
                         {options.length > 8 && (
                             <div className="border-b border-slate-100 p-2">
