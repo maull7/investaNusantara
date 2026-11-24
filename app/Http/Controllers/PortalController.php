@@ -381,11 +381,24 @@ class PortalController extends Controller
     {
         abort_unless($province->level === Region::PROVINCE, 404);
         static $all;
+        static $iconImages;
         $all ??= json_decode((string) @file_get_contents(database_path('data/province_profiles.json')), true) ?: [];
+        $iconImages ??= json_decode((string) @file_get_contents(database_path('data/icon_images.json')), true) ?: [];
         $children = $province->children()->get(['type']);
+        $rawProfile = $all[$province->code] ?? ['capital' => null, 'region' => null, 'summary' => null, 'icons' => [], 'umkm' => []];
+
+        $iconsWithImages = collect($rawProfile['icons'] ?? [])->map(function ($icon) use ($iconImages) {
+            $name = is_array($icon) ? ($icon['name'] ?? '') : (string) $icon;
+            $img = is_array($icon) ? ($icon['image'] ?? null) : ($iconImages[$name] ?? null);
+            return [
+                'name' => $name,
+                'image' => $img,
+            ];
+        })->all();
 
         return [
-            ...($all[$province->code] ?? ['capital' => null, 'region' => null, 'summary' => null, 'icons' => [], 'umkm' => []]),
+            ...$rawProfile,
+            'icons' => $iconsWithImages,
             'regencies' => $children->where('type', '!=', 'kota')->count(),
             'cities' => $children->where('type', 'kota')->count(),
         ];

@@ -36,7 +36,7 @@ type Profile = {
     capital: string | null;
     region: string | null;
     summary: string | null;
-    icons: string[];
+    icons: Array<string | { name: string; image?: string | null }>;
     regencies: number;
     cities: number;
     umkm: {
@@ -686,14 +686,19 @@ export default function RegionIndex({
                         </div>
                     </section>
 
-                    <SidePanel
-                        selected={selected}
-                        cities={cities}
-                        count={count}
-                        hovered={hovered}
-                        onHover={setHovered}
-                        onPick={selectProvince}
-                    />
+                    {/* Absolute on md+ so the map card sets the row height and the city list scrolls. */}
+                    <div className="relative min-h-[28rem] md:min-h-0">
+                        <div className="md:absolute md:inset-0">
+                            <SidePanel
+                                selected={selected}
+                                cities={cities}
+                                count={count}
+                                hovered={hovered}
+                                onHover={setHovered}
+                                onPick={selectProvince}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {selected ? (
@@ -746,21 +751,43 @@ export default function RegionIndex({
                                             </p>
                                         )}
                                         {profile && profile.icons.length > 0 && (
-                                            <div className="space-y-1.5 pt-1">
+                                            <div className="space-y-2 pt-1">
                                                 <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                                                     <span className="text-amber-500">✨</span>
                                                     Ciri Khas & Ikonik
                                                 </span>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {profile.icons.map((icon) => (
-                                                        <span
-                                                            key={icon}
-                                                            className="inline-flex items-center gap-1 rounded-lg border border-accent/15 bg-accent/[0.04] px-2.5 py-1 text-xs font-medium text-navy-900 transition-colors hover:border-accent/30 hover:bg-accent/[0.08]"
-                                                        >
-                                                            <span className="size-1 rounded-full bg-accent" />
-                                                            {icon}
-                                                        </span>
-                                                    ))}
+                                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                                    {profile.icons.map((icon, idx) => {
+                                                        const name = typeof icon === 'string' ? icon : icon.name;
+                                                        const image = typeof icon === 'object' && icon !== null ? icon.image : null;
+
+                                                        return (
+                                                            <div
+                                                                key={`${name}-${idx}`}
+                                                                className="group flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white p-2 shadow-2xs transition hover:border-accent/40 hover:bg-slate-50/60"
+                                                            >
+                                                                <span className="size-10 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200/60">
+                                                                    {image ? (
+                                                                        <img
+                                                                            src={image}
+                                                                            alt={name}
+                                                                            className="size-full object-cover transition duration-300 group-hover:scale-110"
+                                                                            onError={(e) => {
+                                                                                (e.currentTarget as HTMLElement).style.display = 'none';
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        <span className="grid size-full place-items-center text-xs text-slate-400">
+                                                                            🏛️
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                                <span className="line-clamp-2 text-xs font-semibold text-navy-900">
+                                                                    {name}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -1100,8 +1127,8 @@ function SidePanel({
     }
 
     return (
-        <aside className="flex min-w-0 flex-col overflow-hidden card">
-            <div className="p-4 pb-0">
+        <aside className="flex h-full min-w-0 flex-col overflow-hidden card">
+            <div className="shrink-0 p-4 pb-0">
                 <label
                     htmlFor="region-search"
                     className="text-xs font-bold tracking-wider text-slate-500 uppercase"
@@ -1134,8 +1161,8 @@ function SidePanel({
             </div>
 
             {selected ? (
-                <div className="mt-4 flex flex-col">
-                    <div className="relative h-36 bg-merah-dark">
+                <div className="mt-4 flex min-h-0 flex-1 flex-col">
+                    <div className="relative h-32 shrink-0 bg-merah-dark sm:h-36">
                         {selected.image_url && (
                             <img
                                 src={selected.image_url}
@@ -1154,19 +1181,19 @@ function SidePanel({
                             </p>
                         </div>
                     </div>
-                    <div className="space-y-4 p-4">
+                    <div className="flex min-h-0 flex-1 flex-col space-y-4 p-4">
                         <Link
                             href={regionHref(selected)}
-                            className="btn-primary w-full py-2.5"
+                            className="btn-primary shrink-0 w-full py-2.5"
                         >
                             Buka halaman {selected.name}
                             <Icon name="arrow" width={16} height={16} />
                         </Link>
-                        <div>
-                            <h3 className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                        <div className="flex min-h-0 flex-1 flex-col">
+                            <h3 className="mb-2 shrink-0 text-xs font-bold tracking-wider text-slate-500 uppercase">
                                 Kabupaten/kota
                             </h3>
-                            <ul className="max-h-72 space-y-0.5 overflow-y-auto pr-1">
+                            <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto pr-1">
                                 {cities.map((city) => (
                                     <li key={city.code}>
                                         <Link

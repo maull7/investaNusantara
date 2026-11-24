@@ -71,6 +71,7 @@ export default function ArticleShow({
     // Guests must log in or sign up before they can open the source site.
     const [gateOpen, setGateOpen] = useState(false);
     const [reviewOpen, setReviewOpen] = useState(false);
+    const [shareOpen, setShareOpen] = useState(false);
     // Set on first open; the review then keeps running and polling even after the modal closes.
     const [reviewStarted, setReviewStarted] = useState(false);
     const reviewPending =
@@ -178,6 +179,15 @@ export default function ArticleShow({
                 />
             )}
 
+            <AnimatePresence>
+                {shareOpen && (
+                    <ShareDialog
+                        article={article}
+                        onClose={() => setShareOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Reading progress */}
             <motion.div
                 style={{ scaleX: progress }}
@@ -274,7 +284,7 @@ export default function ArticleShow({
                                     className={roundBtn}
                                 />
                                 <button
-                                    onClick={() => void share()}
+                                    onClick={() => setShareOpen(true)}
                                     aria-label="Bagikan"
                                     className={roundBtn}
                                 >
@@ -348,20 +358,15 @@ export default function ArticleShow({
                                     <div className="mt-2.5 flex flex-wrap gap-1.5">
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                shareToWhatsApp(article)
-                                            }
-                                            className={cn(
-                                                pill,
-                                                'bg-[#25D366] text-white ring-[#25D366] hover:bg-brand-wa hover:ring-brand-wa',
-                                            )}
+                                            onClick={() => setShareOpen(true)}
+                                            className={neutral}
                                         >
                                             <Icon
-                                                name="whatsapp"
+                                                name="share"
                                                 width={13}
                                                 height={13}
                                             />
-                                            Bagikan ke WA
+                                            Bagikan
                                         </button>
                                         <button
                                             type="button"
@@ -431,8 +436,15 @@ export default function ArticleShow({
                                                 Review AI
                                             </Link>
                                         )}
-                                        {article.source_url &&
-                                            (locked ? (
+                                        {/* Button Lihat Sumber Asli */}
+                                        {(() => {
+                                            const targetUrl =
+                                                article.source_url ||
+                                                `https://www.google.com/search?q=${encodeURIComponent(
+                                                    `${article.title} ${article.region?.name ?? ''} ${article.source_name ?? ''}`.trim(),
+                                                )}`;
+
+                                            return locked ? (
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -445,11 +457,11 @@ export default function ArticleShow({
                                                         width={13}
                                                         height={13}
                                                     />
-                                                    Lihat Sumber
+                                                    Lihat Sumber Asli
                                                 </button>
                                             ) : (
                                                 <a
-                                                    href={article.source_url}
+                                                    href={targetUrl}
                                                     target="_blank"
                                                     rel="noopener nofollow"
                                                     className={neutral}
@@ -459,9 +471,10 @@ export default function ArticleShow({
                                                         width={13}
                                                         height={13}
                                                     />
-                                                    Lihat Sumber
+                                                    Lihat Sumber Asli
                                                 </a>
-                                            ))}
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </Reveal>
@@ -592,9 +605,6 @@ export default function ArticleShow({
                                 </Reveal>
                             )}
 
-                            <Reveal>
-                                <ShareBar article={article} />
-                            </Reveal>
 
                             <Reveal className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-accent/15 pt-5 text-xs text-slate-400">
                                 <span>
@@ -904,11 +914,257 @@ function LoginGate({ onClose }: { onClose: () => void }) {
     );
 }
 
+/** Pop-up dialog to pick share destination with article preview. */
+function ShareDialog({
+    article,
+    onClose,
+}: {
+    article: Article;
+    onClose: () => void;
+}) {
+    const [copied, setCopied] = useState<'link' | 'text' | null>(null);
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+
+    // Create a clean, engaging share message without raw asterisks or broken emojis
+    const regionName = article.region?.name;
+    const categoryName = article.category?.name;
+    const meta = [regionName, categoryName].filter(Boolean).join(' | ');
+    const summary = article.excerpt || article.source_excerpt || firstWords(article.body, 25);
+
+    const shareMessage = [
+        article.title,
+        meta ? `[${meta}]` : null,
+        summary ? `\n"${summary}"` : null,
+        `\nBaca selengkapnya di Investa Nusantara:`,
+        url,
+    ]
+        .filter((line) => line !== null)
+        .join('\n');
+
+    const enc = encodeURIComponent;
+
+    async function copy(value: string, what: 'link' | 'text') {
+        await navigator.clipboard.writeText(value).catch(() => undefined);
+        setCopied(what);
+        window.setTimeout(() => setCopied(null), 2000);
+    }
+
+    async function shareInstagram() {
+        if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+            await navigator
+                .share({ title: article.title, text: shareMessage, url })
+                .catch(() => undefined);
+        } else {
+            await copy(shareMessage, 'text');
+        }
+    }
+
+    const channels = [
+        {
+            name: 'WhatsApp',
+            icon: 'whatsapp' as const,
+            href: `https://wa.me/?text=${enc(shareMessage)}`,
+            bg: 'bg-[#25D366] text-white hover:bg-[#20bd5a]',
+            ring: 'ring-[#25D366]/30',
+        },
+        {
+            name: 'X (Twitter)',
+            icon: 'x-logo' as const,
+            href: `https://x.com/intent/post?text=${enc(`${article.title}${regionName ? ` (${regionName})` : ''}`.slice(0, 200))}&url=${enc(url)}`,
+            bg: 'bg-black text-white hover:bg-neutral-800',
+            ring: 'ring-black/20',
+        },
+        {
+            name: 'Facebook',
+            icon: 'facebook' as const,
+            href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`,
+            bg: 'bg-[#1877F2] text-white hover:bg-[#156cdb]',
+            ring: 'ring-[#1877F2]/30',
+        },
+        {
+            name: 'Instagram',
+            icon: 'instagram' as const,
+            action: shareInstagram,
+            bg: 'bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white hover:opacity-90',
+            ring: 'ring-[#DD2A7B]/30',
+        },
+    ];
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-50 grid place-items-center bg-navy-950/65 p-4 backdrop-blur-sm"
+        >
+            <motion.div
+                initial={{ scale: 0.94, opacity: 0, y: 16 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.94, opacity: 0, y: 16 }}
+                transition={{ type: 'spring', damping: 24, stiffness: 260 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md overflow-hidden rounded-3xl bg-surface shadow-2xl ring-1 ring-black/10"
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 px-5 pt-5 pb-3">
+                    <div>
+                        <h2 className="text-base font-bold text-navy-900">
+                            Bagikan Berita
+                        </h2>
+                        <p className="text-xs text-slate-400">
+                            Sebarkan kabar baik dan informasi terkini
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Tutup"
+                        className="grid size-8 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    >
+                        <span className="text-xl leading-none">&times;</span>
+                    </button>
+                </div>
+
+                <div className="p-5">
+                    {/* Article Mini Card Preview */}
+                    <div className="flex items-center gap-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/75 p-3">
+                        <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-slate-200">
+                            {article.image_url ? (
+                                <img
+                                    src={article.image_url}
+                                    alt=""
+                                    className="size-full object-cover"
+                                />
+                            ) : (
+                                <Cover
+                                    article={article}
+                                    className="size-full object-cover"
+                                />
+                            )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            {article.category && (
+                                <span className="text-[11px] font-semibold text-accent uppercase">
+                                    {article.category.name}
+                                </span>
+                            )}
+                            <h3 className="line-clamp-2 text-xs font-semibold leading-snug text-navy-900">
+                                {article.title}
+                            </h3>
+                            <p className="mt-1 line-clamp-1 text-[11px] text-slate-400">
+                                {article.region?.name ? `${article.region.name} · ` : ''}
+                                {timeAgo(article.published_at)}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Social Media Share Circular/Pill Options */}
+                    <div className="mt-5">
+                        <p className="mb-3 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                            Kirim ke media sosial
+                        </p>
+                        <div className="grid grid-cols-4 gap-2">
+                            {channels.map((ch) =>
+                                ch.href ? (
+                                    <a
+                                        key={ch.name}
+                                        href={ch.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={onClose}
+                                        className="group flex flex-col items-center gap-1.5"
+                                    >
+                                        <div
+                                            className={cn(
+                                                'grid size-12 place-items-center rounded-2xl shadow-sm transition active:scale-90 group-hover:scale-105',
+                                                ch.bg,
+                                            )}
+                                        >
+                                            <Icon name={ch.icon} width={22} height={22} />
+                                        </div>
+                                        <span className="text-[11px] font-medium text-slate-600 transition group-hover:text-navy-900">
+                                            {ch.name}
+                                        </span>
+                                    </a>
+                                ) : (
+                                    <button
+                                        key={ch.name}
+                                        type="button"
+                                        onClick={() => ch.action?.()}
+                                        className="group flex flex-col items-center gap-1.5"
+                                    >
+                                        <div
+                                            className={cn(
+                                                'grid size-12 place-items-center rounded-2xl shadow-sm transition active:scale-90 group-hover:scale-105',
+                                                ch.bg,
+                                            )}
+                                        >
+                                            <Icon name={ch.icon} width={22} height={22} />
+                                        </div>
+                                        <span className="text-[11px] font-medium text-slate-600 transition group-hover:text-navy-900">
+                                            {copied === 'text' ? 'Disalin' : ch.name}
+                                        </span>
+                                    </button>
+                                ),
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Copy Link Input Bar */}
+                    <div className="mt-5">
+                        <p className="mb-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                            Atau salin tautan
+                        </p>
+                        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/90 p-1.5 pl-3">
+                            <span className="line-clamp-1 flex-1 text-xs text-slate-500">
+                                {url}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => void copy(url, 'link')}
+                                className={cn(
+                                    'inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold shadow-xs transition active:scale-95',
+                                    copied === 'link'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-accent text-white hover:bg-accent-dark',
+                                )}
+                            >
+                                <Icon
+                                    name={copied === 'link' ? 'check' : 'link'}
+                                    width={14}
+                                    height={14}
+                                />
+                                <span>{copied === 'link' ? 'Tersalin' : 'Salin'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+}
+
 /** Opens WhatsApp with the post text and link. Reads the URL on click, so it is safe to render on the server. */
 function shareToWhatsApp(article: Article) {
-    const text = article.social_post ?? article.title;
+    const regionName = article.region?.name;
+    const categoryName = article.category?.name;
+    const meta = [regionName, categoryName].filter(Boolean).join(' | ');
+    const summary = article.excerpt || article.source_excerpt || firstWords(article.body, 25);
+    const url = window.location.href;
+
+    const message = [
+        article.title,
+        meta ? `[${meta}]` : null,
+        summary ? `\n"${summary}"` : null,
+        `\nBaca selengkapnya di Investa Nusantara:`,
+        url,
+    ]
+        .filter((line) => line !== null)
+        .join('\n');
+
     window.open(
-        `https://wa.me/?text=${encodeURIComponent(`${text}\n\n${window.location.href}`)}`,
+        `https://wa.me/?text=${encodeURIComponent(message)}`,
         '_blank',
         'noopener',
     );
@@ -985,105 +1241,4 @@ function firstWords(text: string, count: number) {
         : words.join(' ');
 }
 
-/** Share buttons under the article. Instagram has no web share link, so it uses the phone's share sheet or copies the text. */
-function ShareBar({ article }: { article: Article }) {
-    const [copied, setCopied] = useState<'link' | 'text' | null>(null);
-    const url = window.location.href;
-    const text = article.social_post ?? article.title;
-    const enc = encodeURIComponent;
 
-    async function copy(value: string, what: 'link' | 'text') {
-        await navigator.clipboard.writeText(value).catch(() => undefined);
-        setCopied(what);
-        window.setTimeout(() => setCopied(null), 2500);
-    }
-
-    async function instagram() {
-        // Phones list Instagram in the share sheet; desktop share sheets don't, so copy instead.
-        if (navigator.share && matchMedia('(pointer: coarse)').matches) {
-            await navigator
-                .share({ title: article.title, text, url })
-                .catch(() => undefined);
-        } else {
-            await copy(`${text}\n\n${url}`, 'text');
-        }
-    }
-
-    const btn =
-        'inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium ring-1 transition-colors active:scale-95';
-    const links = [
-        {
-            label: 'WhatsApp',
-            icon: 'whatsapp',
-            href: `https://wa.me/?text=${enc(`${text}\n\n${url}`)}`,
-            tone: 'bg-[#25D366]/10 text-brand-wa ring-[#25D366]/30 hover:bg-[#25D366] hover:text-white hover:ring-[#25D366]',
-        },
-        {
-            label: 'X',
-            icon: 'x-logo',
-            href: `https://x.com/intent/post?text=${enc(text.slice(0, 200))}&url=${enc(url)}`,
-            tone: 'bg-navy-900/5 text-navy-900 ring-navy-900/15 hover:bg-navy-900 hover:text-surface hover:ring-navy-900',
-        },
-        {
-            label: 'Facebook',
-            icon: 'facebook',
-            href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`,
-            tone: 'bg-[#1877F2]/10 text-brand-fb ring-[#1877F2]/30 hover:bg-[#1877F2] hover:text-white hover:ring-[#1877F2]',
-        },
-    ] as const;
-
-    return (
-        <section className="mt-6" aria-label="Bagikan berita">
-            <p className="mb-2.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">
-                Bagikan
-            </p>
-            <div className="flex flex-wrap gap-2">
-                {links.map((l) => (
-                    <a
-                        key={l.label}
-                        href={l.href}
-                        target="_blank"
-                        rel="noopener"
-                        className={cn(btn, l.tone)}
-                    >
-                        <Icon name={l.icon} width={16} height={16} />
-                        {l.label}
-                    </a>
-                ))}
-                <button
-                    type="button"
-                    onClick={() => void instagram()}
-                    className={cn(
-                        btn,
-                        'bg-[#E1306C]/10 text-brand-ig ring-[#E1306C]/30 hover:bg-gradient-to-tr hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF] hover:text-white hover:ring-transparent',
-                    )}
-                >
-                    <Icon name="instagram" width={16} height={16} />
-                    {copied === 'text' ? 'Teks disalin' : 'Instagram'}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => void copy(url, 'link')}
-                    className={cn(
-                        btn,
-                        'bg-surface text-slate-600 ring-slate-200 hover:bg-accent/5 hover:text-accent hover:ring-accent/30',
-                    )}
-                >
-                    <Icon
-                        name={copied === 'link' ? 'check' : 'link'}
-                        width={16}
-                        height={16}
-                    />
-                    {copied === 'link' ? 'Tersalin' : 'Salin tautan'}
-                </button>
-            </div>
-            <p className="sr-only" aria-live="polite">
-                {copied === 'text'
-                    ? 'Teks dan tautan disalin. Tempel di Instagram.'
-                    : copied === 'link'
-                      ? 'Tautan disalin.'
-                      : ''}
-            </p>
-        </section>
-    );
-}
