@@ -28,6 +28,7 @@ class UserController extends Controller
                 ->through(fn (User $u) => [
                     ...$u->only('id', 'name', 'organization', 'email', 'role', 'region_code', 'permissions', 'region', 'client_regions'),
                     'subscription_ends_at' => $u->subscription_ends_at?->toDateString(),
+                    'created_at' => $u->created_at?->toIso8601String(),
                     'manageable' => $this->manageable($request->user(), $u),
                 ]),
             'permissions' => $this->permissionOptions(),

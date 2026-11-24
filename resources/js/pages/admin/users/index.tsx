@@ -6,11 +6,16 @@ import Icon from '@/components/icons';
 import { ease } from '@/components/motion';
 import Pagination from '@/components/pagination';
 import AdminLayout from '@/layouts/admin';
+import { formatDate } from '@/lib/news';
 import { cn } from '@/lib/utils';
 import { create, destroy, edit } from '@/routes/admin/users';
 import type { Paginated, PermissionOption, Role, User } from '@/types';
 
-type Row = User & { region: { name: string } | null; manageable: boolean };
+type Row = User & {
+    region: { name: string } | null;
+    manageable: boolean;
+    created_at: string | null;
+};
 
 export default function UsersIndex({
     users,
@@ -236,6 +241,7 @@ export default function UsersIndex({
                             <thead>
                                 <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
                                     <th className="px-6 py-4">Nama & Kontak</th>
+                                    <th className="px-6 py-4">Terdaftar</th>
                                     <th className="px-6 py-4">Peran</th>
                                     <th className="px-6 py-4">Wilayah Tugas</th>
                                     <th className="px-6 py-4">Izin / Akses Khusus</th>
@@ -287,6 +293,11 @@ export default function UsersIndex({
                                                         </span>
                                                     </div>
                                                 </div>
+                                            </td>
+
+                                            {/* Tanggal registrasi */}
+                                            <td className="px-6 py-4 text-xs whitespace-nowrap text-slate-500">
+                                                {formatDate(u.created_at)}
                                             </td>
 
                                             {/* Kolom 2: Peran (RoleBadge) */}
