@@ -764,7 +764,7 @@ export default function RegionIndex({
                                                         return (
                                                             <div
                                                                 key={`${name}-${idx}`}
-                                                                className="group flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white p-2 shadow-2xs transition hover:border-accent/40 hover:bg-slate-50/60"
+                                                                className="group flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-surface p-2 shadow-2xs transition hover:border-accent/40 hover:bg-slate-50/60"
                                                             >
                                                                 <span className="size-10 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200/60">
                                                                     {image ? (

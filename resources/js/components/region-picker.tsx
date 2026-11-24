@@ -57,7 +57,7 @@ function PickerMenu({
                 disabled={disabled}
                 onClick={() => setOpen((current) => !current)}
                 className={cn(
-                    'flex w-full items-center justify-between gap-3 rounded-full bg-white px-4 py-2.5 text-left text-sm text-navy-900 ring-1 ring-slate-200 transition hover:ring-merah/50 focus:ring-2 focus:ring-merah/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+                    'flex w-full items-center justify-between gap-3 rounded-full bg-surface px-4 py-2.5 text-left text-sm text-navy-900 ring-1 ring-slate-200 transition hover:ring-merah/50 focus:ring-2 focus:ring-merah/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
                     open && 'ring-2 ring-merah/40',
                 )}
             >
@@ -73,7 +73,7 @@ function PickerMenu({
                 </span>
             </button>
             {open && (
-                <div className="absolute z-30 mt-2 w-full min-w-56 rounded-2xl border border-merah/15 bg-white p-2 shadow-xl shadow-merah-dark/10">
+                <div className="absolute z-30 mt-2 w-full min-w-56 rounded-2xl border border-merah/15 bg-surface p-2 shadow-xl shadow-black/10">
                     <input
                         ref={search}
                         type="search"
@@ -94,7 +94,7 @@ function PickerMenu({
                         }}
                         aria-label={`Cari ${label.toLowerCase()}`}
                         placeholder="Cari wilayah…"
-                        className="mb-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-merah focus:ring-2 focus:ring-merah/20"
+                        className="mb-2 w-full rounded-xl border border-slate-200 bg-surface px-3 py-2 text-sm text-navy-900 placeholder:text-slate-400 outline-none focus:border-merah focus:ring-2 focus:ring-merah/20"
                     />
                     <div
                         role="listbox"
