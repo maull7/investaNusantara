@@ -717,9 +717,9 @@ export default function RegionIndex({
                                 Buka halaman provinsi →
                             </Link>
                         </div>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <article className="overflow-hidden card">
-                                <div className="relative h-36 bg-merah-dark">
+                        <div className="grid items-stretch gap-4 md:grid-cols-2">
+                            <article className="flex h-full flex-col overflow-hidden card">
+                                <div className="relative h-44 shrink-0 bg-merah-dark sm:h-48">
                                     {selected.image_url && (
                                         <img
                                             src={selected.image_url}
@@ -727,98 +727,123 @@ export default function RegionIndex({
                                             className="size-full object-cover"
                                         />
                                     )}
-                                    <span className="absolute inset-0 bg-gradient-to-t from-merah-dark/75 to-transparent" />
+                                    <span className="absolute inset-0 bg-gradient-to-t from-merah-dark/85 via-merah-dark/30 to-transparent" />
                                     <h3 className="absolute bottom-4 left-5 text-xl font-bold text-white">
                                         Profil {selected.name}
                                     </h3>
                                 </div>
-                                <div className="space-y-3 p-5 text-sm text-slate-600">
-                                    {profile?.capital && (
-                                        <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
-                                            Ibu kota {profile.capital} ·{' '}
-                                            {profile.region}
-                                        </p>
-                                    )}
-                                    {profile?.summary && (
-                                        <p className="leading-relaxed">
-                                            {profile.summary}
-                                        </p>
-                                    )}
-                                    {profile && profile.icons.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {profile.icons.map((icon) => (
-                                                <span
-                                                    key={icon}
-                                                    className="rounded-full bg-accent/5 px-2.5 py-1 text-xs text-accent ring-1 ring-accent/10"
-                                                >
-                                                    {icon}
+                                <div className="flex flex-1 flex-col justify-between space-y-4 p-5 text-sm text-slate-600 sm:p-6">
+                                    <div className="space-y-3.5">
+                                        {profile?.capital && (
+                                            <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
+                                                Ibu kota {profile.capital} ·{' '}
+                                                {profile.region}
+                                            </p>
+                                        )}
+                                        {profile?.summary && (
+                                            <p className="leading-relaxed">
+                                                {profile.summary}
+                                            </p>
+                                        )}
+                                        {profile && profile.icons.length > 0 && (
+                                            <div className="space-y-1.5 pt-1">
+                                                <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
+                                                    <span className="text-amber-500">✨</span>
+                                                    Ciri Khas & Ikonik
                                                 </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                    <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                                        <span className="rounded-full bg-merah/8 px-3 py-1.5">
-                                            <strong className="text-merah">
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {profile.icons.map((icon) => (
+                                                        <span
+                                                            key={icon}
+                                                            className="inline-flex items-center gap-1 rounded-lg border border-accent/15 bg-accent/[0.04] px-2.5 py-1 text-xs font-medium text-navy-900 transition-colors hover:border-accent/30 hover:bg-accent/[0.08]"
+                                                        >
+                                                            <span className="size-1 rounded-full bg-accent" />
+                                                            {icon}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2.5 border-t border-slate-100 pt-4">
+                                        <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-center transition-colors hover:border-slate-300">
+                                            <div className="text-lg font-bold text-navy-900 sm:text-xl">
                                                 {profile?.regencies ?? '…'}
-                                            </strong>{' '}
-                                            kabupaten
-                                        </span>
-                                        <span className="rounded-full bg-merah/8 px-3 py-1.5">
-                                            <strong className="text-merah">
+                                            </div>
+                                            <div className="mt-0.5 text-[11px] font-medium text-slate-500">
+                                                Kabupaten
+                                            </div>
+                                        </div>
+                                        <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-center transition-colors hover:border-slate-300">
+                                            <div className="text-lg font-bold text-navy-900 sm:text-xl">
                                                 {profile?.cities ?? '…'}
-                                            </strong>{' '}
-                                            kota
-                                        </span>
-                                        <span className="rounded-full bg-merah/8 px-3 py-1.5">
-                                            <strong className="text-merah">
+                                            </div>
+                                            <div className="mt-0.5 text-[11px] font-medium text-slate-500">
+                                                Kota Otonom
+                                            </div>
+                                        </div>
+                                        <div className="rounded-xl border border-accent/20 bg-accent/[0.04] p-3 text-center transition-colors hover:border-accent/40">
+                                            <div className="text-lg font-bold text-accent sm:text-xl">
                                                 {count(selected.code)}
-                                            </strong>{' '}
-                                            berita
-                                        </span>
+                                            </div>
+                                            <div className="mt-0.5 text-[11px] font-medium text-accent">
+                                                Berita
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </article>
-                            <article className="card p-5">
-                                <h3 className="text-lg font-bold text-navy-900">
-                                    Berita terbaru
-                                </h3>
-                                <div className="mt-3 divide-y divide-slate-100">
+                            <article className="flex h-full flex-col card p-5 sm:p-6">
+                                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                                    <h3 className="text-lg font-bold text-navy-900">
+                                        Berita terbaru
+                                    </h3>
+                                    <Link
+                                        href={regionHref(selected)}
+                                        className="text-xs font-semibold text-merah hover:underline"
+                                    >
+                                        Semua berita →
+                                    </Link>
+                                </div>
+                                <div className="flex flex-1 flex-col justify-between divide-y divide-slate-100">
                                     {latest.map((story) => (
                                         <Link
                                             key={story.id}
                                             href={articleRoute.url(story.slug)}
-                                            className="flex gap-3 py-2.5 first:pt-0 last:pb-0 hover:text-merah"
+                                            className="group flex flex-1 items-center gap-3.5 py-2.5 first:pt-2 last:pb-0"
                                         >
-                                            {story.cover_url && (
+                                            {story.cover_url ? (
                                                 <img
                                                     src={story.cover_url}
                                                     alt=""
                                                     loading="lazy"
-                                                    className="size-14 shrink-0 rounded-lg object-cover"
+                                                    className="size-14 shrink-0 rounded-xl object-cover transition-transform duration-200 group-hover:scale-105"
                                                 />
+                                            ) : (
+                                                <div className="grid size-14 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-400">
+                                                    <Icon name="file" width={18} height={18} />
+                                                </div>
                                             )}
-                                            <span className="min-w-0">
-                                                <span className="line-clamp-2 text-sm leading-snug font-semibold text-navy-900">
+                                            <span className="min-w-0 flex-1">
+                                                <span className="line-clamp-2 text-sm leading-snug font-semibold text-navy-900 transition-colors group-hover:text-merah">
                                                     {story.title}
                                                 </span>
-                                                <span className="mt-1 block text-xs text-slate-500">
-                                                    {timeAgo(
-                                                        story.published_at,
-                                                    )}
+                                                <span className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+                                                    <Icon name="clock" width={12} height={12} />
+                                                    {timeAgo(story.published_at)}
                                                 </span>
                                             </span>
                                         </Link>
                                     ))}
                                     {!latestLoading && latest.length === 0 && (
-                                        <p className="py-3 text-sm text-slate-500">
-                                            Belum ada berita terbaru dari
-                                            wilayah ini.
-                                        </p>
+                                        <div className="grid flex-1 place-items-center py-6 text-center text-sm text-slate-500">
+                                            Belum ada berita terbaru dari wilayah ini.
+                                        </div>
                                     )}
                                     {latestLoading && (
-                                        <p className="py-3 text-sm text-slate-500">
+                                        <div className="grid flex-1 place-items-center py-6 text-center text-sm text-slate-500">
                                             Memuat berita…
-                                        </p>
+                                        </div>
                                     )}
                                 </div>
                             </article>
@@ -1067,6 +1092,7 @@ function SidePanel({
     const ranked = [...provinces]
         .sort((a, b) => count(b.code) - count(a.code))
         .slice(0, 5);
+    const topCount = Math.max(1, ...ranked.map((p) => count(p.code)));
 
     function pick(p: Region) {
         setQuery('');
@@ -1173,44 +1199,67 @@ function SidePanel({
                     </div>
                 </div>
             ) : (
-                <div className="p-4">
-                    <h2 className="text-lg font-bold text-navy-900">
-                        Wilayah teratas
-                    </h2>
-                    <p className="mb-3 text-xs text-slate-500">
-                        Berdasarkan jumlah berita terbit
-                    </p>
-                    <ol className="space-y-0.5">
-                        {ranked.map((p, i) => (
-                            <li key={p.code}>
-                                <button
-                                    type="button"
-                                    onClick={() => onPick(p)}
-                                    className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-accent/5"
-                                >
-                                    <span className="w-5 text-xs font-bold text-merah">
-                                        {i + 1}
-                                    </span>
-                                    <span className="size-10 shrink-0 overflow-hidden rounded-xl bg-merah-dark">
-                                        {p.image_url && (
-                                            <img
-                                                src={p.image_url}
-                                                alt=""
-                                                loading="lazy"
-                                                className="size-full object-cover"
-                                            />
-                                        )}
-                                    </span>
-                                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-navy-900">
-                                        {p.name}
-                                    </span>
-                                    <span className="text-xs text-slate-500 tabular-nums">
-                                        {count(p.code)}
-                                    </span>
-                                </button>
-                            </li>
-                        ))}
-                    </ol>
+                <div className="p-4 pt-5">
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <h2 className="text-sm font-bold tracking-tight text-navy-900">
+                                Wilayah teratas
+                            </h2>
+                            <p className="text-[11px] text-slate-400">
+                                Berdasarkan liputan berita terbit
+                            </p>
+                        </div>
+                        <span className="text-[11px] font-semibold text-slate-400">
+                            Top 5
+                        </span>
+                    </div>
+
+                    <ul className="mt-2 divide-y divide-slate-100">
+                        {ranked.map((p, i) => {
+                            const c = count(p.code);
+                            return (
+                                <li key={p.code}>
+                                    <button
+                                        type="button"
+                                        onClick={() => onPick(p)}
+                                        className="group flex w-full items-center gap-3 py-2.5 text-left transition-colors hover:text-accent"
+                                    >
+                                        <span className="w-4 shrink-0 text-center font-mono text-xs font-semibold text-slate-400 group-hover:text-accent">
+                                            {i + 1}
+                                        </span>
+
+                                        <span className="size-9 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200/60">
+                                            {p.image_url ? (
+                                                <img
+                                                    src={p.image_url}
+                                                    alt=""
+                                                    loading="lazy"
+                                                    className="size-full object-cover grayscale-[20%] transition group-hover:scale-105 group-hover:grayscale-0"
+                                                />
+                                            ) : (
+                                                <span className="grid size-full place-items-center text-[10px] text-slate-400">
+                                                    {p.code}
+                                                </span>
+                                            )}
+                                        </span>
+
+                                        <span className="min-w-0 flex-1 truncate text-xs font-medium text-slate-700 transition-colors group-hover:font-semibold group-hover:text-navy-900">
+                                            {p.name}
+                                        </span>
+
+                                        <span className="shrink-0 text-right">
+                                            <span className="font-mono text-xs font-semibold text-navy-900">
+                                                {c}
+                                            </span>
+                                            <span className="ml-1 text-[11px] text-slate-400">
+                                                berita
+                                            </span>
+                                        </span>
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 </div>
             )}
         </aside>

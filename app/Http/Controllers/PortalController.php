@@ -92,7 +92,7 @@ class PortalController extends Controller
         abort_unless($province->level === Region::PROVINCE, 404);
 
         return response()->json([
-            'latest' => Article::published()->card()->inRegion($province)->limit(3)->get(),
+            'latest' => Article::published()->card()->inRegion($province)->limit(5)->get(),
             'agenda' => DirectoryEntry::where('type', 'event')->whereNotNull('verified_at')
                 ->where(fn ($q) => $q->where('region_code', $province->code)->orWhere('region_code', 'like', $province->code.'.%'))
                 ->whereNotNull('starts_on')
