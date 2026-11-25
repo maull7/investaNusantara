@@ -7,14 +7,17 @@ import {
     geoOrthographic,
     geoPath,
 } from "d3-geo";
+import { AnimatePresence, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import EarthGlobe from "@/components/earth-globe";
 import type { FlatTransform } from "@/components/earth-globe";
 import Icon from "@/components/icons";
 import RegionPicker from "@/components/region-picker";
+import RegionalMascot from "@/components/regional-mascot";
 import PublicLayout from "@/layouts/public";
 import { regionHref, timeAgo } from "@/lib/news";
+import { CHARACTERS } from "@/lib/regional-characters";
 import { cn } from "@/lib/utils";
 import { cities as citiesRoute } from "@/routes/region";
 import { article as articleRoute, agenda as agendaRoute } from "@/routes";
@@ -292,6 +295,26 @@ const TIME_THEMES: Record<TimeOfDay, TimeTheme> = {
     },
 };
 
+// Ambient mascots: at most this many at once, this far apart (viewBox units),
+// each staying on screen this long (ms) — long enough to wave and show off.
+const AMBIENT_MAX = 3;
+const AMBIENT_GAP = 130;
+const AMBIENT_STAY = 6500;
+
+/**
+ * Each province's own rhythm, derived from its code so it is stable across
+ * visits: first appearance 1–22 s after load, then every 20–45 s.
+ */
+function ambientTiming(code: string) {
+    let h = 2166136261;
+    for (const ch of code) {
+        h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+    }
+    const r1 = ((h >>> 0) % 1000) / 1000;
+    const r2 = ((Math.imul(h, 2654435761) >>> 0) % 1000) / 1000;
+    return { offset: 1000 + r1 * 21000, period: 20000 + r2 * 25000 };
+}
+
 /** Tracks the site's light/dark toggle (the `dark` class on <html>). */
 function useDarkMode() {
     const [dark, setDark] = useState(() =>
@@ -328,6 +351,9 @@ export default function RegionIndex({
     const [profile, setProfile] = useState<Profile | null>(null);
     const [selected, setSelected] = useState<Region | null>(null);
     const [hovered, setHovered] = useState<string | null>(null);
+    // Province under the cursor on the globe, also while one is selected (then
+    // `hovered` tracks cities), so neighbours still get their mascot.
+    const [globeHover, setGlobeHover] = useState<string | null>(null);
     const [rotation, setRotation] = useState<Rotation>([-118, 2]);
     const [scale, setScale] = useState(GLOBE.r);
     const [fitScale, setFitScale] = useState(GLOBE.r);
@@ -490,6 +516,7 @@ export default function RegionIndex({
         stopSpin();
         setMode("globe");
         setSelected(province);
+        setGlobeHover(null);
         setHovered(null);
         setCityMap(null);
         setCities([]);
@@ -630,6 +657,7 @@ export default function RegionIndex({
         setCities([]);
         setReady(false);
         setHovered(null);
+        setGlobeHover(null);
     }
 
     /** Switch between the flat map of Indonesia and the globe. */
@@ -688,9 +716,123 @@ export default function RegionIndex({
         }
     }
 
+    // The province whose mascot and attire to show: on the flat map / bare globe
+    // it is the hovered province; with a province open, a hovered neighbour.
+    const hoveredProvince = selected ? (globe ? globeHover : null) : hovered;
     const hoveredName = selected
-        ? hovered && cityByCode.get(hovered)?.name
+        ? (hovered && cityByCode.get(hovered)?.name) ||
+          (hoveredProvince && provinceByCode.get(hoveredProvince)?.name)
         : hovered && provinceByCode.get(hovered)?.name;
+
+    // A mascot in local attire greets you on the hovered province. A short delay
+    // keeps it from popping up for every province the cursor merely crosses.
+    const [mascot, setMascot] = useState<string | null>(null);
+    useEffect(() => {
+        if (!hoveredProvince) {
+            setMascot(null);
+            return;
+        }
+        const timer = window.setTimeout(() => setMascot(hoveredProvince), 140);
+        return () => window.clearTimeout(timer);
+    }, [hoveredProvince]);
+    /** Where a province's mascot stands, in viewBox units; `inFrame` is false when clamped. */
+    const mascotSpot = useCallback(
+        (code: string) => {
+            const feature = national?.features.find(
+                (f) => f.properties.code === code,
+            );
+            if (!feature) {
+                return null;
+            }
+            const [x, y] = globe
+                ? globePath.centroid(feature)
+                : (flatPath?.centroid(feature) ?? [NaN, NaN]);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                return null; // on the far side of the globe
+            }
+            // Keep the whole figure (and its speech bubble) inside the frame.
+            const cx = Math.min(845, Math.max(55, x));
+            const cy = Math.min(522, Math.max(150, y));
+            return { x: cx, y: cy, inFrame: cx === x && cy === y };
+        },
+        [national, globe, globePath, flatPath],
+    );
+    const spotRef = useRef(mascotSpot);
+    useEffect(() => {
+        spotRef.current = mascotSpot;
+    }, [mascotSpot]);
+
+    // Ambient life: without any hover, mascots pop up on their own, each
+    // province on its own rhythm (see ambientTiming), a few at a time.
+    const reduceMotion = useReducedMotion();
+    const [ambient, setAmbient] = useState<string[]>([]);
+    useEffect(() => {
+        if (reduceMotion || !national) {
+            return;
+        }
+        const codes = national.features.map((f) => f.properties.code);
+        const start = performance.now();
+        const next = new Map(
+            codes.map((c) => [c, start + ambientTiming(c).offset]),
+        );
+        const until = new Map<string, number>();
+        const timer = window.setInterval(() => {
+            if (document.hidden) {
+                return;
+            }
+            const now = performance.now();
+            let changed = false;
+            for (const [c, t] of until) {
+                if (t <= now) {
+                    until.delete(c);
+                    changed = true;
+                }
+            }
+            for (const [c, t] of next) {
+                if (t > now || until.has(c)) {
+                    continue;
+                }
+                const spot = spotRef.current(c);
+                const crowded =
+                    until.size >= AMBIENT_MAX ||
+                    [...until.keys()].some((o) => {
+                        const other = spotRef.current(o);
+                        return (
+                            other &&
+                            spot &&
+                            Math.hypot(other.x - spot.x, other.y - spot.y) <
+                                AMBIENT_GAP
+                        );
+                    });
+                if (!spot?.inFrame || crowded) {
+                    // Off screen or no room right now: try again a bit later.
+                    next.set(c, now + 1500 + Math.random() * 2500);
+                    continue;
+                }
+                until.set(c, now + AMBIENT_STAY);
+                next.set(c, now + AMBIENT_STAY + ambientTiming(c).period);
+                changed = true;
+            }
+            if (changed) {
+                setAmbient([...until.keys()]);
+            }
+        }, 500);
+        return () => {
+            window.clearInterval(timer);
+            setAmbient([]);
+        };
+    }, [national, reduceMotion]);
+
+    // Hovered first, then the ambient ones that are still on screen.
+    const mascots = [
+        ...new Set([...(mascot ? [mascot] : []), ...ambient]),
+    ].flatMap((code) => {
+        const spot = mascotSpot(code);
+        if (!spot || (code !== mascot && !spot.inFrame)) {
+            return [];
+        }
+        return [{ code, x: (spot.x / 900) * 100, y: (spot.y / 530) * 100 }];
+    });
 
     return (
         <PublicLayout tabs={false}>
@@ -1213,17 +1355,29 @@ export default function RegionIndex({
                                                                     ? "cursor-pointer transition-[fill-opacity] hover:[fill-opacity:0.22]"
                                                                     : "cursor-pointer transition-[fill] hover:fill-[#9cc47a]"),
                                                         )}
-                                                        onMouseEnter={() =>
-                                                            !selected &&
-                                                            setHovered(
+                                                        onMouseEnter={() => {
+                                                            if (current) {
+                                                                return;
+                                                            }
+                                                            setGlobeHover(
                                                                 f.properties
                                                                     .code,
-                                                            )
-                                                        }
-                                                        onMouseLeave={() =>
-                                                            !selected &&
-                                                            setHovered(null)
-                                                        }
+                                                            );
+                                                            if (!selected) {
+                                                                setHovered(
+                                                                    f.properties
+                                                                        .code,
+                                                                );
+                                                            }
+                                                        }}
+                                                        onMouseLeave={() => {
+                                                            setGlobeHover(null);
+                                                            if (!selected) {
+                                                                setHovered(
+                                                                    null,
+                                                                );
+                                                            }
+                                                        }}
                                                         onClick={() =>
                                                             !current &&
                                                             province &&
@@ -1519,12 +1673,34 @@ export default function RegionIndex({
                                 </div>
                             )}
 
+                            <AnimatePresence>
+                                {mascots.map((m) => (
+                                    <RegionalMascot
+                                        key={m.code}
+                                        code={m.code}
+                                        x={m.x}
+                                        y={m.y}
+                                    />
+                                ))}
+                            </AnimatePresence>
+
                             {hoveredName && (
                                 <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg bg-surface/95 px-3 py-2 text-xs font-semibold text-navy-900 shadow">
                                     {hoveredName}
-                                    {!selected &&
-                                        hovered &&
-                                        ` · ${count(hovered)} berita`}
+                                    {hoveredProvince &&
+                                        !(selected && hovered) &&
+                                        ` · ${count(hoveredProvince)} berita`}
+                                    {hoveredProvince &&
+                                        !(selected && hovered) &&
+                                        CHARACTERS[hoveredProvince] && (
+                                            <span className="block text-[11px] font-normal text-slate-500">
+                                                Pakaian adat:{" "}
+                                                {
+                                                    CHARACTERS[hoveredProvince]
+                                                        .attire
+                                                }
+                                            </span>
+                                        )}
                                 </div>
                             )}
                         </div>
