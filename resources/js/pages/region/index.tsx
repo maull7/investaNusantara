@@ -1,22 +1,22 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from "@inertiajs/react";
 import {
     geoBounds,
     geoCentroid,
     geoEquirectangular,
     geoOrthographic,
     geoPath,
-} from 'd3-geo';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
-import Icon from '@/components/icons';
-import RegionPicker from '@/components/region-picker';
-import PublicLayout from '@/layouts/public';
-import { regionHref, timeAgo } from '@/lib/news';
-import { cn } from '@/lib/utils';
-import { cities as citiesRoute } from '@/routes/region';
-import { article as articleRoute, agenda as agendaRoute } from '@/routes';
-import { create as agendaCreate, show as agendaShow } from '@/routes/agenda';
-import type { ArticleCard, Region } from '@/types';
+} from "d3-geo";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
+import Icon from "@/components/icons";
+import RegionPicker from "@/components/region-picker";
+import PublicLayout from "@/layouts/public";
+import { regionHref, timeAgo } from "@/lib/news";
+import { cn } from "@/lib/utils";
+import { cities as citiesRoute } from "@/routes/region";
+import { article as articleRoute, agenda as agendaRoute } from "@/routes";
+import { create as agendaCreate, show as agendaShow } from "@/routes/agenda";
+import type { ArticleCard, Region } from "@/types";
 
 type MapData = GeoJSON.FeatureCollection<
     GeoJSON.MultiPolygon,
@@ -52,8 +52,16 @@ type Profile = {
     }[];
 };
 
+type Detail = {
+    name: string;
+    image: string | null;
+    category?: string;
+    description?: string;
+    credit?: Profile["umkm"][number]["image"];
+};
+
 const GLOBE = { cx: 450, cy: 265, r: 218 };
-const NO_NEWS = '#dce5ed';
+const NO_NEWS = "#dce5ed";
 
 /** Interactive map: flat Indonesia, click a province to spin a draggable globe onto it. */
 export default function RegionIndex({
@@ -76,6 +84,7 @@ export default function RegionIndex({
     const [scale, setScale] = useState(GLOBE.r);
     const [fitScale, setFitScale] = useState(GLOBE.r);
     const [ready, setReady] = useState(false);
+    const [detail, setDetail] = useState<Detail | null>(null);
     const frame = useRef<number | null>(null);
     const drag = useRef<{
         x: number;
@@ -85,7 +94,7 @@ export default function RegionIndex({
     } | null>(null);
 
     useEffect(() => {
-        void fetch('/maps/interactive/provinces.json')
+        void fetch("/maps/interactive/provinces.json")
             .then((r) => r.json())
             .then(setNational);
 
@@ -143,7 +152,7 @@ export default function RegionIndex({
 
     // /wilayah?provinsi=11 opens straight on that province (shareable link).
     const deepLink = useMemo(
-        () => new URLSearchParams(window.location.search).get('provinsi'),
+        () => new URLSearchParams(window.location.search).get("provinsi"),
         [],
     );
     useEffect(() => {
@@ -234,7 +243,7 @@ export default function RegionIndex({
 
         setFitScale(zoomTo);
 
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             setRotation(target);
             setScale(zoomTo);
             setReady(true);
@@ -404,12 +413,12 @@ export default function RegionIndex({
                         <div className="flex items-center justify-between gap-3 min-h-[40px]">
                             <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-semibold text-navy-900">
-                                    {selected ? selected.name : 'Indonesia'}
+                                    {selected ? selected.name : "Indonesia"}
                                 </p>
                                 <p className="truncate text-xs text-slate-500">
                                     {selected
-                                        ? 'Seret untuk memutar globe, klik kabupaten/kota untuk membuka beritanya'
-                                        : 'Klik provinsi pada peta'}
+                                        ? "Seret untuk memutar globe, klik kabupaten/kota untuk membuka beritanya"
+                                        : "Klik provinsi pada peta"}
                                 </p>
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
@@ -422,8 +431,8 @@ export default function RegionIndex({
                                             className="btn-ghost px-3 py-1.5 text-xs whitespace-nowrap"
                                         >
                                             {scale > GLOBE.r * 1.5
-                                                ? 'Lihat globe'
-                                                : 'Zoom wilayah'}
+                                                ? "Lihat globe"
+                                                : "Zoom wilayah"}
                                         </button>
                                         <button
                                             type="button"
@@ -451,12 +460,12 @@ export default function RegionIndex({
                                 aria-label={
                                     selected
                                         ? `Globe berpusat di ${selected.name}`
-                                        : 'Peta provinsi Indonesia'
+                                        : "Peta provinsi Indonesia"
                                 }
                                 className={cn(
-                                    'block aspect-[900/530] w-full',
+                                    "block aspect-[900/530] w-full",
                                     selected &&
-                                        'cursor-grab touch-none select-none active:cursor-grabbing',
+                                        "cursor-grab touch-none select-none active:cursor-grabbing",
                                 )}
                                 onPointerDown={onPointerDown}
                                 onPointerMove={onPointerMove}
@@ -503,20 +512,20 @@ export default function RegionIndex({
                                             return (
                                                 <path
                                                     key={f.properties.code}
-                                                    d={globePath(f) ?? ''}
+                                                    d={globePath(f) ?? ""}
                                                     fill={
                                                         current
                                                             ? color(
                                                                   selected.code,
                                                               )
-                                                            : '#e4ebee'
+                                                            : "#e4ebee"
                                                     }
                                                     stroke="#fff"
                                                     strokeWidth=".8"
                                                     fillRule="evenodd"
                                                     className={cn(
                                                         !current &&
-                                                            'cursor-pointer hover:fill-[#cfdbe0]',
+                                                            "cursor-pointer hover:fill-[#cfdbe0]",
                                                     )}
                                                     onClick={() =>
                                                         !current &&
@@ -558,7 +567,7 @@ export default function RegionIndex({
                                                         <path
                                                             d={
                                                                 globePath(f) ??
-                                                                ''
+                                                                ""
                                                             }
                                                             fill={color(
                                                                 selected.code,
@@ -567,10 +576,10 @@ export default function RegionIndex({
                                                             strokeWidth="1.3"
                                                             fillRule="evenodd"
                                                             className={cn(
-                                                                'cursor-pointer',
+                                                                "cursor-pointer",
                                                                 hovered ===
                                                                     city.code &&
-                                                                    'fill-merah',
+                                                                    "fill-merah",
                                                             )}
                                                         />
                                                     </Link>
@@ -596,7 +605,7 @@ export default function RegionIndex({
                                         return province ? (
                                             <path
                                                 key={province.code}
-                                                d={flatPath?.(f) ?? ''}
+                                                d={flatPath?.(f) ?? ""}
                                                 fill={color(province.code)}
                                                 stroke="#fff"
                                                 strokeWidth="1.2"
@@ -642,8 +651,18 @@ export default function RegionIndex({
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                         >
-                                            <line x1="12" y1="5" x2="12" y2="19" />
-                                            <line x1="5" y1="12" x2="19" y2="12" />
+                                            <line
+                                                x1="12"
+                                                y1="5"
+                                                x2="12"
+                                                y2="19"
+                                            />
+                                            <line
+                                                x1="5"
+                                                y1="12"
+                                                x2="19"
+                                                y2="12"
+                                            />
                                         </svg>
                                     </button>
                                     <div className="h-px w-full bg-slate-200" />
@@ -663,7 +682,12 @@ export default function RegionIndex({
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                         >
-                                            <line x1="5" y1="12" x2="19" y2="12" />
+                                            <line
+                                                x1="5"
+                                                y1="12"
+                                                x2="19"
+                                                y2="12"
+                                            />
                                         </svg>
                                     </button>
                                 </div>
@@ -741,7 +765,7 @@ export default function RegionIndex({
                                     <div className="space-y-3.5">
                                         {profile?.capital && (
                                             <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
-                                                Ibu kota {profile.capital} ·{' '}
+                                                Ibu kota {profile.capital} ·{" "}
                                                 {profile.region}
                                             </p>
                                         )}
@@ -750,52 +774,89 @@ export default function RegionIndex({
                                                 {profile.summary}
                                             </p>
                                         )}
-                                        {profile && profile.icons.length > 0 && (
-                                            <div className="space-y-2 pt-1">
-                                                <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
-                                                    <span className="text-amber-500">✨</span>
-                                                    Ciri Khas & Ikonik
-                                                </span>
-                                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                                                    {profile.icons.map((icon, idx) => {
-                                                        const name = typeof icon === 'string' ? icon : icon.name;
-                                                        const image = typeof icon === 'object' && icon !== null ? icon.image : null;
+                                        {profile &&
+                                            profile.icons.length > 0 && (
+                                                <div className="space-y-2 pt-1">
+                                                    <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
+                                                        <span className="text-amber-500">
+                                                            ✨
+                                                        </span>
+                                                        Ciri Khas & Ikonik
+                                                    </span>
+                                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                                        {profile.icons.map(
+                                                            (icon, idx) => {
+                                                                const name =
+                                                                    typeof icon ===
+                                                                    "string"
+                                                                        ? icon
+                                                                        : icon.name;
+                                                                const image =
+                                                                    typeof icon ===
+                                                                        "object" &&
+                                                                    icon !==
+                                                                        null
+                                                                        ? icon.image
+                                                                        : null;
 
-                                                        return (
-                                                            <div
-                                                                key={`${name}-${idx}`}
-                                                                className="group flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-surface p-2 shadow-2xs transition hover:border-accent/40 hover:bg-slate-50/60"
-                                                            >
-                                                                <span className="size-10 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200/60">
-                                                                    {image ? (
-                                                                        <img
-                                                                            src={image}
-                                                                            alt={name}
-                                                                            className="size-full object-cover transition duration-300 group-hover:scale-110"
-                                                                            onError={(e) => {
-                                                                                (e.currentTarget as HTMLElement).style.display = 'none';
-                                                                            }}
-                                                                        />
-                                                                    ) : (
-                                                                        <span className="grid size-full place-items-center text-xs text-slate-400">
-                                                                            🏛️
+                                                                return (
+                                                                    <button
+                                                                        type="button"
+                                                                        key={`${name}-${idx}`}
+                                                                        onClick={() =>
+                                                                            setDetail(
+                                                                                {
+                                                                                    name,
+                                                                                    image:
+                                                                                        image ??
+                                                                                        null,
+                                                                                },
+                                                                            )
+                                                                        }
+                                                                        className="group flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200/80 bg-surface p-2 text-left shadow-2xs transition hover:border-accent/40 hover:bg-slate-50/60"
+                                                                    >
+                                                                        <span className="size-10 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200/60">
+                                                                            {image ? (
+                                                                                <img
+                                                                                    src={
+                                                                                        image
+                                                                                    }
+                                                                                    alt={
+                                                                                        name
+                                                                                    }
+                                                                                    className="size-full object-cover transition duration-300 group-hover:scale-110"
+                                                                                    onError={(
+                                                                                        e,
+                                                                                    ) => {
+                                                                                        (
+                                                                                            e.currentTarget as HTMLElement
+                                                                                        ).style.display =
+                                                                                            "none";
+                                                                                    }}
+                                                                                />
+                                                                            ) : (
+                                                                                <span className="grid size-full place-items-center text-xs text-slate-400">
+                                                                                    🏛️
+                                                                                </span>
+                                                                            )}
                                                                         </span>
-                                                                    )}
-                                                                </span>
-                                                                <span className="line-clamp-2 text-xs font-semibold text-navy-900">
-                                                                    {name}
-                                                                </span>
-                                                            </div>
-                                                        );
-                                                    })}
+                                                                        <span className="line-clamp-2 text-xs font-semibold text-navy-900">
+                                                                            {
+                                                                                name
+                                                                            }
+                                                                        </span>
+                                                                    </button>
+                                                                );
+                                                            },
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
                                     </div>
                                     <div className="grid grid-cols-3 gap-2.5 border-t border-slate-100 pt-4">
                                         <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-center transition-colors hover:border-slate-300">
                                             <div className="text-lg font-bold text-navy-900 sm:text-xl">
-                                                {profile?.regencies ?? '…'}
+                                                {profile?.regencies ?? "…"}
                                             </div>
                                             <div className="mt-0.5 text-[11px] font-medium text-slate-500">
                                                 Kabupaten
@@ -803,7 +864,7 @@ export default function RegionIndex({
                                         </div>
                                         <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-center transition-colors hover:border-slate-300">
                                             <div className="text-lg font-bold text-navy-900 sm:text-xl">
-                                                {profile?.cities ?? '…'}
+                                                {profile?.cities ?? "…"}
                                             </div>
                                             <div className="mt-0.5 text-[11px] font-medium text-slate-500">
                                                 Kota Otonom
@@ -848,7 +909,11 @@ export default function RegionIndex({
                                                 />
                                             ) : (
                                                 <div className="grid size-14 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-400">
-                                                    <Icon name="file" width={18} height={18} />
+                                                    <Icon
+                                                        name="file"
+                                                        width={18}
+                                                        height={18}
+                                                    />
                                                 </div>
                                             )}
                                             <span className="min-w-0 flex-1">
@@ -856,15 +921,22 @@ export default function RegionIndex({
                                                     {story.title}
                                                 </span>
                                                 <span className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
-                                                    <Icon name="clock" width={12} height={12} />
-                                                    {timeAgo(story.published_at)}
+                                                    <Icon
+                                                        name="clock"
+                                                        width={12}
+                                                        height={12}
+                                                    />
+                                                    {timeAgo(
+                                                        story.published_at,
+                                                    )}
                                                 </span>
                                             </span>
                                         </Link>
                                     ))}
                                     {!latestLoading && latest.length === 0 && (
                                         <div className="grid flex-1 place-items-center py-6 text-center text-sm text-slate-500">
-                                            Belum ada berita terbaru dari wilayah ini.
+                                            Belum ada berita terbaru dari
+                                            wilayah ini.
                                         </div>
                                     )}
                                     {latestLoading && (
@@ -930,11 +1002,11 @@ export default function RegionIndex({
                                                             {new Date(
                                                                 event.starts_on,
                                                             ).toLocaleDateString(
-                                                                'id-ID',
+                                                                "id-ID",
                                                                 {
-                                                                    month: 'short',
+                                                                    month: "short",
                                                                     timeZone:
-                                                                        'UTC',
+                                                                        "UTC",
                                                                 },
                                                             )}
                                                         </span>
@@ -947,17 +1019,17 @@ export default function RegionIndex({
                                                             {new Date(
                                                                 event.starts_on,
                                                             ).toLocaleDateString(
-                                                                'id-ID',
+                                                                "id-ID",
                                                                 {
-                                                                    day: 'numeric',
-                                                                    month: 'long',
-                                                                    year: 'numeric',
+                                                                    day: "numeric",
+                                                                    month: "long",
+                                                                    year: "numeric",
                                                                     timeZone:
-                                                                        'UTC',
+                                                                        "UTC",
                                                                 },
                                                             )}
                                                             {event.ends_on &&
-                                                                ` – ${new Date(event.ends_on).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}`}
+                                                                ` – ${new Date(event.ends_on).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}`}
                                                         </p>
                                                         <p className="mt-1 text-sm text-slate-500">
                                                             {event.address ||
@@ -980,7 +1052,7 @@ export default function RegionIndex({
                                         </span>
                                         <div className="min-w-0 flex-1">
                                             <p className="text-sm font-semibold text-navy-900">
-                                                Belum ada agenda mendatang di{' '}
+                                                Belum ada agenda mendatang di{" "}
                                                 {selected.name}
                                             </p>
                                             <p className="mt-0.5 text-sm text-slate-500">
@@ -1011,14 +1083,37 @@ export default function RegionIndex({
                                     <p className="mt-2 text-sm text-slate-500">
                                         {profile
                                             ? `Profil UMKM unggulan ${selected.name} belum tersedia.`
-                                            : 'Memuat…'}
+                                            : "Memuat…"}
                                     </p>
                                 ) : (
                                     <ul className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
                                         {profile.umkm.map((u) => (
                                             <li
                                                 key={u.name}
-                                                className="group overflow-hidden rounded-2xl bg-surface ring-1 ring-slate-200"
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() =>
+                                                    setDetail({
+                                                        name: u.name,
+                                                        image:
+                                                            u.image?.url ??
+                                                            null,
+                                                        category: u.category,
+                                                        description:
+                                                            u.description,
+                                                        credit: u.image,
+                                                    })
+                                                }
+                                                onKeyDown={(e) => {
+                                                    if (
+                                                        e.key === "Enter" ||
+                                                        e.key === " "
+                                                    ) {
+                                                        e.preventDefault();
+                                                        e.currentTarget.click();
+                                                    }
+                                                }}
+                                                className="group cursor-pointer overflow-hidden rounded-2xl bg-surface ring-1 ring-slate-200 transition hover:ring-accent/40"
                                             >
                                                 <div className="relative aspect-[4/3] bg-gradient-to-br from-merah-dark to-merah">
                                                     {u.image && (
@@ -1042,7 +1137,7 @@ export default function RegionIndex({
                                                     </p>
                                                     {u.image && (
                                                         <p className="mt-2 truncate text-[10px] text-slate-400">
-                                                            Foto:{' '}
+                                                            Foto:{" "}
                                                             {u.image.page ? (
                                                                 <a
                                                                     href={
@@ -1051,6 +1146,11 @@ export default function RegionIndex({
                                                                     }
                                                                     target="_blank"
                                                                     rel="noopener nofollow"
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) =>
+                                                                        e.stopPropagation()
+                                                                    }
                                                                     className="hover:text-accent"
                                                                 >
                                                                     {
@@ -1060,7 +1160,7 @@ export default function RegionIndex({
                                                                 </a>
                                                             ) : (
                                                                 u.image.credit
-                                                            )}{' '}
+                                                            )}{" "}
                                                             · {u.image.license}
                                                         </p>
                                                     )}
@@ -1087,7 +1187,194 @@ export default function RegionIndex({
                     </section>
                 )}
             </div>
+            {detail && (
+                <DetailDialog
+                    detail={detail}
+                    province={selected?.name ?? ""}
+                    onClose={() => setDetail(null)}
+                />
+            )}
         </PublicLayout>
+    );
+}
+
+/** Popup for an icon or UMKM card; fuller text comes from an Indonesian Wikipedia search on the item name. */
+function DetailDialog({
+    detail,
+    province,
+    onClose,
+}: {
+    detail: Detail;
+    province: string;
+    onClose: () => void;
+}) {
+    const ref = useRef<HTMLDialogElement>(null);
+    const [wiki, setWiki] = useState<{
+        title: string;
+        paragraphs: string[];
+        url: string;
+        image: string | null;
+    } | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        ref.current?.showModal();
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        const params = new URLSearchParams({
+            action: "query",
+            format: "json",
+            origin: "*",
+            generator: "search",
+            gsrsearch: `${detail.name} ${province}`,
+            gsrlimit: "1",
+            prop: "extracts|pageimages|info",
+            exintro: "1",
+            explaintext: "1",
+            inprop: "url",
+            piprop: "thumbnail",
+            pithumbsize: "800",
+        });
+        setWiki(null);
+        setLoading(true);
+        void fetch(`https://id.wikipedia.org/w/api.php?${params}`, {
+            signal: controller.signal,
+        })
+            .then((r) => (r.ok ? r.json() : Promise.reject()))
+            .then(
+                (d: {
+                    query?: {
+                        pages?: Record<
+                            string,
+                            {
+                                title: string;
+                                extract?: string;
+                                fullurl?: string;
+                                thumbnail?: { source: string };
+                            }
+                        >;
+                    };
+                }) => {
+                    const page = Object.values(d.query?.pages ?? {})[0];
+                    const paragraphs = (page?.extract ?? "")
+                        .split("\n")
+                        .map((p) => p.trim())
+                        .filter(Boolean);
+                    if (page && paragraphs.length) {
+                        setWiki({
+                            title: page.title,
+                            paragraphs,
+                            url: page.fullurl ?? "",
+                            image: page.thumbnail?.source ?? null,
+                        });
+                    }
+                },
+            )
+            .catch(() => undefined)
+            .finally(() => {
+                if (!controller.signal.aborted) setLoading(false);
+            });
+        return () => controller.abort();
+    }, [detail, province]);
+
+    const image = detail.image ?? wiki?.image ?? null;
+
+    return (
+        <dialog
+            ref={ref}
+            onClose={onClose}
+            onClick={(e) =>
+                e.target === e.currentTarget && ref.current?.close()
+            }
+            aria-label={detail.name}
+            className="m-auto flex max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl flex-col overflow-hidden rounded-3xl bg-surface p-0 text-navy-900 shadow-2xl ring-1 ring-slate-200 backdrop:bg-navy-900/60 backdrop:backdrop-blur-sm"
+        >
+            <div className="relative h-56 shrink-0 bg-gradient-to-br from-merah-dark to-merah sm:h-64">
+                {image && (
+                    <img
+                        src={image}
+                        alt={detail.name}
+                        className="size-full object-cover"
+                    />
+                )}
+                <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <button
+                    type="button"
+                    onClick={() => ref.current?.close()}
+                    aria-label="Tutup"
+                    className="absolute top-3 right-3 grid size-9 cursor-pointer place-items-center rounded-full bg-white/90 text-navy-900 shadow transition hover:bg-white"
+                >
+                    ✕
+                </button>
+                <div className="absolute right-5 bottom-4 left-5 space-y-1.5">
+                    <div className="flex flex-wrap gap-1.5">
+                        <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-accent">
+                            {detail.category ?? "Ciri khas & ikonik"}
+                        </span>
+                        <span className="rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                            {province}
+                        </span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white drop-shadow">
+                        {detail.name}
+                    </h3>
+                </div>
+            </div>
+
+            <div className="flex-1 space-y-4 overflow-y-auto p-5 sm:p-6">
+                {detail.description && (
+                    <p className="rounded-xl border-l-4 border-accent bg-accent/[0.05] px-4 py-3 text-sm font-medium leading-relaxed text-navy-900">
+                        {detail.description}
+                    </p>
+                )}
+
+                {loading ? (
+                    <div className="space-y-2" aria-label="Memuat penjelasan">
+                        {[100, 95, 90, 70].map((w) => (
+                            <span
+                                key={w}
+                                style={{ width: `${w}%` }}
+                                className="block h-3 animate-pulse rounded bg-slate-200"
+                            />
+                        ))}
+                    </div>
+                ) : wiki ? (
+                    <div className="space-y-3 text-sm leading-relaxed text-slate-600">
+                        {wiki.paragraphs.map((p, i) => (
+                            <p key={i}>{p}</p>
+                        ))}
+                    </div>
+                ) : (
+                    !detail.description && (
+                        <p className="text-sm text-slate-500">
+                            Penjelasan lengkap belum tersedia.
+                        </p>
+                    )
+                )}
+            </div>
+
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-5 py-3 text-[11px] text-slate-400 sm:px-6">
+                <span className="truncate">
+                    {detail.credit
+                        ? `Foto: ${detail.credit.credit} · ${detail.credit.license}`
+                        : wiki
+                          ? `Sumber: Wikipedia — ${wiki.title}`
+                          : ""}
+                </span>
+                {wiki?.url && (
+                    <a
+                        href={wiki.url}
+                        target="_blank"
+                        rel="noopener nofollow"
+                        className="font-semibold text-merah hover:underline"
+                    >
+                        Baca selengkapnya →
+                    </a>
+                )}
+            </div>
+        </dialog>
     );
 }
 
@@ -1108,7 +1395,7 @@ function SidePanel({
     onPick: (province: Region) => void;
 }) {
     const { provinces } = usePage().props.nav;
-    const [query, setQuery] = useState('');
+    const [query, setQuery] = useState("");
     const results = query.trim()
         ? provinces
               .filter((p) =>
@@ -1122,7 +1409,7 @@ function SidePanel({
     const topCount = Math.max(1, ...ranked.map((p) => count(p.code)));
 
     function pick(p: Region) {
-        setQuery('');
+        setQuery("");
         onPick(p);
     }
 
@@ -1176,8 +1463,8 @@ function SidePanel({
                                 {selected.name}
                             </h2>
                             <p className="text-xs text-white/80">
-                                {count(selected.code)} berita ·{' '}
-                                {cities.length || '…'} kabupaten/kota
+                                {count(selected.code)} berita ·{" "}
+                                {cities.length || "…"} kabupaten/kota
                             </p>
                         </div>
                     </div>
@@ -1206,10 +1493,10 @@ function SidePanel({
                                             }
                                             onMouseLeave={() => onHover(null)}
                                             className={cn(
-                                                'block rounded-lg px-2.5 py-1.5 text-sm transition',
+                                                "block rounded-lg px-2.5 py-1.5 text-sm transition",
                                                 hovered === city.code
-                                                    ? 'bg-accent/10 text-accent'
-                                                    : 'text-slate-600 hover:bg-accent/5 hover:text-accent',
+                                                    ? "bg-accent/10 text-accent"
+                                                    : "text-slate-600 hover:bg-accent/5 hover:text-accent",
                                             )}
                                         >
                                             {city.name}
