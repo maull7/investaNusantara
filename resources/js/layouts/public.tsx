@@ -1,26 +1,26 @@
-import { Form, Link, router, usePage } from '@inertiajs/react';
+import { Form, Link, router, usePage } from "@inertiajs/react";
 import {
     MotionConfig,
     motion,
     useMotionValueEvent,
     useScroll,
-} from 'motion/react';
+} from "motion/react";
 import {
     type ReactNode,
     type TouchEvent,
     useEffect,
     useRef,
     useState,
-} from 'react';
-import CategoryTabs from '@/components/category-tabs';
-import Icon, { type IconName } from '@/components/icons';
-import InstallPrompt from '@/components/install-prompt';
-import Logo from '@/components/logo';
-import PushFollow from '@/components/push-follow';
-import { ease } from '@/components/motion';
-import { INFO_LINKS } from '@/lib/info-links';
-import { regionHref } from '@/lib/news';
-import { cn } from '@/lib/utils';
+} from "react";
+import CategoryTabs from "@/components/category-tabs";
+import Icon, { type IconName } from "@/components/icons";
+import InstallPrompt from "@/components/install-prompt";
+import Logo from "@/components/logo";
+import PushFollow from "@/components/push-follow";
+import { ease } from "@/components/motion";
+import { INFO_LINKS } from "@/lib/info-links";
+import { regionHref } from "@/lib/news";
+import { cn } from "@/lib/utils";
 import {
     agenda as agendaRoute,
     category,
@@ -33,17 +33,34 @@ import {
     regions,
     search,
     sentiment,
-} from '@/routes';
-import { index as adminArticles } from '@/routes/admin/articles';
+} from "@/routes";
+import { index as adminArticles } from "@/routes/admin/articles";
 
 /**
  * default: navbar + category tabs.
  * home:    on phones the navbar shows a greeting, a search field and the tabs.
  * article: on phones there is no top bar; the page draws a full-bleed cover.
  */
-type Variant = 'default' | 'home' | 'article';
+type Variant = "default" | "home" | "article";
 
-const spring = { type: 'spring', stiffness: 400, damping: 32 } as const;
+const spring = { type: "spring", stiffness: 400, damping: 32 } as const;
+
+/**
+ * Footer province columns, by island. Kemendagri province codes start with the
+ * island group's digit (1–2 Sumatera, 3 Jawa, 5 Bali & Nusa Tenggara,
+ * 6 Kalimantan, 7 Sulawesi, 8 Maluku, 9 Papua), so new provinces sort themselves.
+ */
+const FOOTER_ISLANDS = [
+    [{ name: "Sumatera", prefixes: ["1", "2"] }],
+    [{ name: "Jawa", prefixes: ["3"] }],
+    [{ name: "Kalimantan", prefixes: ["6"] }],
+    [{ name: "Sulawesi", prefixes: ["7"] }],
+    [
+        { name: "Bali & Nusa Tenggara", prefixes: ["5"] },
+        { name: "Maluku", prefixes: ["8"] },
+    ],
+    [{ name: "Papua", prefixes: ["9"] }],
+];
 
 // Last visited category tab. The layout remounts when the page component
 // changes (home -> category), so the previous tab has to outlive it.
@@ -58,7 +75,7 @@ function insideHorizontalScroller(target: EventTarget | null, stop: Element) {
     ) {
         const overflow = getComputedStyle(el).overflowX;
         if (
-            (overflow === 'auto' || overflow === 'scroll') &&
+            (overflow === "auto" || overflow === "scroll") &&
             el.scrollWidth > el.clientWidth + 1
         ) {
             return true;
@@ -70,7 +87,7 @@ function insideHorizontalScroller(target: EventTarget | null, stop: Element) {
 export default function PublicLayout({
     children,
     tabs = true,
-    variant = 'default',
+    variant = "default",
 }: {
     children: ReactNode;
     tabs?: boolean;
@@ -78,18 +95,18 @@ export default function PublicLayout({
 }) {
     const { nav, auth } = usePage().props;
     const { url } = usePage();
-    const path = url.split('?')[0];
-    const isHome = variant === 'home';
+    const path = url.split("?")[0];
+    const isHome = variant === "home";
 
     const tabItems = [
-        { href: home.url(), label: 'Semua' },
+        { href: home.url(), label: "Semua" },
         ...nav.categories.map((c) => ({
             href: category.url(c.slug),
             label: c.name,
         })),
     ];
     // Pelanggan read the public site only: no newsroom link for them.
-    const staff = auth.user && auth.user.role !== 'customer';
+    const staff = auth.user && auth.user.role !== "customer";
     const redaksi = staff ? adminArticles.url() : login.url();
     const menu: {
         href: string;
@@ -97,20 +114,20 @@ export default function PublicLayout({
         icon: IconName;
         post?: boolean;
     }[] = [
-        { href: home.url(), label: 'Beranda', icon: 'home' },
-        { href: regions.url(), label: 'Wilayah', icon: 'map' },
-        { href: agendaRoute.url(), label: 'Agenda', icon: 'clock' },
-        { href: search.url(), label: 'Cari', icon: 'search' },
+        { href: home.url(), label: "Beranda", icon: "home" },
+        { href: regions.url(), label: "Wilayah", icon: "map" },
+        { href: agendaRoute.url(), label: "Agenda", icon: "clock" },
+        { href: search.url(), label: "Cari", icon: "search" },
         auth.user && !staff
-            ? { href: logout.url(), label: 'Keluar', icon: 'user', post: true }
+            ? { href: logout.url(), label: "Keluar", icon: "user", post: true }
             : {
                   href: redaksi,
-                  label: staff ? 'Redaksi' : 'Masuk',
-                  icon: 'user',
+                  label: staff ? "Redaksi" : "Masuk",
+                  icon: "user",
               },
     ];
     const isActive = (href: string) =>
-        href === '/' ? path === '/' : path.startsWith(href);
+        href === "/" ? path === "/" : path.startsWith(href);
     const activeTab = tabItems.findIndex((t) => isActive(t.href));
 
     // Slide direction for the page content: +1 = came from a tab on the left.
@@ -141,7 +158,7 @@ export default function PublicLayout({
     // detaches into a floating pill that drops in from above.
     const { scrollY } = useScroll();
     const [floating, setFloating] = useState(false);
-    useMotionValueEvent(scrollY, 'change', (y) =>
+    useMotionValueEvent(scrollY, "change", (y) =>
         // The phone home header isn't sticky (it scrolls away), so it never floats.
         setFloating(y > 24 && !(isHome && window.innerWidth < 768)),
     );
@@ -181,10 +198,10 @@ export default function PublicLayout({
             <div className="theme-public min-h-screen bg-nusantara pb-24 text-slate-700 md:pb-0">
                 <header
                     className={cn(
-                        'top-0 z-30',
+                        "top-0 z-30",
                         // On the phone home screen the header scrolls away like an app feed.
-                        isHome ? 'relative md:sticky' : 'sticky',
-                        variant === 'article' && 'hidden md:block',
+                        isHome ? "relative md:sticky" : "sticky",
+                        variant === "article" && "hidden md:block",
                     )}
                 >
                     {/* Transforms only (no padding/height change), so the page never jumps. */}
@@ -197,22 +214,22 @@ export default function PublicLayout({
                         transition={
                             floating
                                 ? {
-                                      type: 'spring',
+                                      type: "spring",
                                       stiffness: 300,
                                       damping: 22,
                                   }
                                 : { duration: 0.35, ease }
                         }
                         className={cn(
-                            'mx-auto border bg-surface/85 backdrop-blur-xl backdrop-saturate-150 transition-[width,max-width,border-radius,box-shadow,border-color,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                            "mx-auto border bg-surface/85 backdrop-blur-xl backdrop-saturate-150 transition-[width,max-width,border-radius,box-shadow,border-color,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
                             floating
-                                ? 'w-[calc(100%-1.5rem)] max-w-[74rem] rounded-[1.75rem] border-accent/10 bg-surface/90 shadow-[0_14px_40px_-14px_rgba(165,14,30,0.35)]'
-                                : 'w-full max-w-full rounded-none border-transparent border-b-accent/10 shadow-none',
+                                ? "w-[calc(100%-1.5rem)] max-w-[74rem] rounded-[1.75rem] border-accent/10 bg-surface/90 shadow-[0_14px_40px_-14px_rgba(165,14,30,0.35)]"
+                                : "w-full max-w-full rounded-none border-transparent border-b-accent/10 shadow-none",
                         )}
                     >
                         <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
                             {isHome && <Greeting className="md:hidden" />}
-                            <Logo className={cn(isHome && 'hidden md:flex')} />
+                            <Logo className={cn(isHome && "hidden md:flex")} />
 
                             {/* Laptop links */}
                             <nav className="ml-2 hidden h-full shrink-0 items-stretch gap-1 md:flex lg:ml-6">
@@ -221,8 +238,8 @@ export default function PublicLayout({
                                     // Desktop only: the phone bottom bar has no room for a fifth tab.
                                     {
                                         href: sentiment.url(),
-                                        label: 'Sentimen',
-                                        icon: 'chart' as const,
+                                        label: "Sentimen",
+                                        icon: "chart" as const,
                                     },
                                 ].map((i) => {
                                     const active = isActive(i.href);
@@ -235,10 +252,10 @@ export default function PublicLayout({
                                             aria-label={i.label}
                                             title={i.label}
                                             className={cn(
-                                                'relative flex items-center gap-2 px-3 text-sm transition',
+                                                "relative flex items-center gap-2 px-3 text-sm transition",
                                                 active
-                                                    ? 'font-medium text-accent'
-                                                    : 'text-slate-500 hover:text-navy-900',
+                                                    ? "font-medium text-accent"
+                                                    : "text-slate-500 hover:text-navy-900",
                                             )}
                                         >
                                             <Icon
@@ -328,7 +345,7 @@ export default function PublicLayout({
                                             width={16}
                                             height={16}
                                         />
-                                        {staff ? 'Ruang Redaksi' : 'Masuk'}
+                                        {staff ? "Ruang Redaksi" : "Masuk"}
                                     </Link>
                                 )}
                             </div>
@@ -362,10 +379,10 @@ export default function PublicLayout({
                     onTouchStart={tabs ? onTouchStart : undefined}
                     onTouchEnd={tabs ? onTouchEnd : undefined}
                     className={cn(
-                        'mx-auto max-w-6xl',
-                        variant === 'article'
-                            ? 'md:px-4 md:py-8'
-                            : 'px-4 py-5 sm:py-8',
+                        "mx-auto max-w-6xl",
+                        variant === "article"
+                            ? "md:px-4 md:py-8"
+                            : "px-4 py-5 sm:py-8",
                     )}
                 >
                     {children}
@@ -403,16 +420,40 @@ export default function PublicLayout({
                                 </Link>
                             </div>
                         </div>
-                        <div className="mt-8 grid grid-cols-3 gap-x-4 gap-y-2 lg:grid-cols-6">
-                            {nav.provinces.map((p) => (
-                                <Link
-                                    key={p.code}
-                                    href={regionHref(p)}
-                                    viewTransition
-                                    className="text-slate-500 transition hover:text-accent"
-                                >
-                                    {p.name}
-                                </Link>
+                        {/* All 38 provinces, grouped by island so every column is balanced */}
+                        <div className="mt-8 grid grid-cols-3 gap-x-6 gap-y-6 lg:grid-cols-6">
+                            {FOOTER_ISLANDS.map((column) => (
+                                <div key={column[0].name} className="space-y-5">
+                                    {column.map((island) => {
+                                        const list = nav.provinces.filter((p) =>
+                                            island.prefixes.includes(
+                                                p.code.slice(0, 1),
+                                            ),
+                                        );
+                                        return list.length ? (
+                                            <div key={island.name}>
+                                                <p className="mb-2 text-xs font-bold tracking-wider text-navy-900 uppercase">
+                                                    {island.name}
+                                                </p>
+                                                <ul className="space-y-1.5">
+                                                    {list.map((p) => (
+                                                        <li key={p.code}>
+                                                            <Link
+                                                                href={regionHref(
+                                                                    p,
+                                                                )}
+                                                                viewTransition
+                                                                className="text-slate-500 transition hover:text-accent"
+                                                            >
+                                                                {p.name}
+                                                            </Link>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ) : null;
+                                    })}
+                                </div>
                             ))}
                         </div>
                         <div className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-accent/10 pt-6 text-xs text-slate-400">
@@ -446,25 +487,25 @@ export default function PublicLayout({
                                 <Link
                                     key={i.label}
                                     href={i.href}
-                                    method={i.post ? 'post' : undefined}
-                                    as={i.post ? 'button' : undefined}
+                                    method={i.post ? "post" : undefined}
+                                    as={i.post ? "button" : undefined}
                                     viewTransition
                                     className={cn(
-                                        'relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] transition',
+                                        "relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] transition",
                                         active
-                                            ? 'font-medium text-accent'
-                                            : 'text-slate-400',
+                                            ? "font-medium text-accent"
+                                            : "text-slate-400",
                                     )}
                                 >
                                     <motion.span
                                         animate={{
                                             scale: active ? 1.05 : 1,
                                             backgroundColor: active
-                                                ? 'rgba(165, 14, 30, 0.1)'
-                                                : 'rgba(165, 14, 30, 0)',
+                                                ? "rgba(165, 14, 30, 0.1)"
+                                                : "rgba(165, 14, 30, 0)",
                                         }}
                                         transition={{
-                                            type: 'spring',
+                                            type: "spring",
                                             stiffness: 400,
                                             damping: 20,
                                         }}
@@ -506,18 +547,18 @@ function UserMenu({ name }: { name: string }) {
         const close = (e: MouseEvent | KeyboardEvent) => {
             if (
                 e instanceof KeyboardEvent
-                    ? e.key === 'Escape'
+                    ? e.key === "Escape"
                     : !box.current?.contains(e.target as Node)
             ) {
                 setOpen(false);
             }
         };
-        document.addEventListener('mousedown', close);
-        document.addEventListener('keydown', close);
+        document.addEventListener("mousedown", close);
+        document.addEventListener("keydown", close);
 
         return () => {
-            document.removeEventListener('mousedown', close);
-            document.removeEventListener('keydown', close);
+            document.removeEventListener("mousedown", close);
+            document.removeEventListener("keydown", close);
         };
     }, [open]);
 
@@ -533,14 +574,14 @@ function UserMenu({ name }: { name: string }) {
                 <span className="grid size-7 place-items-center rounded-full bg-accent text-xs font-semibold text-white">
                     {name[0]}
                 </span>
-                <span className="max-w-28 truncate">{name.split(' ')[0]}</span>
+                <span className="max-w-28 truncate">{name.split(" ")[0]}</span>
                 <Icon
                     name="chevron"
                     width={14}
                     height={14}
                     className={cn(
-                        'text-slate-400 transition-transform',
-                        open ? '-rotate-90' : 'rotate-90',
+                        "text-slate-400 transition-transform",
+                        open ? "-rotate-90" : "rotate-90",
                     )}
                 />
             </button>
@@ -588,7 +629,7 @@ function SearchField({
             action={search.url()}
             method="get"
             className={cn(
-                'flex items-center gap-2.5 rounded-full bg-accent/5 px-4 py-2.5 text-sm ring-1 ring-accent/10 transition focus-within:bg-surface focus-within:ring-2 focus-within:ring-accent/30 md:py-2',
+                "flex items-center gap-2.5 rounded-full bg-accent/5 px-4 py-2.5 text-sm ring-1 ring-accent/10 transition focus-within:bg-surface focus-within:ring-2 focus-within:ring-accent/30 md:py-2",
                 className,
             )}
         >
@@ -622,14 +663,14 @@ function SearchField({
 /** Light/dark switch; the choice is remembered on this device (read by app.blade.php). */
 function ThemeToggle() {
     const [dark, setDark] = useState(() =>
-        document.documentElement.classList.contains('dark'),
+        document.documentElement.classList.contains("dark"),
     );
 
     function toggle() {
         const next = !dark;
-        document.documentElement.classList.toggle('dark', next);
+        document.documentElement.classList.toggle("dark", next);
         try {
-            localStorage.setItem('theme', next ? 'dark' : 'light');
+            localStorage.setItem("theme", next ? "dark" : "light");
         } catch {
             // Private mode: the switch still works for this visit.
         }
@@ -640,11 +681,11 @@ function ThemeToggle() {
         <button
             type="button"
             onClick={toggle}
-            aria-label={dark ? 'Mode terang' : 'Mode gelap'}
+            aria-label={dark ? "Mode terang" : "Mode gelap"}
             aria-pressed={dark}
             className="grid size-10 shrink-0 place-items-center rounded-full bg-accent/5 text-navy-900 ring-1 ring-accent/10 transition active:scale-90"
         >
-            <Icon name={dark ? 'sun' : 'moon'} width={18} height={18} />
+            <Icon name={dark ? "sun" : "moon"} width={18} height={18} />
         </button>
     );
 }
@@ -669,9 +710,9 @@ function Greeting({ className }: { className?: string }) {
     const { auth } = usePage().props;
 
     return (
-        <div className={cn('leading-tight', className)}>
+        <div className={cn("leading-tight", className)}>
             <p className="text-base font-semibold text-navy-900">
-                Halo, {auth.user?.name.split(' ')[0] ?? 'Pembaca'}
+                Halo, {auth.user?.name.split(" ")[0] ?? "Pembaca"}
             </p>
             <p className="text-xs text-slate-400">
                 Kabar harian dari seluruh Nusantara

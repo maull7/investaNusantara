@@ -7,8 +7,10 @@ import {
     geoOrthographic,
     geoPath,
 } from "d3-geo";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
+import EarthGlobe from "@/components/earth-globe";
+import type { FlatTransform } from "@/components/earth-globe";
 import Icon from "@/components/icons";
 import RegionPicker from "@/components/region-picker";
 import PublicLayout from "@/layouts/public";
@@ -62,6 +64,8 @@ type Detail = {
 };
 
 const GLOBE = { cx: 450, cy: 265, r: 218 };
+const GLOBE_VIEW: [number, number] = [900, 530];
+const GLOBE_CENTER: [number, number] = [GLOBE.cx, GLOBE.cy];
 const GRATICULE = geoGraticule().step([10, 10])();
 // Fixed pseudo-random starfield so it does not jump between renders.
 const STARS = Array.from({ length: 140 }, (_, i) => {
@@ -288,14 +292,23 @@ const TIME_THEMES: Record<TimeOfDay, TimeTheme> = {
     },
 };
 
-function getCurrentTimeOfDay(): TimeOfDay {
-    const now = new Date();
-    const minutes = now.getHours() * 60 + now.getMinutes();
-    if (minutes >= 5 * 60 && minutes < 7 * 60) return "dawn";
-    if (minutes >= 7 * 60 && minutes < 11 * 60) return "morning";
-    if (minutes >= 11 * 60 && minutes < 15 * 60) return "noon";
-    if (minutes >= 15 * 60 && minutes < 18 * 60 + 30) return "sunset";
-    return "night";
+/** Tracks the site's light/dark toggle (the `dark` class on <html>). */
+function useDarkMode() {
+    const [dark, setDark] = useState(() =>
+        document.documentElement.classList.contains("dark"),
+    );
+    useEffect(() => {
+        const root = document.documentElement;
+        const observer = new MutationObserver(() =>
+            setDark(root.classList.contains("dark")),
+        );
+        observer.observe(root, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+        return () => observer.disconnect();
+    }, []);
+    return dark;
 }
 
 /** Interactive map: flat Indonesia, click a province to spin a draggable globe onto it. */
@@ -320,16 +333,15 @@ export default function RegionIndex({
     const [fitScale, setFitScale] = useState(GLOBE.r);
     const [ready, setReady] = useState(false);
     const [detail, setDetail] = useState<Detail | null>(null);
-    const [currentTime, setCurrentTime] = useState<TimeOfDay>(getCurrentTimeOfDay);
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(getCurrentTimeOfDay());
-        }, 60000);
-        return () => clearInterval(timer);
-    }, []);
-
-    const activeTheme = TIME_THEMES[currentTime];
+    // Light mode = daytime planet, dark mode = night side with city lights.
+    const dark = useDarkMode();
+    const activeTheme = TIME_THEMES[dark ? "night" : "noon"];
+    // True once the photo-real Earth is drawn; until then the SVG ocean shows.
+    const [earth, setEarth] = useState(false);
+    // Flat map of Indonesia or the 3D globe; picking a province always flies the globe.
+    const [mode, setMode] = useState<"flat" | "globe">("flat");
+    const globe = mode === "globe";
+    const onEarthReady = useCallback((ok: boolean) => setEarth(ok), []);
     const frame = useRef<number | null>(null);
     const drag = useRef<{
         x: number;
@@ -423,21 +435,31 @@ export default function RegionIndex({
         () => new Map(cities.map((c) => [c.code, c])),
         [cities],
     );
-    const flatPath = useMemo(
+    const flatProjection = useMemo(
         () =>
             national
-                ? geoPath(
-                      geoEquirectangular().fitExtent(
-                          [
-                              [24, 50],
-                              [876, 480],
-                          ],
-                          national,
-                      ),
+                ? geoEquirectangular().fitExtent(
+                      [
+                          [24, 50],
+                          [876, 480],
+                      ],
+                      national,
                   )
                 : null,
         [national],
     );
+    const flatPath = useMemo(
+        () => (flatProjection ? geoPath(flatProjection) : null),
+        [flatProjection],
+    );
+    // The same transform for the satellite layer, so imagery and outlines match.
+    const flatTransform = useMemo<FlatTransform | null>(() => {
+        if (!flatProjection) {
+            return null;
+        }
+        const [tx, ty] = flatProjection.translate();
+        return { k: flatProjection.scale(), tx, ty };
+    }, [flatProjection]);
     const globePath = useMemo(
         () =>
             geoPath(
@@ -466,6 +488,7 @@ export default function RegionIndex({
             return;
         }
         stopSpin();
+        setMode("globe");
         setSelected(province);
         setHovered(null);
         setCityMap(null);
@@ -513,10 +536,7 @@ export default function RegionIndex({
                 const t = Math.min(1, el / DURATION);
                 const eased = easeInOutCubic(t);
 
-                setRotation([
-                    from[0] + dLon * eased,
-                    from[1] + dLat * eased,
-                ]);
+                setRotation([from[0] + dLon * eased, from[1] + dLat * eased]);
 
                 // Interpolate in log space for visually even zoom sensation
                 setScale(Math.exp(fromLog + (toLog - fromLog) * eased));
@@ -551,7 +571,8 @@ export default function RegionIndex({
     function zoomBy(factor: number, animate = true) {
         stopSpin();
         const minScale = GLOBE.r * 0.8;
-        const maxScale = 14000;
+        // Deep enough for street-level satellite tiles (~zoom 17).
+        const maxScale = 1_500_000;
         const next = Math.max(minScale, Math.min(maxScale, scale * factor));
         if (!animate || Math.abs(next - scale) < 5) {
             setScale(next);
@@ -603,6 +624,7 @@ export default function RegionIndex({
     function reset() {
         stopSpin();
         setScale(GLOBE.r);
+        setRotation([-118, 2]);
         setSelected(null);
         setCityMap(null);
         setCities([]);
@@ -610,10 +632,19 @@ export default function RegionIndex({
         setHovered(null);
     }
 
+    /** Switch between the flat map of Indonesia and the globe. */
+    function showMode(next: "flat" | "globe") {
+        if (next === mode) {
+            return;
+        }
+        reset();
+        setMode(next);
+    }
+
     // Drag the globe to rotate it. The pointer is only captured once it really moves,
     // so a plain click still reaches the city underneath.
     function onPointerDown(e: ReactPointerEvent<SVGSVGElement>) {
-        if (selected) {
+        if (globe) {
             stopSpin();
             drag.current = {
                 x: e.clientX,
@@ -691,10 +722,39 @@ export default function RegionIndex({
                                 <p className="truncate text-xs text-slate-500">
                                     {selected
                                         ? "Seret untuk memutar globe, klik kabupaten/kota untuk membuka beritanya"
-                                        : "Klik provinsi pada peta"}
+                                        : globe
+                                          ? "Seret untuk memutar globe, klik provinsi"
+                                          : "Klik provinsi pada peta"}
                                 </p>
                             </div>
-                            <div className="flex shrink-0 items-center gap-2">
+                            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                                <div
+                                    role="group"
+                                    aria-label="Tampilan peta"
+                                    className="flex rounded-lg border border-slate-200 p-0.5 text-xs font-semibold"
+                                >
+                                    {(
+                                        [
+                                            ["flat", "Peta"],
+                                            ["globe", "Globe"],
+                                        ] as const
+                                    ).map(([value, label]) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            aria-pressed={mode === value}
+                                            onClick={() => showMode(value)}
+                                            className={cn(
+                                                "rounded-md px-3 py-1 transition-colors",
+                                                mode === value
+                                                    ? "bg-merah text-white"
+                                                    : "text-slate-500 hover:text-navy-900",
+                                            )}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
                                 {selected ? (
                                     <>
                                         <button
@@ -720,9 +780,7 @@ export default function RegionIndex({
                                             Seluruh Indonesia
                                         </button>
                                     </>
-                                ) : (
-                                    <div className="h-7" aria-hidden="true" />
-                                )}
+                                ) : null}
                             </div>
                         </div>
 
@@ -730,17 +788,82 @@ export default function RegionIndex({
                             className="relative mt-3 overflow-hidden rounded-2xl shadow-inner ring-1 ring-white/10 transition-colors duration-700"
                             style={{ backgroundColor: activeTheme.containerBg }}
                         >
+                            {globe && (
+                                <svg
+                                    viewBox="0 0 900 530"
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute inset-0 h-full w-full"
+                                >
+                                    <rect
+                                        width="900"
+                                        height="530"
+                                        fill="url(#space)"
+                                    />
+                                    {STARS.map((s, i) => (
+                                        <circle
+                                            key={i}
+                                            cx={s.x}
+                                            cy={s.y}
+                                            r={s.s}
+                                            fill="#fff"
+                                            opacity={
+                                                s.o *
+                                                (activeTheme.id === "night"
+                                                    ? 1
+                                                    : activeTheme.id ===
+                                                            "sunset" ||
+                                                        activeTheme.id ===
+                                                            "dawn"
+                                                      ? 0.55
+                                                      : 0.18)
+                                            }
+                                            pointerEvents="none"
+                                        />
+                                    ))}
+                                    <circle
+                                        cx={GLOBE.cx}
+                                        cy={GLOBE.cy}
+                                        r={scale * 1.14}
+                                        fill="url(#outerGlow)"
+                                        pointerEvents="none"
+                                    />
+                                    {/* Outer atmospheric halo ring */}
+                                    <circle
+                                        cx={GLOBE.cx}
+                                        cy={GLOBE.cy}
+                                        r={scale + 3}
+                                        fill="none"
+                                        stroke={activeTheme.haloStroke}
+                                        strokeWidth="3.5"
+                                        opacity="0.45"
+                                        filter="url(#atmosphereHalo)"
+                                        pointerEvents="none"
+                                    />
+                                </svg>
+                            )}
+                            {/* One satellite layer for both views, so imagery loads only once */}
+                            <EarthGlobe
+                                rotation={rotation}
+                                scale={scale}
+                                night={dark}
+                                center={GLOBE_CENTER}
+                                view={GLOBE_VIEW}
+                                flat={globe ? null : flatTransform}
+                                onReady={onEarthReady}
+                            />
                             <svg
                                 viewBox="0 0 900 530"
                                 role="img"
                                 aria-label={
                                     selected
                                         ? `Globe berpusat di ${selected.name}`
-                                        : "Peta provinsi Indonesia"
+                                        : globe
+                                          ? "Globe Indonesia"
+                                          : "Peta provinsi Indonesia"
                                 }
                                 className={cn(
-                                    "block aspect-[900/530] w-full",
-                                    selected &&
+                                    "relative block aspect-[900/530] w-full",
+                                    globe &&
                                         "cursor-grab touch-none select-none active:cursor-grabbing",
                                 )}
                                 onPointerDown={onPointerDown}
@@ -748,7 +871,7 @@ export default function RegionIndex({
                                 onPointerUp={onPointerUp}
                                 onPointerCancel={onPointerUp}
                                 onWheel={(e) => {
-                                    if (selected) {
+                                    if (globe) {
                                         e.preventDefault();
                                         zoomBy(
                                             e.deltaY < 0 ? 1.15 : 0.85,
@@ -766,13 +889,15 @@ export default function RegionIndex({
                                         cy="30%"
                                         r="75%"
                                     >
-                                        {activeTheme.oceanStops.map((s, idx) => (
-                                            <stop
-                                                key={idx}
-                                                offset={s.offset}
-                                                stopColor={s.color}
-                                            />
-                                        ))}
+                                        {activeTheme.oceanStops.map(
+                                            (s, idx) => (
+                                                <stop
+                                                    key={idx}
+                                                    offset={s.offset}
+                                                    stopColor={s.color}
+                                                />
+                                            ),
+                                        )}
                                     </radialGradient>
 
                                     {/* Flat map ocean background */}
@@ -783,13 +908,15 @@ export default function RegionIndex({
                                         x2="100%"
                                         y2="100%"
                                     >
-                                        {activeTheme.flatOceanStops.map((s, idx) => (
-                                            <stop
-                                                key={idx}
-                                                offset={s.offset}
-                                                stopColor={s.color}
-                                            />
-                                        ))}
+                                        {activeTheme.flatOceanStops.map(
+                                            (s, idx) => (
+                                                <stop
+                                                    key={idx}
+                                                    offset={s.offset}
+                                                    stopColor={s.color}
+                                                />
+                                            ),
+                                        )}
                                     </linearGradient>
 
                                     {/* 3D Earth atmosphere rim glow (Fresnel glow) */}
@@ -799,14 +926,16 @@ export default function RegionIndex({
                                         cy="50%"
                                         r="50%"
                                     >
-                                        {activeTheme.atmosphereRim.map((s, idx) => (
-                                            <stop
-                                                key={idx}
-                                                offset={s.offset}
-                                                stopColor={s.color}
-                                                stopOpacity={s.opacity}
-                                            />
-                                        ))}
+                                        {activeTheme.atmosphereRim.map(
+                                            (s, idx) => (
+                                                <stop
+                                                    key={idx}
+                                                    offset={s.offset}
+                                                    stopColor={s.color}
+                                                    stopOpacity={s.opacity}
+                                                />
+                                            ),
+                                        )}
                                     </radialGradient>
 
                                     {/* Sphere 3D shading (specular sun highlight + deep shadow limb) */}
@@ -824,7 +953,9 @@ export default function RegionIndex({
                                         <stop
                                             offset="30%"
                                             stopColor={activeTheme.sunColor}
-                                            stopOpacity={activeTheme.sunOpacity * 0.25}
+                                            stopOpacity={
+                                                activeTheme.sunOpacity * 0.25
+                                            }
                                         />
                                         <stop
                                             offset="65%"
@@ -834,12 +965,16 @@ export default function RegionIndex({
                                         <stop
                                             offset="88%"
                                             stopColor="#020b14"
-                                            stopOpacity={activeTheme.shadowOpacity * 0.55}
+                                            stopOpacity={
+                                                activeTheme.shadowOpacity * 0.55
+                                            }
                                         />
                                         <stop
                                             offset="100%"
                                             stopColor="#01060b"
-                                            stopOpacity={activeTheme.shadowOpacity}
+                                            stopOpacity={
+                                                activeTheme.shadowOpacity
+                                            }
                                         />
                                     </radialGradient>
 
@@ -849,10 +984,17 @@ export default function RegionIndex({
                                         cy="50%"
                                         r="75%"
                                     >
-                                        <stop offset="0%" stopColor={activeTheme.spaceStops[0]} />
+                                        <stop
+                                            offset="0%"
+                                            stopColor={
+                                                activeTheme.spaceStops[0]
+                                            }
+                                        />
                                         <stop
                                             offset="100%"
-                                            stopColor={activeTheme.spaceStops[1]}
+                                            stopColor={
+                                                activeTheme.spaceStops[1]
+                                            }
                                         />
                                     </radialGradient>
                                     {/* Soft atmospheric glow that fades out around the sphere */}
@@ -864,17 +1006,23 @@ export default function RegionIndex({
                                     >
                                         <stop
                                             offset="82%"
-                                            stopColor={activeTheme.outerGlowColor}
+                                            stopColor={
+                                                activeTheme.outerGlowColor
+                                            }
                                             stopOpacity="0.35"
                                         />
                                         <stop
                                             offset="90%"
-                                            stopColor={activeTheme.outerGlowColor}
+                                            stopColor={
+                                                activeTheme.outerGlowColor
+                                            }
                                             stopOpacity="0.12"
                                         />
                                         <stop
                                             offset="100%"
-                                            stopColor={activeTheme.outerGlowColor}
+                                            stopColor={
+                                                activeTheme.outerGlowColor
+                                            }
                                             stopOpacity="0"
                                         />
                                     </radialGradient>
@@ -886,7 +1034,10 @@ export default function RegionIndex({
                                         x2="100%"
                                         y2="100%"
                                     >
-                                        <stop offset="0%" stopColor={activeTheme.landStops[0]} />
+                                        <stop
+                                            offset="0%"
+                                            stopColor={activeTheme.landStops[0]}
+                                        />
                                         <stop
                                             offset="55%"
                                             stopColor={activeTheme.landStops[1]}
@@ -932,7 +1083,9 @@ export default function RegionIndex({
                                         />
                                         <feFlood
                                             floodColor={activeTheme.coastColor}
-                                            floodOpacity={activeTheme.coastOpacity}
+                                            floodOpacity={
+                                                activeTheme.coastOpacity
+                                            }
                                         />
                                         <feComposite
                                             in2="blur"
@@ -974,70 +1127,41 @@ export default function RegionIndex({
                                     </filter>
                                 </defs>
 
-                                {selected ? (
+                                {globe ? (
                                     <>
-                                        <rect
-                                            width="900"
-                                            height="530"
-                                            fill="url(#space)"
-                                        />
-                                        {STARS.map((s, i) => (
-                                            <circle
-                                                key={i}
-                                                cx={s.x}
-                                                cy={s.y}
-                                                r={s.s}
-                                                fill="#fff"
-                                                opacity={
-                                                    s.o *
-                                                    (activeTheme.id === "night"
-                                                        ? 1
-                                                        : activeTheme.id === "sunset" ||
-                                                            activeTheme.id === "dawn"
-                                                          ? 0.55
-                                                          : 0.18)
-                                                }
-                                                pointerEvents="none"
-                                            />
-                                        ))}
-                                        <circle
-                                            cx={GLOBE.cx}
-                                            cy={GLOBE.cy}
-                                            r={scale * 1.14}
-                                            fill="url(#outerGlow)"
-                                            pointerEvents="none"
-                                        />
-                                        {/* Outer atmospheric halo ring */}
-                                        <circle
-                                            cx={GLOBE.cx}
-                                            cy={GLOBE.cy}
-                                            r={scale + 3}
-                                            fill="none"
-                                            stroke={activeTheme.haloStroke}
-                                            strokeWidth="3.5"
-                                            opacity="0.45"
-                                            filter="url(#atmosphereHalo)"
-                                            pointerEvents="none"
-                                        />
-
-                                        {/* Ocean Base Sphere */}
-                                        <circle
-                                            cx={GLOBE.cx}
-                                            cy={GLOBE.cy}
-                                            r={scale}
-                                            fill="url(#realisticOcean)"
-                                            stroke={activeTheme.haloStroke}
-                                            strokeWidth="1.2"
-                                        />
-                                        <path
-                                            d={globePath(GRATICULE) ?? ""}
-                                            fill="none"
-                                            stroke="#9fd8ff"
-                                            strokeOpacity="0.12"
-                                            strokeWidth=".6"
-                                            pointerEvents="none"
-                                        />
-                                        <g filter="url(#landShadow)">
+                                        {/* Stylised ocean, shown until the satellite Earth has loaded */}
+                                        {!earth && (
+                                            <>
+                                                <circle
+                                                    cx={GLOBE.cx}
+                                                    cy={GLOBE.cy}
+                                                    r={scale}
+                                                    fill="url(#realisticOcean)"
+                                                    stroke={
+                                                        activeTheme.haloStroke
+                                                    }
+                                                    strokeWidth="1.2"
+                                                />
+                                                <path
+                                                    d={
+                                                        globePath(GRATICULE) ??
+                                                        ""
+                                                    }
+                                                    fill="none"
+                                                    stroke="#9fd8ff"
+                                                    strokeOpacity="0.12"
+                                                    strokeWidth=".6"
+                                                    pointerEvents="none"
+                                                />
+                                            </>
+                                        )}
+                                        <g
+                                            filter={
+                                                earth
+                                                    ? undefined
+                                                    : "url(#landShadow)"
+                                            }
+                                        >
                                             {national?.features.map((f) => {
                                                 const province =
                                                     provinceByCode.get(
@@ -1045,7 +1169,7 @@ export default function RegionIndex({
                                                     );
                                                 const current =
                                                     f.properties.code ===
-                                                    selected.code;
+                                                    selected?.code;
 
                                                 return (
                                                     <path
@@ -1054,18 +1178,52 @@ export default function RegionIndex({
                                                         fill={
                                                             current
                                                                 ? color(
-                                                                      selected.code,
+                                                                      f
+                                                                          .properties
+                                                                          .code,
                                                                   )
-                                                                : "url(#land)"
+                                                                : earth
+                                                                  ? "#ffffff"
+                                                                  : "url(#land)"
                                                         }
-                                                        stroke="#2b4a26"
-                                                        strokeOpacity="0.7"
+                                                        // On the satellite Earth, provinces are
+                                                        // outlines; the imagery shows through.
+                                                        fillOpacity={
+                                                            earth
+                                                                ? current
+                                                                    ? 0.12
+                                                                    : 0
+                                                                : 1
+                                                        }
+                                                        stroke={
+                                                            earth
+                                                                ? dark
+                                                                    ? "#fde68a"
+                                                                    : "#ffffff"
+                                                                : "#2b4a26"
+                                                        }
+                                                        strokeOpacity={
+                                                            earth ? 0.35 : 0.7
+                                                        }
                                                         strokeWidth=".5"
                                                         fillRule="evenodd"
                                                         className={cn(
                                                             !current &&
-                                                                "cursor-pointer transition-[fill] hover:fill-[#9cc47a]",
+                                                                (earth
+                                                                    ? "cursor-pointer transition-[fill-opacity] hover:[fill-opacity:0.22]"
+                                                                    : "cursor-pointer transition-[fill] hover:fill-[#9cc47a]"),
                                                         )}
+                                                        onMouseEnter={() =>
+                                                            !selected &&
+                                                            setHovered(
+                                                                f.properties
+                                                                    .code,
+                                                            )
+                                                        }
+                                                        onMouseLeave={() =>
+                                                            !selected &&
+                                                            setHovered(null)
+                                                        }
                                                         onClick={() =>
                                                             !current &&
                                                             province &&
@@ -1087,6 +1245,7 @@ export default function RegionIndex({
                                             })}
                                         </g>
                                         {ready &&
+                                            selected &&
                                             cityMap?.features.map((f) => {
                                                 const city = cityByCode.get(
                                                     f.properties.code,
@@ -1117,7 +1276,18 @@ export default function RegionIndex({
                                                             fill={color(
                                                                 selected.code,
                                                             )}
+                                                            fillOpacity={
+                                                                earth
+                                                                    ? hovered ===
+                                                                      city.code
+                                                                        ? 0.55
+                                                                        : 0.18
+                                                                    : 1
+                                                            }
                                                             stroke="#ffffff"
+                                                            strokeOpacity={
+                                                                earth ? 0.8 : 1
+                                                            }
                                                             strokeWidth="1"
                                                             fillRule="evenodd"
                                                             className={cn(
@@ -1131,43 +1301,101 @@ export default function RegionIndex({
                                                 ) : null;
                                             })}
 
-                                        {/* 3D Realistic Sphere Shading (Atmosphere + Specular Sun Light) */}
-                                        <circle
-                                            cx={GLOBE.cx}
-                                            cy={GLOBE.cy}
-                                            r={scale}
-                                            fill="url(#sphereShading)"
-                                            pointerEvents="none"
-                                        />
-
-                                        {/* Atmosphere Blue Rim Tint */}
-                                        <circle
-                                            cx={GLOBE.cx}
-                                            cy={GLOBE.cy}
-                                            r={scale}
-                                            fill="url(#globeAtmosphere)"
-                                            pointerEvents="none"
-                                        />
+                                        {/* Fake 3D shading for the stylised globe; the satellite Earth lights itself */}
+                                        {!earth && (
+                                            <>
+                                                <circle
+                                                    cx={GLOBE.cx}
+                                                    cy={GLOBE.cy}
+                                                    r={scale}
+                                                    fill="url(#sphereShading)"
+                                                    pointerEvents="none"
+                                                />
+                                                <circle
+                                                    cx={GLOBE.cx}
+                                                    cy={GLOBE.cy}
+                                                    r={scale}
+                                                    fill="url(#globeAtmosphere)"
+                                                    pointerEvents="none"
+                                                />
+                                            </>
+                                        )}
                                     </>
                                 ) : (
                                     <>
-                                        {/* Flat ocean background rectangle with deep oceanic depth */}
-                                        <rect
-                                            width="900"
-                                            height="530"
-                                            fill="url(#flatOcean)"
-                                        />
+                                        {earth ? (
+                                            <>
+                                                {/* Satellite map: dim everything that is not Indonesia */}
+                                                <mask id="indonesiaOnly">
+                                                    <rect
+                                                        width="900"
+                                                        height="530"
+                                                        fill="#fff"
+                                                    />
+                                                    {national?.features.map(
+                                                        (f) => (
+                                                            <path
+                                                                key={
+                                                                    f.properties
+                                                                        .code
+                                                                }
+                                                                d={
+                                                                    flatPath?.(
+                                                                        f,
+                                                                    ) ?? ""
+                                                                }
+                                                                fill="#000"
+                                                                stroke="#000"
+                                                                strokeWidth="1.5"
+                                                            />
+                                                        ),
+                                                    )}
+                                                </mask>
+                                                <rect
+                                                    width="900"
+                                                    height="530"
+                                                    fill={
+                                                        activeTheme.containerBg
+                                                    }
+                                                    fillOpacity={
+                                                        dark ? 0.6 : 0.5
+                                                    }
+                                                    mask="url(#indonesiaOnly)"
+                                                    pointerEvents="none"
+                                                />
+                                            </>
+                                        ) : (
+                                            <>
+                                                {/* Flat ocean background rectangle with deep oceanic depth */}
+                                                <rect
+                                                    width="900"
+                                                    height="530"
+                                                    fill="url(#flatOcean)"
+                                                />
 
-                                        <path
-                                            d={flatPath?.(GRATICULE) ?? ""}
-                                            fill="none"
-                                            stroke={activeTheme.haloStroke}
-                                            strokeOpacity="0.12"
-                                            strokeWidth=".7"
-                                            pointerEvents="none"
-                                        />
+                                                <path
+                                                    d={
+                                                        flatPath?.(GRATICULE) ??
+                                                        ""
+                                                    }
+                                                    fill="none"
+                                                    stroke={
+                                                        activeTheme.haloStroke
+                                                    }
+                                                    strokeOpacity="0.12"
+                                                    strokeWidth=".7"
+                                                    pointerEvents="none"
+                                                />
+                                            </>
+                                        )}
 
-                                        <g filter="url(#coastGlow)">
+                                        <g
+                                            filter={
+                                                earth
+                                                    ? undefined
+                                                    : "url(#coastGlow)"
+                                            }
+                                        >
                                             {national?.features.map((f) => {
                                                 const province =
                                                     provinceByCode.get(
@@ -1181,11 +1409,28 @@ export default function RegionIndex({
                                                         fill={color(
                                                             province.code,
                                                         )}
+                                                        // Over the satellite map, tint by news
+                                                        // volume and let the imagery show through.
+                                                        fillOpacity={
+                                                            earth
+                                                                ? count(
+                                                                      province.code,
+                                                                  )
+                                                                    ? 0.5
+                                                                    : 0.04
+                                                                : 1
+                                                        }
                                                         stroke="#ffffff"
-                                                        strokeOpacity="0.55"
+                                                        strokeOpacity={
+                                                            earth ? 0.6 : 0.55
+                                                        }
                                                         strokeWidth=".7"
                                                         fillRule="evenodd"
-                                                        className="cursor-pointer transition-colors hover:fill-merah hover:stroke-white"
+                                                        className={cn(
+                                                            "cursor-pointer transition-colors hover:fill-merah hover:stroke-white",
+                                                            earth &&
+                                                                "hover:[fill-opacity:0.6]",
+                                                        )}
                                                         onMouseEnter={() =>
                                                             setHovered(
                                                                 province.code,
@@ -1214,7 +1459,7 @@ export default function RegionIndex({
                             )}
 
                             {/* Floating Zoom In & Zoom Out Controls */}
-                            {selected && (
+                            {globe && (
                                 <div className="absolute right-3 bottom-3 z-10 flex flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-surface/95 shadow-md backdrop-blur-sm">
                                     <button
                                         type="button"
