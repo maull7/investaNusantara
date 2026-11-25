@@ -3,6 +3,7 @@ import {
     geoBounds,
     geoCentroid,
     geoEquirectangular,
+    geoGraticule,
     geoOrthographic,
     geoPath,
 } from "d3-geo";
@@ -61,7 +62,241 @@ type Detail = {
 };
 
 const GLOBE = { cx: 450, cy: 265, r: 218 };
+const GRATICULE = geoGraticule().step([10, 10])();
+// Fixed pseudo-random starfield so it does not jump between renders.
+const STARS = Array.from({ length: 140 }, (_, i) => {
+    const r = (n: number) =>
+        (((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1) + 1) % 1;
+    return {
+        x: r(1) * 900,
+        y: r(2) * 530,
+        s: r(3) * 1.1 + 0.2,
+        o: r(4) * 0.6 + 0.2,
+    };
+});
 const NO_NEWS = "#dce5ed";
+
+type TimeOfDay = "dawn" | "morning" | "noon" | "sunset" | "night";
+
+interface TimeTheme {
+    id: TimeOfDay;
+    label: string;
+    range: string;
+    icon: string;
+    containerBg: string;
+    oceanStops: Array<{ offset: string; color: string }>;
+    flatOceanStops: Array<{ offset: string; color: string }>;
+    atmosphereRim: Array<{ offset: string; color: string; opacity: number }>;
+    haloStroke: string;
+    outerGlowColor: string;
+    sunCx: string;
+    sunCy: string;
+    sunColor: string;
+    sunOpacity: number;
+    shadowOpacity: number;
+    spaceStops: [string, string];
+    landStops: [string, string, string];
+    coastColor: string;
+    coastOpacity: number;
+}
+
+const TIME_THEMES: Record<TimeOfDay, TimeTheme> = {
+    dawn: {
+        id: "dawn",
+        label: "Subuh / Fajar",
+        range: "05:00 - 07:00",
+        icon: "🌅",
+        containerBg: "#071322",
+        oceanStops: [
+            { offset: "0%", color: "#2a819b" },
+            { offset: "25%", color: "#1d627a" },
+            { offset: "55%", color: "#13455a" },
+            { offset: "85%", color: "#0b2d3d" },
+            { offset: "100%", color: "#051824" },
+        ],
+        flatOceanStops: [
+            { offset: "0%", color: "#0c2b42" },
+            { offset: "35%", color: "#123c5c" },
+            { offset: "70%", color: "#194a6e" },
+            { offset: "100%", color: "#0a2135" },
+        ],
+        atmosphereRim: [
+            { offset: "78%", color: "#fdba74", opacity: 0 },
+            { offset: "88%", color: "#fdba74", opacity: 0.35 },
+            { offset: "95%", color: "#38bdf8", opacity: 0.65 },
+            { offset: "100%", color: "#bae6fd", opacity: 0.95 },
+        ],
+        haloStroke: "#f59e0b",
+        outerGlowColor: "#f97316",
+        sunCx: "30%",
+        sunCy: "32%",
+        sunColor: "#fff1db",
+        sunOpacity: 0.35,
+        shadowOpacity: 0.78,
+        spaceStops: ["#0c192c", "#030811"],
+        landStops: ["#67964d", "#487535", "#82834f"],
+        coastColor: "#38bdf8",
+        coastOpacity: 0.55,
+    },
+    morning: {
+        id: "morning",
+        label: "Pagi",
+        range: "07:00 - 11:00",
+        icon: "☀️",
+        containerBg: "#051b33",
+        oceanStops: [
+            { offset: "0%", color: "#38bdf8" },
+            { offset: "20%", color: "#0ea5e9" },
+            { offset: "45%", color: "#0284c7" },
+            { offset: "75%", color: "#0369a1" },
+            { offset: "100%", color: "#0c4a6e" },
+        ],
+        flatOceanStops: [
+            { offset: "0%", color: "#0f4a75" },
+            { offset: "35%", color: "#196396" },
+            { offset: "70%", color: "#1e72aa" },
+            { offset: "100%", color: "#0d3d63" },
+        ],
+        atmosphereRim: [
+            { offset: "78%", color: "#38bdf8", opacity: 0 },
+            { offset: "90%", color: "#38bdf8", opacity: 0.35 },
+            { offset: "96%", color: "#7dd3fc", opacity: 0.75 },
+            { offset: "100%", color: "#bae6fd", opacity: 0.95 },
+        ],
+        haloStroke: "#38bdf8",
+        outerGlowColor: "#38bdf8",
+        sunCx: "34%",
+        sunCy: "26%",
+        sunColor: "#ffffff",
+        sunOpacity: 0.42,
+        shadowOpacity: 0.65,
+        spaceStops: ["#0d2b4d", "#041121"],
+        landStops: ["#74ab54", "#528e3a", "#959b58"],
+        coastColor: "#67e8f9",
+        coastOpacity: 0.75,
+    },
+    noon: {
+        id: "noon",
+        label: "Siang",
+        range: "11:00 - 15:00",
+        icon: "🌞",
+        containerBg: "#030f1e",
+        oceanStops: [
+            { offset: "0%", color: "#2980b9" },
+            { offset: "25%", color: "#1f6696" },
+            { offset: "55%", color: "#15486e" },
+            { offset: "85%", color: "#0c3250" },
+            { offset: "100%", color: "#051c30" },
+        ],
+        flatOceanStops: [
+            { offset: "0%", color: "#0b2e4d" },
+            { offset: "35%", color: "#12436d" },
+            { offset: "70%", color: "#154c7a" },
+            { offset: "100%", color: "#08233d" },
+        ],
+        atmosphereRim: [
+            { offset: "78%", color: "#00d2ff", opacity: 0 },
+            { offset: "90%", color: "#38bdf8", opacity: 0.3 },
+            { offset: "97%", color: "#7dd3fc", opacity: 0.7 },
+            { offset: "100%", color: "#bae6fd", opacity: 0.9 },
+        ],
+        haloStroke: "#38bdf8",
+        outerGlowColor: "#0284c7",
+        sunCx: "36%",
+        sunCy: "24%",
+        sunColor: "#ffffff",
+        sunOpacity: 0.48,
+        shadowOpacity: 0.75,
+        spaceStops: ["#07192f", "#020914"],
+        landStops: ["#6b9a4e", "#4b7a37", "#878850"],
+        coastColor: "#38bdf8",
+        coastOpacity: 0.55,
+    },
+    sunset: {
+        id: "sunset",
+        label: "Senja / Sore",
+        range: "15:00 - 18:30",
+        icon: "🌇",
+        containerBg: "#120a1f",
+        oceanStops: [
+            { offset: "0%", color: "#3b82f6" },
+            { offset: "25%", color: "#2563eb" },
+            { offset: "55%", color: "#1e3a8a" },
+            { offset: "85%", color: "#172554" },
+            { offset: "100%", color: "#090d1f" },
+        ],
+        flatOceanStops: [
+            { offset: "0%", color: "#182247" },
+            { offset: "35%", color: "#243361" },
+            { offset: "70%", color: "#282e5b" },
+            { offset: "100%", color: "#12142d" },
+        ],
+        atmosphereRim: [
+            { offset: "78%", color: "#f59e0b", opacity: 0 },
+            { offset: "87%", color: "#f59e0b", opacity: 0.4 },
+            { offset: "94%", color: "#f97316", opacity: 0.75 },
+            { offset: "100%", color: "#ec4899", opacity: 0.9 },
+        ],
+        haloStroke: "#fb923c",
+        outerGlowColor: "#ea580c",
+        sunCx: "28%",
+        sunCy: "36%",
+        sunColor: "#fef08a",
+        sunOpacity: 0.45,
+        shadowOpacity: 0.82,
+        spaceStops: ["#1a102e", "#070410"],
+        landStops: ["#708346", "#50612f", "#8b7145"],
+        coastColor: "#f59e0b",
+        coastOpacity: 0.5,
+    },
+    night: {
+        id: "night",
+        label: "Malam",
+        range: "18:30 - 05:00",
+        icon: "🌙",
+        containerBg: "#02060e",
+        oceanStops: [
+            { offset: "0%", color: "#1e3a5f" },
+            { offset: "25%", color: "#122b49" },
+            { offset: "55%", color: "#0b1c33" },
+            { offset: "85%", color: "#050e1c" },
+            { offset: "100%", color: "#02060e" },
+        ],
+        flatOceanStops: [
+            { offset: "0%", color: "#051321" },
+            { offset: "35%", color: "#091d33" },
+            { offset: "70%", color: "#0c243d" },
+            { offset: "100%", color: "#030c17" },
+        ],
+        atmosphereRim: [
+            { offset: "78%", color: "#38bdf8", opacity: 0 },
+            { offset: "90%", color: "#1e3a8a", opacity: 0.3 },
+            { offset: "97%", color: "#38bdf8", opacity: 0.5 },
+            { offset: "100%", color: "#7dd3fc", opacity: 0.75 },
+        ],
+        haloStroke: "#1d4ed8",
+        outerGlowColor: "#1e3a5f",
+        sunCx: "32%",
+        sunCy: "24%",
+        sunColor: "#e0f2fe",
+        sunOpacity: 0.22,
+        shadowOpacity: 0.92,
+        spaceStops: ["#040a16", "#010307"],
+        landStops: ["#365430", "#243c1f", "#434a31"],
+        coastColor: "#22d3ee",
+        coastOpacity: 0.35,
+    },
+};
+
+function getCurrentTimeOfDay(): TimeOfDay {
+    const now = new Date();
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    if (minutes >= 5 * 60 && minutes < 7 * 60) return "dawn";
+    if (minutes >= 7 * 60 && minutes < 11 * 60) return "morning";
+    if (minutes >= 11 * 60 && minutes < 15 * 60) return "noon";
+    if (minutes >= 15 * 60 && minutes < 18 * 60 + 30) return "sunset";
+    return "night";
+}
 
 /** Interactive map: flat Indonesia, click a province to spin a draggable globe onto it. */
 export default function RegionIndex({
@@ -85,6 +320,16 @@ export default function RegionIndex({
     const [fitScale, setFitScale] = useState(GLOBE.r);
     const [ready, setReady] = useState(false);
     const [detail, setDetail] = useState<Detail | null>(null);
+    const [currentTime, setCurrentTime] = useState<TimeOfDay>(getCurrentTimeOfDay);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(getCurrentTimeOfDay());
+        }, 60000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const activeTheme = TIME_THEMES[currentTime];
     const frame = useRef<number | null>(null);
     const drag = useRef<{
         x: number;
@@ -248,33 +493,39 @@ export default function RegionIndex({
             setScale(zoomTo);
             setReady(true);
         } else {
-            // Two beats: spin the globe onto the province, then zoom in.
-            const SPIN = 900;
-            const ZOOM = 800;
+            // Smooth unified flight: spin and zoom glide concurrently with ease-in-out cushioning
+            const DURATION = 1250;
             const start = performance.now();
             const from = rotation;
             const fromScale = scale;
-            // Take the short way round the globe.
+            // Take the short way round the globe (-180 to 180).
             const dLon = ((((target[0] - from[0]) % 360) + 540) % 360) - 180;
-            const ease = (t: number) => 1 - (1 - t) ** 3;
+            const dLat = target[1] - from[1];
+            const fromLog = Math.log(fromScale);
+            const toLog = Math.log(zoomTo);
+
+            // Silky smooth ease-in-out cubic curve (soft start, fluid middle, cushioned arrival)
+            const easeInOutCubic = (t: number) =>
+                t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
             const tick = (now: number) => {
                 const el = now - start;
-                const spin = ease(Math.min(1, el / SPIN));
-                const zoom = ease(Math.min(1, Math.max(0, (el - SPIN) / ZOOM)));
+                const t = Math.min(1, el / DURATION);
+                const eased = easeInOutCubic(t);
+
                 setRotation([
-                    from[0] + dLon * spin,
-                    from[1] + (target[1] - from[1]) * spin,
+                    from[0] + dLon * eased,
+                    from[1] + dLat * eased,
                 ]);
-                // Interpolate in log space: zoom feels even instead of rushing at the end.
-                setScale(
-                    Math.exp(
-                        Math.log(fromScale) +
-                            (Math.log(zoomTo) - Math.log(fromScale)) * zoom,
-                    ),
-                );
-                if (el < SPIN + ZOOM) {
+
+                // Interpolate in log space for visually even zoom sensation
+                setScale(Math.exp(fromLog + (toLog - fromLog) * eased));
+
+                if (t < 1) {
                     frame.current = requestAnimationFrame(tick);
                 } else {
+                    setRotation(target);
+                    setScale(zoomTo);
                     setReady(true);
                 }
             };
@@ -297,13 +548,33 @@ export default function RegionIndex({
     }
 
     /** Step zoom in or zoom out incrementally (buttons & wheel). */
-    function zoomBy(factor: number) {
+    function zoomBy(factor: number, animate = true) {
         stopSpin();
         const minScale = GLOBE.r * 0.8;
         const maxScale = 14000;
         const next = Math.max(minScale, Math.min(maxScale, scale * factor));
-        setScale(next);
-        setReady(true);
+        if (!animate || Math.abs(next - scale) < 5) {
+            setScale(next);
+            setReady(true);
+            return;
+        }
+        const from = scale;
+        const fromLog = Math.log(from);
+        const toLog = Math.log(next);
+        const start = performance.now();
+        const duration = 240;
+        const easeOutQuad = (t: number) => 1 - (1 - t) * (1 - t);
+        const tick = (now: number) => {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = easeOutQuad(t);
+            setScale(Math.exp(fromLog + (toLog - fromLog) * eased));
+            if (t < 1) {
+                frame.current = requestAnimationFrame(tick);
+            } else {
+                setReady(true);
+            }
+        };
+        frame.current = requestAnimationFrame(tick);
     }
 
     /** Toggle between the whole globe and the province filling the frame. */
@@ -311,15 +582,17 @@ export default function RegionIndex({
         stopSpin();
         const from = scale;
         const to = scale > GLOBE.r * 1.5 ? GLOBE.r : fitScale;
+        const fromLog = Math.log(from);
+        const toLog = Math.log(to);
         const start = performance.now();
+        const duration = 650;
+        const easeInOutCubic = (t: number) =>
+            t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
         const tick = (now: number) => {
-            const t = Math.min(1, (now - start) / 700);
-            const eased = 1 - (1 - t) ** 3;
-            setScale(
-                Math.exp(
-                    Math.log(from) + (Math.log(to) - Math.log(from)) * eased,
-                ),
-            );
+            const t = Math.min(1, (now - start) / duration);
+            const eased = easeInOutCubic(t);
+            setScale(Math.exp(fromLog + (toLog - fromLog) * eased));
             if (t < 1) {
                 frame.current = requestAnimationFrame(tick);
             }
@@ -453,7 +726,10 @@ export default function RegionIndex({
                             </div>
                         </div>
 
-                        <div className="relative mt-3 overflow-hidden rounded-2xl bg-[#f1f7fa]">
+                        <div
+                            className="relative mt-3 overflow-hidden rounded-2xl shadow-inner ring-1 ring-white/10 transition-colors duration-700"
+                            style={{ backgroundColor: activeTheme.containerBg }}
+                        >
                             <svg
                                 viewBox="0 0 900 530"
                                 role="img"
@@ -474,73 +750,342 @@ export default function RegionIndex({
                                 onWheel={(e) => {
                                     if (selected) {
                                         e.preventDefault();
-                                        zoomBy(e.deltaY < 0 ? 1.15 : 0.85);
+                                        zoomBy(
+                                            e.deltaY < 0 ? 1.15 : 0.85,
+                                            false,
+                                        );
                                     }
                                 }}
                                 onClickCapture={swallowClickAfterDrag}
                             >
                                 <defs>
+                                    {/* Realistic ocean water gradient with deep oceanic blues and shallow coastal aqua */}
                                     <radialGradient
-                                        id="ocean"
-                                        cx="38%"
-                                        cy="32%"
+                                        id="realisticOcean"
+                                        cx="36%"
+                                        cy="30%"
                                         r="75%"
                                     >
-                                        <stop offset="0" stopColor="#e6f4f8" />
-                                        <stop offset="1" stopColor="#9fcfe0" />
+                                        {activeTheme.oceanStops.map((s, idx) => (
+                                            <stop
+                                                key={idx}
+                                                offset={s.offset}
+                                                stopColor={s.color}
+                                            />
+                                        ))}
                                     </radialGradient>
+
+                                    {/* Flat map ocean background */}
+                                    <linearGradient
+                                        id="flatOcean"
+                                        x1="0%"
+                                        y1="0%"
+                                        x2="100%"
+                                        y2="100%"
+                                    >
+                                        {activeTheme.flatOceanStops.map((s, idx) => (
+                                            <stop
+                                                key={idx}
+                                                offset={s.offset}
+                                                stopColor={s.color}
+                                            />
+                                        ))}
+                                    </linearGradient>
+
+                                    {/* 3D Earth atmosphere rim glow (Fresnel glow) */}
+                                    <radialGradient
+                                        id="globeAtmosphere"
+                                        cx="50%"
+                                        cy="50%"
+                                        r="50%"
+                                    >
+                                        {activeTheme.atmosphereRim.map((s, idx) => (
+                                            <stop
+                                                key={idx}
+                                                offset={s.offset}
+                                                stopColor={s.color}
+                                                stopOpacity={s.opacity}
+                                            />
+                                        ))}
+                                    </radialGradient>
+
+                                    {/* Sphere 3D shading (specular sun highlight + deep shadow limb) */}
+                                    <radialGradient
+                                        id="sphereShading"
+                                        cx={activeTheme.sunCx}
+                                        cy={activeTheme.sunCy}
+                                        r="70%"
+                                    >
+                                        <stop
+                                            offset="0%"
+                                            stopColor={activeTheme.sunColor}
+                                            stopOpacity={activeTheme.sunOpacity}
+                                        />
+                                        <stop
+                                            offset="30%"
+                                            stopColor={activeTheme.sunColor}
+                                            stopOpacity={activeTheme.sunOpacity * 0.25}
+                                        />
+                                        <stop
+                                            offset="65%"
+                                            stopColor="#000000"
+                                            stopOpacity="0.0"
+                                        />
+                                        <stop
+                                            offset="88%"
+                                            stopColor="#020b14"
+                                            stopOpacity={activeTheme.shadowOpacity * 0.55}
+                                        />
+                                        <stop
+                                            offset="100%"
+                                            stopColor="#01060b"
+                                            stopOpacity={activeTheme.shadowOpacity}
+                                        />
+                                    </radialGradient>
+
+                                    <radialGradient
+                                        id="space"
+                                        cx="50%"
+                                        cy="50%"
+                                        r="75%"
+                                    >
+                                        <stop offset="0%" stopColor={activeTheme.spaceStops[0]} />
+                                        <stop
+                                            offset="100%"
+                                            stopColor={activeTheme.spaceStops[1]}
+                                        />
+                                    </radialGradient>
+                                    {/* Soft atmospheric glow that fades out around the sphere */}
+                                    <radialGradient
+                                        id="outerGlow"
+                                        cx="50%"
+                                        cy="50%"
+                                        r="50%"
+                                    >
+                                        <stop
+                                            offset="82%"
+                                            stopColor={activeTheme.outerGlowColor}
+                                            stopOpacity="0.35"
+                                        />
+                                        <stop
+                                            offset="90%"
+                                            stopColor={activeTheme.outerGlowColor}
+                                            stopOpacity="0.12"
+                                        />
+                                        <stop
+                                            offset="100%"
+                                            stopColor={activeTheme.outerGlowColor}
+                                            stopOpacity="0"
+                                        />
+                                    </radialGradient>
+                                    {/* Earthy land: vegetation green blending to dry tan */}
+                                    <linearGradient
+                                        id="land"
+                                        x1="0%"
+                                        y1="0%"
+                                        x2="100%"
+                                        y2="100%"
+                                    >
+                                        <stop offset="0%" stopColor={activeTheme.landStops[0]} />
+                                        <stop
+                                            offset="55%"
+                                            stopColor={activeTheme.landStops[1]}
+                                        />
+                                        <stop
+                                            offset="100%"
+                                            stopColor={activeTheme.landStops[2]}
+                                        />
+                                    </linearGradient>
+                                    <filter
+                                        id="landShadow"
+                                        x="-10%"
+                                        y="-10%"
+                                        width="120%"
+                                        height="120%"
+                                    >
+                                        <feDropShadow
+                                            dx="1.5"
+                                            dy="2.5"
+                                            stdDeviation="2.5"
+                                            floodColor="#000"
+                                            floodOpacity="0.55"
+                                        />
+                                    </filter>
+                                    {/* Shallow-water halo along the coast */}
+                                    <filter
+                                        id="coastGlow"
+                                        x="-10%"
+                                        y="-10%"
+                                        width="120%"
+                                        height="120%"
+                                    >
+                                        <feMorphology
+                                            in="SourceAlpha"
+                                            operator="dilate"
+                                            radius="2.5"
+                                            result="grow"
+                                        />
+                                        <feGaussianBlur
+                                            in="grow"
+                                            stdDeviation="4"
+                                            result="blur"
+                                        />
+                                        <feFlood
+                                            floodColor={activeTheme.coastColor}
+                                            floodOpacity={activeTheme.coastOpacity}
+                                        />
+                                        <feComposite
+                                            in2="blur"
+                                            operator="in"
+                                            result="glow"
+                                        />
+                                        <feDropShadow
+                                            in="SourceGraphic"
+                                            dx="1"
+                                            dy="2"
+                                            stdDeviation="1.5"
+                                            floodColor="#000"
+                                            floodOpacity="0.5"
+                                            result="land"
+                                        />
+                                        <feMerge>
+                                            <feMergeNode in="glow" />
+                                            <feMergeNode in="land" />
+                                        </feMerge>
+                                    </filter>
+
+                                    {/* Outer space atmospheric halo */}
+                                    <filter
+                                        id="atmosphereHalo"
+                                        x="-25%"
+                                        y="-25%"
+                                        width="150%"
+                                        height="150%"
+                                    >
+                                        <feGaussianBlur
+                                            in="SourceGraphic"
+                                            stdDeviation="6"
+                                            result="blur"
+                                        />
+                                        <feMerge>
+                                            <feMergeNode in="blur" />
+                                            <feMergeNode in="SourceGraphic" />
+                                        </feMerge>
+                                    </filter>
                                 </defs>
 
                                 {selected ? (
                                     <>
+                                        <rect
+                                            width="900"
+                                            height="530"
+                                            fill="url(#space)"
+                                        />
+                                        {STARS.map((s, i) => (
+                                            <circle
+                                                key={i}
+                                                cx={s.x}
+                                                cy={s.y}
+                                                r={s.s}
+                                                fill="#fff"
+                                                opacity={
+                                                    s.o *
+                                                    (activeTheme.id === "night"
+                                                        ? 1
+                                                        : activeTheme.id === "sunset" ||
+                                                            activeTheme.id === "dawn"
+                                                          ? 0.55
+                                                          : 0.18)
+                                                }
+                                                pointerEvents="none"
+                                            />
+                                        ))}
+                                        <circle
+                                            cx={GLOBE.cx}
+                                            cy={GLOBE.cy}
+                                            r={scale * 1.14}
+                                            fill="url(#outerGlow)"
+                                            pointerEvents="none"
+                                        />
+                                        {/* Outer atmospheric halo ring */}
+                                        <circle
+                                            cx={GLOBE.cx}
+                                            cy={GLOBE.cy}
+                                            r={scale + 3}
+                                            fill="none"
+                                            stroke={activeTheme.haloStroke}
+                                            strokeWidth="3.5"
+                                            opacity="0.45"
+                                            filter="url(#atmosphereHalo)"
+                                            pointerEvents="none"
+                                        />
+
+                                        {/* Ocean Base Sphere */}
                                         <circle
                                             cx={GLOBE.cx}
                                             cy={GLOBE.cy}
                                             r={scale}
-                                            fill="url(#ocean)"
-                                            stroke="#82bacd"
-                                            strokeWidth="2"
+                                            fill="url(#realisticOcean)"
+                                            stroke={activeTheme.haloStroke}
+                                            strokeWidth="1.2"
                                         />
-                                        {national?.features.map((f) => {
-                                            const province = provinceByCode.get(
-                                                f.properties.code,
-                                            );
-                                            const current =
-                                                f.properties.code ===
-                                                selected.code;
+                                        <path
+                                            d={globePath(GRATICULE) ?? ""}
+                                            fill="none"
+                                            stroke="#9fd8ff"
+                                            strokeOpacity="0.12"
+                                            strokeWidth=".6"
+                                            pointerEvents="none"
+                                        />
+                                        <g filter="url(#landShadow)">
+                                            {national?.features.map((f) => {
+                                                const province =
+                                                    provinceByCode.get(
+                                                        f.properties.code,
+                                                    );
+                                                const current =
+                                                    f.properties.code ===
+                                                    selected.code;
 
-                                            return (
-                                                <path
-                                                    key={f.properties.code}
-                                                    d={globePath(f) ?? ""}
-                                                    fill={
-                                                        current
-                                                            ? color(
-                                                                  selected.code,
-                                                              )
-                                                            : "#e4ebee"
-                                                    }
-                                                    stroke="#fff"
-                                                    strokeWidth=".8"
-                                                    fillRule="evenodd"
-                                                    className={cn(
-                                                        !current &&
-                                                            "cursor-pointer hover:fill-[#cfdbe0]",
-                                                    )}
-                                                    onClick={() =>
-                                                        !current &&
-                                                        province &&
-                                                        selectProvince(province)
-                                                    }
-                                                >
-                                                    {!current && province && (
-                                                        <title>
-                                                            {province.name}
-                                                        </title>
-                                                    )}
-                                                </path>
-                                            );
-                                        })}
+                                                return (
+                                                    <path
+                                                        key={f.properties.code}
+                                                        d={globePath(f) ?? ""}
+                                                        fill={
+                                                            current
+                                                                ? color(
+                                                                      selected.code,
+                                                                  )
+                                                                : "url(#land)"
+                                                        }
+                                                        stroke="#2b4a26"
+                                                        strokeOpacity="0.7"
+                                                        strokeWidth=".5"
+                                                        fillRule="evenodd"
+                                                        className={cn(
+                                                            !current &&
+                                                                "cursor-pointer transition-[fill] hover:fill-[#9cc47a]",
+                                                        )}
+                                                        onClick={() =>
+                                                            !current &&
+                                                            province &&
+                                                            selectProvince(
+                                                                province,
+                                                            )
+                                                        }
+                                                    >
+                                                        {!current &&
+                                                            province && (
+                                                                <title>
+                                                                    {
+                                                                        province.name
+                                                                    }
+                                                                </title>
+                                                            )}
+                                                    </path>
+                                                );
+                                            })}
+                                        </g>
                                         {ready &&
                                             cityMap?.features.map((f) => {
                                                 const city = cityByCode.get(
@@ -572,8 +1117,8 @@ export default function RegionIndex({
                                                             fill={color(
                                                                 selected.code,
                                                             )}
-                                                            stroke="#fff"
-                                                            strokeWidth="1.3"
+                                                            stroke="#ffffff"
+                                                            strokeWidth="1"
                                                             fillRule="evenodd"
                                                             className={cn(
                                                                 "cursor-pointer",
@@ -585,44 +1130,80 @@ export default function RegionIndex({
                                                     </Link>
                                                 ) : null;
                                             })}
-                                        {/* Soft shading so the sphere reads as a ball */}
+
+                                        {/* 3D Realistic Sphere Shading (Atmosphere + Specular Sun Light) */}
                                         <circle
                                             cx={GLOBE.cx}
                                             cy={GLOBE.cy}
                                             r={scale}
-                                            fill="none"
-                                            stroke="#82bacd"
-                                            strokeWidth="2"
+                                            fill="url(#sphereShading)"
+                                            pointerEvents="none"
+                                        />
+
+                                        {/* Atmosphere Blue Rim Tint */}
+                                        <circle
+                                            cx={GLOBE.cx}
+                                            cy={GLOBE.cy}
+                                            r={scale}
+                                            fill="url(#globeAtmosphere)"
                                             pointerEvents="none"
                                         />
                                     </>
                                 ) : (
-                                    national?.features.map((f) => {
-                                        const province = provinceByCode.get(
-                                            f.properties.code,
-                                        );
+                                    <>
+                                        {/* Flat ocean background rectangle with deep oceanic depth */}
+                                        <rect
+                                            width="900"
+                                            height="530"
+                                            fill="url(#flatOcean)"
+                                        />
 
-                                        return province ? (
-                                            <path
-                                                key={province.code}
-                                                d={flatPath?.(f) ?? ""}
-                                                fill={color(province.code)}
-                                                stroke="#fff"
-                                                strokeWidth="1.2"
-                                                fillRule="evenodd"
-                                                className="cursor-pointer transition-colors hover:fill-merah"
-                                                onMouseEnter={() =>
-                                                    setHovered(province.code)
-                                                }
-                                                onMouseLeave={() =>
-                                                    setHovered(null)
-                                                }
-                                                onClick={() =>
-                                                    selectProvince(province)
-                                                }
-                                            />
-                                        ) : null;
-                                    })
+                                        <path
+                                            d={flatPath?.(GRATICULE) ?? ""}
+                                            fill="none"
+                                            stroke={activeTheme.haloStroke}
+                                            strokeOpacity="0.12"
+                                            strokeWidth=".7"
+                                            pointerEvents="none"
+                                        />
+
+                                        <g filter="url(#coastGlow)">
+                                            {national?.features.map((f) => {
+                                                const province =
+                                                    provinceByCode.get(
+                                                        f.properties.code,
+                                                    );
+
+                                                return province ? (
+                                                    <path
+                                                        key={province.code}
+                                                        d={flatPath?.(f) ?? ""}
+                                                        fill={color(
+                                                            province.code,
+                                                        )}
+                                                        stroke="#ffffff"
+                                                        strokeOpacity="0.55"
+                                                        strokeWidth=".7"
+                                                        fillRule="evenodd"
+                                                        className="cursor-pointer transition-colors hover:fill-merah hover:stroke-white"
+                                                        onMouseEnter={() =>
+                                                            setHovered(
+                                                                province.code,
+                                                            )
+                                                        }
+                                                        onMouseLeave={() =>
+                                                            setHovered(null)
+                                                        }
+                                                        onClick={() =>
+                                                            selectProvince(
+                                                                province,
+                                                            )
+                                                        }
+                                                    />
+                                                ) : null;
+                                            })}
+                                        </g>
+                                    </>
                                 )}
                             </svg>
 
