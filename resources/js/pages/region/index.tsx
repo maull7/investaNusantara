@@ -358,6 +358,7 @@ export default function RegionIndex({
     const [scale, setScale] = useState(GLOBE.r);
     const [fitScale, setFitScale] = useState(GLOBE.r);
     const [ready, setReady] = useState(false);
+    const [globeOpacity, setGlobeOpacity] = useState(1);
     const [detail, setDetail] = useState<Detail | null>(null);
     // Light mode = daytime planet, dark mode = night side with city lights.
     const dark = useDarkMode();
@@ -650,14 +651,63 @@ export default function RegionIndex({
 
     function reset() {
         stopSpin();
-        setScale(GLOBE.r);
-        setRotation([-118, 2]);
-        setSelected(null);
-        setCityMap(null);
-        setCities([]);
+        if (
+            mode === "flat" ||
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ) {
+            setMode("flat");
+            setScale(GLOBE.r);
+            setRotation([-118, 2]);
+            setSelected(null);
+            setCityMap(null);
+            setCities([]);
+            setReady(false);
+            setHovered(null);
+            setGlobeHover(null);
+            return;
+        }
+
+        const fromScale = scale;
+        const toScale = GLOBE.r;
+        const fromRot = rotation;
+        const toRot: Rotation = [-118, 2];
+        const dLon = ((((toRot[0] - fromRot[0]) % 360) + 540) % 360) - 180;
+        const dLat = toRot[1] - fromRot[1];
+        const fromLog = Math.log(fromScale);
+        const toLog = Math.log(toScale);
+        const start = performance.now();
+        const duration = 550;
+        const easeInOutCubic = (t: number) =>
+            t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
         setReady(false);
         setHovered(null);
         setGlobeHover(null);
+
+        const tick = (now: number) => {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = easeInOutCubic(t);
+            setScale(Math.exp(fromLog + (toLog - fromLog) * eased));
+            setRotation([
+                fromRot[0] + dLon * eased,
+                fromRot[1] + dLat * eased,
+            ]);
+            if (t > 0.45) {
+                setGlobeOpacity(Math.max(0, 1 - (t - 0.45) / 0.55));
+            }
+            if (t < 1) {
+                frame.current = requestAnimationFrame(tick);
+            } else {
+                setMode("flat");
+                setGlobeOpacity(1);
+                setScale(GLOBE.r);
+                setRotation([-118, 2]);
+                setSelected(null);
+                setCityMap(null);
+                setCities([]);
+            }
+        };
+        frame.current = requestAnimationFrame(tick);
     }
 
     /** Switch between the flat map of Indonesia and the globe. */
@@ -935,6 +985,7 @@ export default function RegionIndex({
                                     viewBox="0 0 900 530"
                                     aria-hidden="true"
                                     className="pointer-events-none absolute inset-0 h-full w-full"
+                                    style={{ opacity: globeOpacity }}
                                 >
                                     <rect
                                         width="900"
@@ -1008,6 +1059,7 @@ export default function RegionIndex({
                                     globe &&
                                         "cursor-grab touch-none select-none active:cursor-grabbing",
                                 )}
+                                style={{ opacity: globe ? globeOpacity : 1 }}
                                 onPointerDown={onPointerDown}
                                 onPointerMove={onPointerMove}
                                 onPointerUp={onPointerUp}
